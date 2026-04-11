@@ -8,7 +8,7 @@ export const MobileNav: React.FC = () => {
   const { t } = useLanguage();
   const location = useLocation();
 
-  const handleNavClick = (path: string, e: React.MouseEvent) => {
+  const handleNavClick = (path: string) => {
     // If we're already on this path, scroll to top
     if (location.pathname === path) {
       window.scrollTo({
@@ -37,7 +37,7 @@ export const MobileNav: React.FC = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={(e) => handleNavClick(item.path, e)}
+            onClick={() => handleNavClick(item.path)}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1.5 py-1 transition-all duration-300 ${
                 isActive
