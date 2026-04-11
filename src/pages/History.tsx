@@ -326,8 +326,8 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified List Header: Master Marker (Lowest Z-index among sticky headers) */}
-      <div className="sticky top-[68px] z-10 flex items-center gap-3 pt-2 pb-2 bg-background backdrop-blur-xl -mx-6 px-6 border-b border-white/5 shadow-2xl">
+      {/* Unified List Header: Master Marker (Clean - No bottom border) */}
+      <div className="sticky top-[68px] z-10 flex items-center gap-3 pt-2 pb-2 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl">
         <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
           {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
         </h3>
@@ -408,7 +408,7 @@ export const History: React.FC = () => {
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div className="sticky top-[68px] z-20 flex items-center gap-4 py-2 bg-background backdrop-blur-xl -mx-6 px-6 border-b border-white/10 shadow-2xl">
+                    <div className="sticky top-[68px] z-20 flex items-center gap-4 py-2 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl">
                       <div className="h-px flex-grow bg-white/10" />
                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/10 shadow-lg">
                         {(() => {
