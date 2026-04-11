@@ -297,3 +297,32 @@ create index if not exists idx_binary_trades_status on public.binary_trades(stat
 create index if not exists idx_portfolio_user_id on public.portfolio(user_id);
 create index if not exists idx_user_login_history_user_id on public.user_login_history(user_id);
 create index if not exists idx_push_subs_user_id on public.push_subscriptions(user_id);
+
+-- ============================================================
+-- STEP 7: BACKGROUND SETTLEMENT (Edge Functions & pg_cron)
+-- ============================================================
+-- 
+-- IMPORTANT: To enable 24/7 automated trade resolution, you must:
+-- 1. Deploy the Edge Function:
+--    npx supabase functions deploy resolve-trades --no-verify-jwt
+-- 
+-- 2. Configure Environment Variables in Supabase Dashboard (Settings > Edge Functions):
+--    EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY, EMAILJS_TEMPLATE_WIN_ID
+-- 
+-- 3. Run the following SQL to enable the cron job:
+/*
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+select cron.unschedule('resolve-binary-trades-every-minute');
+select cron.schedule(
+  'resolve-binary-trades-every-minute',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := 'https://[YOUR_PROJECT_REF].supabase.co/functions/v1/resolve-trades',
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+*/

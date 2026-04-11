@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
-import { emailService } from "../services/emailService";
 import { useLanguage } from "./LanguageContext";
 
 export interface Transaction {
@@ -63,7 +62,7 @@ interface WalletContextType {
   refreshWallet: () => Promise<void>;
 }
 
-import { marketService } from "../services/marketService";
+
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
@@ -285,22 +284,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
             })
           );
 
-          // Send win email notification (if won)
-          if (won) {
-            const durationMs = Number(trade.expiry_time) - new Date(trade.created_at).getTime();
-            const durationMinutes = Math.round(durationMs / 60000);
-            emailService.sendWinNotification({
-              email: profile.email || user.email || '',
-              userName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
-              amount: Number(trade.amount),
-              payout,
-              assetSymbol: trade.asset_symbol,
-              orderId: trade.id.slice(-4).toUpperCase(),
-              durationMinutes,
-              payoutPercent: Number(trade.payout_percent),
-              lang: language,
-            });
-          }
+          // Note: WIN emails are now handled exclusively by Supabase Edge Functions in the background.
           
           notifiedIds.push(trade.id);
           newNotifications++;
@@ -384,22 +368,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
               })
             );
 
-            // Send win email notification (fire & forget)
-            if (won && user && profile) {
-              const durationMs = Number(updatedTrade.expiry_time) - new Date(updatedTrade.created_at).getTime();
-              const durationMinutes = Math.round(durationMs / 60000);
-              emailService.sendWinNotification({
-                email: profile.email || user.email || '',
-                userName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
-                amount: Number(updatedTrade.amount),
-                payout,
-                assetSymbol: updatedTrade.asset_symbol,
-                orderId: updatedTrade.id.slice(-4).toUpperCase(),
-                durationMinutes,
-                payoutPercent: Number(updatedTrade.payout_percent),
-                lang: language,
-              });
-            }
+            // Note: Backend Edge Function sends email notifications.
 
             // Update local balance and trades
             refreshProfile(); // Backend already updated the DB, so we just refresh
@@ -429,12 +398,13 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
     init();
   }, [loadData, reconcileSettledTrades]);
 
-  // --- Frontend Fallback: Resolve expired trades when app is open ---
+  // --- Frontend Fallback to Trigger Edge Function & Poll ---
+  // If `pg_cron` fails, the frontend manually pings the Edge Function.
+  // We also poll the DB directly to see if trades resolved, in case Realtime is disabled.
   useEffect(() => {
     if (activeBinaryTrades.length === 0 || !user) return;
 
     const interval = setInterval(async () => {
-      // ONLY run if there are pending trades that have actually expired
       const now = Date.now();
       const expiredTrades = activeBinaryTrades.filter(
         (t) => now >= t.expiryTime && (t.status === "pending" || t.status === "active"),
@@ -442,129 +412,63 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
 
       if (expiredTrades.length === 0) return;
 
-      // console.log(`[WalletContext] Found ${expiredTrades.length} expired trades to resolve.`);
-      
-      for (const trade of expiredTrades) {
-        // Skip if already being processed (prevents duplicate processing)
-        if (processingTradeIds.current.has(trade.id)) continue;
-        processingTradeIds.current.add(trade.id);
-
-        // Remove from active list immediately
-        setActiveBinaryTrades((prev) => prev.filter((t) => t.id !== trade.id));
-
+      const newExpired = expiredTrades.filter(t => !processingTradeIds.current.has(t.id));
+      if (newExpired.length > 0) {
+        newExpired.forEach(t => processingTradeIds.current.add(t.id));
         try {
-          // Check if backend already resolved this trade
-          const { data: dbTrade } = await supabase
-            .from("binary_trades")
-            .select("status")
-            .eq("id", trade.id)
-            .single();
-
-          if (dbTrade && (dbTrade.status === "won" || dbTrade.status === "lost")) {
-            // Backend already resolved - just refresh UI
-            await refreshProfile();
-            await loadData();
-            processingTradeIds.current.delete(trade.id);
-            continue;
-          }
-
-          // Fetch current price
-          const result = await marketService.fetchSymbolPrice(trade.assetSymbol);
-          if (!result || typeof result.price !== "number") {
-            console.warn(`[WalletContext] Could not fetch price for ${trade.assetSymbol}, refunding.`);
-            
-            // --- ATOMIC REFUND VIA RPC ---
-            const { data: refundRes, error: refundErr } = await supabase.rpc('refund_binary_trade', {
-              p_trade_id: trade.id
-            });
-
-            if (refundErr || !refundRes?.success) {
-              console.error(`[WalletContext] Atomic refund failed for ${trade.id}:`, refundErr || refundRes?.message);
-            } else {
-              console.log(`[WalletContext] Atomic refund successful for ${trade.id}`);
-              await refreshProfile();
-            }
-            
-            processingTradeIds.current.delete(trade.id);
-            continue;
-          }
-
-          const currentPrice = result.price;
-          let won = false;
-          if (trade.type === "up" && currentPrice > trade.entryPrice) won = true;
-          if (trade.type === "down" && currentPrice < trade.entryPrice) won = true;
-
-          const payout = won
-            ? trade.amount + (trade.amount * trade.payoutPercent) / 100
-            : 0;
-          const tradeStatus = won ? "won" : "lost";
-
-          // --- ATOMIC RESOLUTION VIA RPC ---
-          // This ensures only ONE resolver (across all tabs/backend) can settle this trade.
-          const { data: rpcRes, error: rpcErr } = await supabase.rpc('resolve_binary_trade', {
-            p_trade_id: trade.id,
-            p_new_status: tradeStatus,
-            p_result_price: currentPrice,
-            p_payout_amount: payout
-          });
-
-          if (rpcErr) {
-            console.error(`[WalletContext] Atomic resolution failed for ${trade.id}:`, rpcErr);
-            processingTradeIds.current.delete(trade.id);
-            continue;
-          }
-
-          // rpcRes is the JSONB returned from the function: {success: boolean, message: string}
-          if (rpcRes && rpcRes.success) {
-            // SUCCESS: This was the first resolver to complete
-            await refreshProfile();
-            await loadData();
-
-            // Trigger winner/loser modal
-            window.dispatchEvent(
-              new CustomEvent("binary-trade-result", {
-                detail: {
-                  won,
-                  assetSymbol: trade.assetSymbol,
-                  amount: trade.amount,
-                  payout: won ? payout : 0,
-                },
-              }),
-            );
-
-            // Send win email notification (fire & forget)
-            if (won && user && profile) {
-              const durationMinutes = Math.round((trade.expiryTime - trade.startTime) / 60000);
-              emailService.sendWinNotification({
-                email: profile.email || user.email || '',
-                userName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
-                amount: trade.amount,
-                payout,
-                assetSymbol: trade.assetSymbol,
-                orderId: trade.id.slice(-4).toUpperCase(),
-                direction: trade.type,
-                durationMinutes,
-                payoutPercent: trade.payoutPercent,
-                lang: language,
-              });
-            }
-          } else {
-            // FAILED: Another tab or the backend already resolved this trade
-            console.log(`[WalletContext] Trade ${trade.id} was already resolved by another process.`);
-            await loadData(); // Refresh list to remove the trade
-          }
-
+          // Ping the edge function to wake it up
+          const { error } = await supabase.functions.invoke('resolve-trades');
+          if (error) console.error(`[WalletContext] Func Invoke Error:`, error);
         } catch (err) {
-          console.error(`[WalletContext] Error resolving binary trade:`, err);
-        } finally {
-          processingTradeIds.current.delete(trade.id);
+          console.error(`[WalletContext] Error invoking Edge Function:`, err);
         }
       }
-    }, 1000); // 1.0 seconds checking interval (was 10s)
+
+      // Poll the DB to check if ANY of our expired trades got resolved by the backend
+      const expiredTradeIds = expiredTrades.map(t => t.id);
+      const { data: dbTrades } = await supabase
+        .from('binary_trades')
+        .select('id, status, amount, payout_percent, asset_symbol')
+        .in('id', expiredTradeIds);
+        
+      if (dbTrades) {
+         let resolvedCount = 0;
+         dbTrades.forEach(dbTrade => {
+            if (dbTrade.status === 'won' || dbTrade.status === 'lost') {
+                const won = dbTrade.status === 'won';
+                const payout = won 
+                  ? Number(dbTrade.amount) + (Number(dbTrade.amount) * Number(dbTrade.payout_percent)) / 100 
+                  : 0;
+
+                // Fire modal event
+                window.dispatchEvent(
+                  new CustomEvent("binary-trade-result", {
+                    detail: {
+                      won,
+                      assetSymbol: dbTrade.asset_symbol,
+                      amount: Number(dbTrade.amount),
+                      payout: won ? payout : 0, 
+                    },
+                  })
+                );
+
+                // Update UI state immediately
+                setActiveBinaryTrades(prev => prev.filter(t => t.id !== dbTrade.id));
+                resolvedCount++;
+                processingTradeIds.current.delete(dbTrade.id);
+            }
+         });
+         
+         if (resolvedCount > 0) {
+             refreshProfile();
+             loadData();
+         }
+      }
+
+    }, 2000);
 
     return () => clearInterval(interval);
-  }, [activeBinaryTrades, user]);
-
+  }, [activeBinaryTrades, user, refreshProfile, loadData]);
 
   // --- Trade Handler ---
   const handleTrade = async (
