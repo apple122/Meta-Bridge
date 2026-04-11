@@ -80,4 +80,23 @@
 *   **สถานะ KYC:** แสดงเป็นตัวพิมพ์ใหญ่ `UNVERIFIED` เพื่อความชัดเจนยิ่งขึ้น
 
 ---
-**ทีมพัฒนา:** Antigravity AI (Google DeepMind Team)
+ 
+ ## 🌐 ระบบสลับภาษาและการแจ้งเตือนอัปเกรด (Multi-language & Smart Localization)
+ *   **Database Language Sync:** ระบบจะจดจำการเลือกภาษา (ไทย/อังกฤษ) ของผู้ใช้ลงในฐานข้อมูล Profile โดยอัตโนมัติ เพื่อให้ระบบหลังบ้านส่งเมลแจ้งเตือนได้ถูกต้องตามภาษาที่คุณชอบ
+ *   **Localized Win Notifications:** อีเมลฉลองชัยชนะ (Win Celebration) อัปเกรดให้รองรับภาษาไทย 100% โดยอ้างอิงจากภาษาที่ผู้ใช้เลือกในแอป
+ *   **Global Default Language:** ปรับเปลี่ยนค่าเริ่มต้นของแอปพลิเคชันทั้งหมดให้เป็น **ภาษาอังกฤษ (English)** ตามความต้องการล่าสุด โดยยังคงรักษาความสามารถในการสลับเป็นภาษาไทยได้ทุกเมื่อ
+ *   **Case-Insensitive Template Parameters:** ปรับปรุงความเสถียรของการส่งข้อมูลไปยัง EmailJS ให้รองรับทั้งตัวแปรแบบตัวเล็ก (`email_body`) และตัวใหญ่ (`EMAIL_BODY`) เพื่อให้ทำงานร่วมกับเทมเพลตของคุณได้อย่างไม่มีข้อผิดพลาด
+ 
+ ---
+ 
+ ## 🛠️ ขั้นตอนหลังการอัปเกรด (Post-Upgrade Steps)
+ *   **SQL Update Required:** ผู้ดูแลระบบต้องรัน SQL เพื่อเพิ่มคอลัมน์เก็บภาษา:
+     ```sql
+     ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS language text DEFAULT 'en';
+     ```
+ *   **Edge Function Redeploy:** รัน `npx supabase functions deploy resolve-trades --no-verify-jwt` เพื่อเปิดใช้งานระบบเมลภาษาไทยในขั้นตอนตัดสินผล
+ 
+ ---
+ 
+ **ทีมพัฒนา:** Antigravity AI (Google DeepMind Team)
+ 

@@ -70,6 +70,7 @@ create table public.profiles (
   avatar_url text,
   balance decimal(18,2) default 0.00,
   is_admin boolean default false,
+  language text default 'en',
   updated_at timestamp with time zone default now(),
   created_at timestamp with time zone default now(),
   
