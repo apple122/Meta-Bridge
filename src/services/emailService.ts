@@ -108,7 +108,7 @@ export const emailService = {
   /**
    * Sends a 6-digit OTP to the specified email using EmailJS.
    */
-  sendOTP: async ({ email, code, userName, lang = "th", type = "verification" }: SendOptions): Promise<boolean> => {
+  sendOTP: async ({ email, code, userName, lang = "en", type = "verification" }: SendOptions): Promise<boolean> => {
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -119,7 +119,7 @@ export const emailService = {
         return false;
       }
 
-      const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
       
       let subject = t.verification_subject;
       let body = t.body;
@@ -170,7 +170,7 @@ export const emailService = {
   /**
    * Sends a deposit confirmation notification email.
    */
-  sendDepositNotification: async ({ email, userName, amount, lang = "th" }: NotifyDepositOptions): Promise<boolean> => {
+  sendDepositNotification: async ({ email, userName, amount, lang = "en" }: NotifyDepositOptions): Promise<boolean> => {
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_DEPOSIT_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -181,7 +181,7 @@ export const emailService = {
         return false;
       }
 
-      const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
       const formattedAmount = `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
       await emailjs.send(
@@ -223,7 +223,7 @@ export const emailService = {
   /**
    * Sends a win celebration notification email.
    */
-  sendWinNotification: async ({ email, userName, amount, payout, assetSymbol, orderId, direction, durationMinutes, payoutPercent, lang = "th" }: NotifyWinOptions): Promise<boolean> => {
+  sendWinNotification: async ({ email, userName, amount, payout, assetSymbol, orderId, direction, durationMinutes, payoutPercent, lang = "en" }: NotifyWinOptions): Promise<boolean> => {
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_WIN_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -234,7 +234,7 @@ export const emailService = {
         return false;
       }
 
-      const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
       const formattedPayout = `$${payout.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
       const formattedStake = `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
       const formattedProfit = `$${(payout - amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
