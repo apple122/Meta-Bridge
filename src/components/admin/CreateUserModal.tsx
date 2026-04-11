@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { X, Shield } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { AdminInput } from "./AdminInput";
-import { hashPassword } from "../../utils/security";
+import { encryptPassword } from "../../utils/security";
+import { generateUserCode } from "../../utils/userUtils";
 
 interface CreateUserModalProps {
   onClose: () => void;
@@ -28,7 +29,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     setError("");
 
     try {
-      const hashedPassword = await hashPassword(formData.password);
       const { data: _data, error: registerError } = await supabase
         .from("profiles")
         .insert([{
@@ -37,10 +37,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
-          password: hashedPassword,
+          password: encryptPassword(formData.password),
           is_verified: true,
           balance: 0,
           is_admin: false,
+          code: generateUserCode(),
           updated_at: new Date().toISOString(),
         }])
         .select().single();

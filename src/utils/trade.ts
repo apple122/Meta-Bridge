@@ -6,8 +6,9 @@ export const getAssetCategory = (symbol: string): string => {
   const cryptoAssets = ["BTC", "ETH", "USDT", "BNB", "SOL", "DOGE"];
   const commodityAssets = ["GOLD", "SILVER"];
   
-  if (cryptoAssets.includes(symbol)) return "crypto";
-  if (commodityAssets.includes(symbol)) return "commodity";
+  const upperSymbol = symbol.toUpperCase();
+  if (cryptoAssets.some(asset => upperSymbol.includes(asset))) return "crypto";
+  if (commodityAssets.some(asset => upperSymbol.includes(asset))) return "commodity";
   return "stock";
 };
 
@@ -27,8 +28,8 @@ export const getTransactionTypeLabel = (type: string, hasAsset: boolean = true):
   if (!hasAsset) return type.toUpperCase();
   
   switch (type) {
-    case 'deposit': return 'WIN';
-    case 'withdraw': return 'LOSS';
+    case 'deposit': return 'DEPOSIT';
+    case 'withdraw': return 'WITHDRAW';
     case 'buy': return 'BUY';
     case 'sell': return 'SELL';
     default: return type.toUpperCase();

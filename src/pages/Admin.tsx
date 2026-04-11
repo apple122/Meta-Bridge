@@ -399,6 +399,7 @@ export const Admin: React.FC = () => {
                 <div className="md:col-span-1">
                   <AdminInput
                     label="รหัสผ่าน"
+                    type="password"
                     value={editingProfile.password || ""}
                     onChange={(val) =>
                       setEditingProfile({ ...editingProfile, password: val })

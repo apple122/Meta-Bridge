@@ -180,8 +180,18 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           }
         });
 
-        // 4. Sort back to newest first for the UI
-        setTransactions(processed.filter(t => t.type !== 'win' && t.type !== 'loss').sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+        // 4. Sort back to newest first for the UI (with ID tie-breaker)
+        setTransactions(
+          processed
+            .filter(t => t.type !== 'win' && t.type !== 'loss')
+            .sort((a, b) => {
+              const timeA = new Date(a.timestamp).getTime();
+              const timeB = new Date(b.timestamp).getTime();
+              if (timeA !== timeB) return timeB - timeA;
+              // Secondary sort by ID in descending order for transactions in the same millisecond or second
+              return b.id.localeCompare(a.id);
+            })
+        );
       }
 
       // Load portfolio

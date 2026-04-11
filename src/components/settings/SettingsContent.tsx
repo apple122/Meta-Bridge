@@ -13,6 +13,12 @@ import {
   Bell,
   BellOff,
   AlertCircle,
+  CheckCircle,
+  X,
+  User,
+  Smartphone,
+  Tablet,
+  Monitor,
 } from "lucide-react";
 import { 
   getNotificationPermissionStatus, 
@@ -23,7 +29,24 @@ import { SettingsInput } from "./SettingsInput";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
-import { Check, Globe } from "lucide-react";
+import { encryptPassword, comparePassword } from "../../utils/security";
+import { Check, Globe, Zap, Cpu } from "lucide-react";
+
+const THAI_BANKS = [
+  { id: 'KBank', name: 'Kasikorn Bank', nameTh: 'ธนาคารกสิกรไทย', color: '#00A950', icon: 'K' },
+  { id: 'SCB', name: 'Siam Commercial Bank', nameTh: 'ธนาคารไทยพาณิชย์', color: '#4E2E7F', icon: 'S' },
+  { id: 'BBL', name: 'Bangkok Bank', nameTh: 'ธนาคารกรุงเทพ', color: '#1E4595', icon: 'B' },
+  { id: 'KTB', name: 'Krungthai Bank', nameTh: 'ธนาคารกรุงไทย', color: '#00A1E0', icon: 'KTB' },
+  { id: 'Krungsri', name: 'Krungsri Bank', nameTh: 'ธนาคารกรุงศรีอยุธยา', color: '#FFD700', icon: 'KS' },
+  { id: 'TTB', name: 'ttb bank', nameTh: 'ธนาคารทหารไทยธนชาต', color: '#001E62', icon: 'ttb' },
+  { id: 'GSB', name: 'Government Savings Bank', nameTh: 'ธนาคารออมสิน', color: '#EC068D', icon: 'GSB' },
+];
+
+const CRYPTO_NETWORKS = [
+  { id: 'TRC-20', name: 'USDT (TRC-20)', desc: 'Tron Network (Low Fee)', color: '#FF0013' },
+  { id: 'ERC-20', name: 'USDT (ERC-20)', desc: 'Ethereum Network', color: '#627EEA' },
+  { id: 'BEP-20', name: 'USDT (BEP-20)', desc: 'Binance Smart Chain', color: '#F3BA2F' },
+];
 
 interface SettingsContentProps {
   activeTab: "profile" | "bank" | "security" | "history" | "notifications" | "language";
@@ -49,9 +72,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   refreshProfile,
   transactions = [],
 }) => {
-  const {  } = useLanguage();
+  const { language } = useLanguage();
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
   
   // Password States
   const [currentPassword, setCurrentPassword] = useState("");
@@ -60,6 +82,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [isChangingPassword, setIsChangingPassword] = useState(() => {
     return sessionStorage.getItem("settings_is_changing_password") === "true";
   });
+
+  // Notification System
+  const [notifications, setNotifications] = useState<{ id: string; message: string; type: 'success' | 'error' }[]>([]);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 4000);
+  };
   
   React.useEffect(() => {
     sessionStorage.setItem("settings_is_changing_password", isChangingPassword.toString());
@@ -79,7 +112,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   }, [isOtpFlow, otpStep]);
 
   const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
 
   // Email States
@@ -97,6 +129,59 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [isLoginHistoryFlow, setIsLoginHistoryFlow] = useState(false);
   const [loginHistoryList, setLoginHistoryList] = useState<any[]>([]);
   const [isLoginHistoryLoading, setIsLoginHistoryLoading] = useState(false);
+  
+  // Bank 2.0 States
+  const [bankType, setBankType] = useState<"bank" | "crypto">(() => {
+    const net = profileData.bank_network?.toUpperCase() || "";
+    return (net.includes("RC-") || net.includes("EP-")) ? "crypto" : "bank";
+  });
+  const [tempBankNetwork, setTempBankNetwork] = useState(profileData.bank_network);
+  const [tempBankName, setTempBankName] = useState(profileData.bank_name);
+  const [tempBankAccount, setTempBankAccount] = useState(profileData.bank_account);
+
+  // Validation functions
+  const getAccountError = () => {
+    if (!tempBankAccount) return "";
+    
+    if (bankType === "bank") {
+      const digitsOnly = tempBankAccount.replace(/[^0-9]/g, "");
+      if (digitsOnly.length !== tempBankAccount.length) {
+        return language === "th" ? "เลขบัญชีต้องเป็นตัวเลขเท่านั้น" : "Account number must contain only digits";
+      }
+      if (tempBankAccount.length < 10 || tempBankAccount.length > 12) {
+        return language === "th" ? "เลขบัญชีธนาคารปกติจะมี 10-12 หลัก" : "Bank accounts are usually 10-12 digits";
+      }
+    } else {
+      if (tempBankNetwork === "TRC-20") {
+        if (!tempBankAccount.startsWith("T")) {
+          return language === "th" ? "ที่อยู่ TRC-20 ต้องขึ้นต้นด้วย 'T'" : "TRC-20 address must start with 'T'";
+        }
+        if (tempBankAccount.length !== 34) {
+          return language === "th" ? "ที่อยู่ TRC-20 ต้องมีความยาว 34 ตัวอักษร" : "TRC-20 address must be 34 characters long";
+        }
+      } else if (tempBankNetwork === "ERC-20" || tempBankNetwork === "BEP-20") {
+        if (!tempBankAccount.startsWith("0x")) {
+          return language === "th" ? "ที่อยู่ต้องขึ้นต้นด้วย '0x'" : "Address must start with '0x'";
+        }
+        if (tempBankAccount.length !== 42) {
+          return language === "th" ? "ที่อยู่ต้องมีความยาว 42 ตัวอักษร" : "Address must be 42 characters long";
+        }
+      }
+    }
+    return "";
+  };
+
+  const accountError = getAccountError();
+
+  React.useEffect(() => {
+    if (activeTab === "bank") {
+      setTempBankNetwork(profileData.bank_network);
+      setTempBankName(profileData.bank_name);
+      setTempBankAccount(profileData.bank_account);
+      const net = profileData.bank_network?.toUpperCase() || "";
+      setBankType((net.includes("RC-") || net.includes("EP-")) ? "crypto" : "bank");
+    }
+  }, [activeTab, profileData]);
   
   React.useEffect(() => {
     if (isLoginHistoryFlow && userId) {
@@ -118,38 +203,55 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [newEmail, setNewEmail] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
   const [emailLoading, setEmailLoading] = useState(false);
-  const [emailError, setEmailError] = useState("");
 
   // Notification States
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(getNotificationPermissionStatus());
 
   const handleSave = async () => {
     if (!userId) return;
+    
+    // Basic Validation
+    if (!profileData.first_name?.trim() || !profileData.last_name?.trim()) {
+      const fallbackMsg = language === "th" ? "กรุณาระบุชื่อและนามสกุล" : "First name and last name are required";
+      showToast(t("nameRequired") !== "nameRequired" ? t("nameRequired") : fallbackMsg, "error");
+      return;
+    }
+
+    if (profileData.username && profileData.username.length < 3) {
+      showToast(t("usernameTooShort") || "Username must be at least 3 characters", "error");
+      return;
+    }
+
     setIsSaving(true);
-    setSaveMessage("");
     try {
       const { error } = await supabase
         .from("profiles")
         .update({
-          first_name: profileData.first_name,
-          last_name: profileData.last_name,
-          username: profileData.username,
-          phone_number: profileData.phone_number,
-          address: profileData.address,
-          bank_network: profileData.bank_network,
-          bank_account: profileData.bank_account,
-          bank_name: profileData.bank_name,
+          first_name: profileData.first_name.trim(),
+          last_name: profileData.last_name.trim(),
+          // full_name: `${profileData.first_name.trim()} ${profileData.last_name.trim()}`, // Database column missing
+          username: profileData.username?.trim(),
+          phone_number: profileData.phone_number?.trim(),
+          address: profileData.address?.trim(),
+          bank_network: profileData.bank_network?.trim(),
+          bank_account: profileData.bank_account?.trim(),
+          bank_name: profileData.bank_name?.trim(),
         })
         .eq("id", userId);
 
-      if (error) throw error;
-
+      if (error) {
+        // Handle specific unique constraint error for username
+        if (error.code === "23505" || error.message?.includes("unique")) {
+          throw new Error(t("usernameTaken") || "This username is already taken");
+        }
+        console.error("[Settings] handleSave Error Object:", error);
+        throw error;
+      };
+      
+      showToast(t("saveSuccess") || "Settings saved successfully", "success");
       await refreshProfile();
-      setSaveMessage("Saved successfully!");
-      setTimeout(() => setSaveMessage(""), 3000);
-    } catch (err) {
-      console.error(err);
-      setSaveMessage("Error saving data");
+    } catch (err: any) {
+      showToast(err.message || "Failed to save settings", "error");
     } finally {
       setIsSaving(false);
     }
@@ -161,17 +263,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleNormalPasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
-      setSaveMessage("Passwords do not match");
+      showToast("Passwords do not match", "error");
       return;
     }
     if (newPassword.length < 6) {
-      setSaveMessage("Password must be at least 6 characters");
+      showToast("Password must be at least 6 characters", "error");
       return;
     }
 
     setIsSaving(true);
-    setSaveMessage("");
-
     try {
       if (!userId) throw new Error("You must be logged in to change your password");
 
@@ -183,27 +283,24 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         
       if (fetchError || !userProfile) throw new Error("User not found");
       
-      if (userProfile.password !== currentPassword) {
+      if (!(await comparePassword(currentPassword, userProfile.password))) {
         throw new Error("Current password incorrect");
       }
       
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ password: newPassword })
+        .update({ password: encryptPassword(newPassword) })
         .eq("id", userId);
         
       if (updateError) throw updateError;
 
-      setSaveMessage("Password updated successfully!");
+      showToast("Password updated successfully!", "success");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setTimeout(() => {
-        setSaveMessage("");
-        setIsChangingPassword(false);
-      }, 3000);
+      setIsChangingPassword(false);
     } catch (err: any) {
-      setSaveMessage(err.message || "Error updating password");
+      showToast(err.message || "Error updating password", "error");
     } finally {
       setIsSaving(false);
     }
@@ -211,11 +308,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleSendOtp = async () => {
     if (!profileData.email) {
-      setOtpError("Email not found. Please refresh the page.");
+      showToast("Email not found. Please refresh the page.", "error");
       return;
     }
     setOtpLoading(true);
-    setOtpError("");
     try {
       const code = generateOTP();
       const expires_at = new Date(Date.now() + 10 * 60000).toISOString();
@@ -235,8 +331,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       });
 
       setOtpStep("verify");
+      showToast("Verification code sent!", "success");
     } catch (err: any) {
-      setOtpError(err.message || "Failed to send OTP");
+      showToast(err.message || "Failed to send OTP", "error");
     } finally {
       setOtpLoading(false);
     }
@@ -244,7 +341,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleVerifyOtp = async () => {
     setOtpLoading(true);
-    setOtpError("");
     try {
        const { data, error } = await supabase
         .from("profiles")
@@ -260,7 +356,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
       setOtpStep("new_password");
     } catch (err: any) {
-      setOtpError(err.message || "Invalid or expired OTP");
+      showToast(err.message || "Invalid or expired OTP", "error");
     } finally {
       setOtpLoading(false);
     }
@@ -268,25 +364,24 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleOtpPasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
-      setOtpError("Passwords do not match");
+      showToast("Passwords do not match", "error");
       return;
     }
     setOtpLoading(true);
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ password: newPassword, otp_code: null })
+        .update({ password: encryptPassword(newPassword), otp_code: null })
         .eq("id", userId);
 
       if (error) throw error;
-      setSaveMessage(t("passwordChanged"));
+      showToast(t("passwordChanged"), "success");
       setIsOtpFlow(false);
       setOtpStep("request");
       setNewPassword("");
       setConfirmPassword("");
-      setTimeout(() => setSaveMessage(""), 3000);
     } catch (err: any) {
-      setOtpError(err.message || "Error resetting password");
+      showToast(err.message || "Error resetting password", "error");
     } finally {
       setOtpLoading(false);
     }
@@ -294,7 +389,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleSendOldEmailOtp = async () => {
     setEmailLoading(true);
-    setEmailError("");
     try {
       const code = generateOTP();
       const expires_at = new Date(Date.now() + 10 * 60000).toISOString();
@@ -310,8 +404,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         type: 'change_email'
       });
       setEmailOtpStep("verify_old");
+      showToast("Verification code sent!", "success");
     } catch (err: any) {
-      setEmailError(err.message || "Failed to send code");
+      showToast(err.message || "Failed to send code", "error");
     } finally {
       setEmailLoading(false);
     }
@@ -319,7 +414,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleVerifyOldEmailOtp = async () => {
     setEmailLoading(true);
-    setEmailError("");
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -340,7 +434,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       setEmailOtpStep("new_email");
       setEmailOtp("");
     } catch (err: any) {
-      setEmailError(err.message || "Invalid or expired OTP");
+      showToast(err.message || "Invalid or expired OTP", "error");
     } finally {
       setEmailLoading(false);
     }
@@ -348,11 +442,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleSendEmailOtp = async () => {
     if (!newEmail || !newEmail.includes("@")) {
-      setEmailError("Please enter a valid email address.");
+      showToast("Please enter a valid email address.", "error");
       return;
     }
     setEmailLoading(true);
-    setEmailError("");
     try {
       const code = generateOTP();
       const expires_at = new Date(Date.now() + 10 * 60000).toISOString();
@@ -368,8 +461,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         type: 'change_email'
       });
       setEmailOtpStep("verify_new");
+      showToast("Verification code sent to new email!", "success");
     } catch (err: any) {
-      setEmailError(err.message || "Failed to send code");
+      showToast(err.message || "Failed to send code", "error");
     } finally {
       setEmailLoading(false);
     }
@@ -377,7 +471,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleVerifyEmailOtp = async () => {
     setEmailLoading(true);
-    setEmailError("");
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -396,14 +489,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       if (updateError) throw updateError;
       
       setProfileData((prev: any) => ({...prev, email: newEmail}));
-      setSaveMessage(t("emailUpdated"));
+      showToast(t("emailUpdated"), "success");
       setIsEmailFlow(false);
       setEmailOtpStep("request_old");
       setNewEmail("");
       setEmailOtp("");
-      setTimeout(() => setSaveMessage(""), 3000);
     } catch (err: any) {
-      setEmailError(err.message || "Invalid or expired OTP");
+      showToast(err.message || "Invalid or expired OTP", "error");
     } finally {
       setEmailLoading(false);
     }
@@ -415,14 +507,44 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   };
 
   return (
-    <AnimatePresence mode="wait">
-      {activeTab === "profile" && (
+    <>
+      <div className="fixed top-20 right-6 z-[200] space-y-3 pointer-events-none">
+        <AnimatePresence>
+          {notifications.map((n) => (
+            <motion.div
+              key={n.id}
+              initial={{ opacity: 0, x: 50, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 20, scale: 0.9 }}
+              className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto backdrop-blur-xl border ${
+                n.type === "success" 
+                  ? "bg-green-500/10 border-green-500/20 text-green-500" 
+                  : "bg-red-500/10 border-red-500/20 text-red-500"
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${n.type === "success" ? "bg-green-500/20" : "bg-red-500/20"}`}>
+                {n.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+              </div>
+              <span className="font-bold text-sm">{n.message}</span>
+              <button 
+                onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
+                className="ml-2 hover:opacity-70 transition-opacity"
+              >
+                <X size={14} />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {activeTab === "profile" && (
         <motion.div
           key="profile"
           initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card space-y-8 relative"
+          className="glass-card relative"
         >
           {isMobile && (
             <button
@@ -433,66 +555,67 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </button>
           )}
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-primary/20">
-              {profileData.first_name && profileData.last_name
-                ? `${profileData.first_name[0]}${profileData.last_name[0]}`.toUpperCase()
-                : (profileData.username || "AC").slice(0, 2).toUpperCase()}
+            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+              <User size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white">
-                {t("verification")}
-              </h2>
-              <p className="text-slate-400 text-sm">
-                {t("managePersonalInfo")}
-              </p>
+              <h2 className="text-2xl font-black text-white">{t("verification")}</h2>
+              <p className="text-slate-400 text-sm">{t("managePersonalInfo")}</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SettingsInput
-              label={t("firstName")}
-              placeholder="John"
-              value={profileData.first_name}
-              onChange={(e) => updateField("first_name", e.target.value)}
-            />
-            <SettingsInput
-              label={t("lastName")}
-              placeholder="Doe"
-              value={profileData.last_name}
-              onChange={(e) => updateField("last_name", e.target.value)}
-            />
-            <SettingsInput
-              label={t("username")}
-              placeholder="johndoe123"
-              value={profileData.username}
-              onChange={(e) => updateField("username", e.target.value)}
-            />
-            <SettingsInput
-              label={t("phone")}
-              placeholder="08x-xxx-xxxx"
-              value={profileData.phone_number}
-              onChange={(e) => updateField("phone_number", e.target.value)}
-            />
-            <div className="md:col-span-2">
-              <SettingsInput
-                label={t("address")}
-                placeholder="123 Example St."
-                value={profileData.address}
-                onChange={(e) => updateField("address", e.target.value)}
-              />
-            </div>
-          </div>
+          <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-8 mt-8">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SettingsInput
+                  label={t("firstName")}
+                  placeholder="สมชาย"
+                  value={profileData.first_name}
+                  onChange={(e) => updateField("first_name", e.target.value)}
+                />
+                <SettingsInput
+                  label={t("lastName")}
+                  placeholder="ใจดี"
+                  value={profileData.last_name}
+                  onChange={(e) => updateField("last_name", e.target.value)}
+                />
+              </div>
 
-          <div className="flex justify-between items-center pt-6 border-t border-white/5">
-            <div className="text-sm font-bold text-green-500">
-              {saveMessage}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SettingsInput
+                  label={t("username")}
+                  placeholder="somchai123"
+                  value={profileData.username}
+                  onChange={(e) => updateField("username", e.target.value)}
+                />
+                <SettingsInput
+                  label={t("phone")}
+                  placeholder="08x-xxx-xxxx"
+                  value={profileData.phone_number}
+                  onChange={(e) => updateField("phone_number", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <SettingsInput
+                  label={t("address")}
+                  placeholder="123 Example St."
+                  value={profileData.address}
+                  onChange={(e) => updateField("address", e.target.value)}
+                />
+              </div>
             </div>
-            <div className="flex justify-end gap-3">
-              <button className="px-6 py-2 rounded-xl bg-white/5 text-slate-400 font-bold text-sm hover:text-white transition-colors">
+
+            <div className="flex justify-end items-center pt-6 border-t border-white/5 gap-3">
+              <button
+                type="button"
+                onClick={() => refreshProfile()}
+                className="px-6 py-2 rounded-xl bg-white/5 text-slate-400 font-bold text-sm hover:text-white transition-colors"
+              >
                 {t("discard")}
               </button>
               <button
-                onClick={handleSave}
+                type="submit"
                 disabled={isSaving}
                 className="px-6 py-2 rounded-xl bg-primary text-white font-bold text-sm flex items-center gap-2 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
               >
@@ -504,7 +627,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 {t("save")}
               </button>
             </div>
-          </div>
+          </form>
         </motion.div>
       )}
 
@@ -524,64 +647,180 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <ChevronRight className="rotate-180" size={24} />
             </button>
           )}
+
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
             <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent">
               <Landmark size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white">
-                {t("bankDetails")}
-              </h2>
-              <p className="text-slate-400 text-sm">
-                {t("bankDescription")}
-              </p>
+              <h2 className="text-2xl font-black text-white">{t("bankDetails")}</h2>
+              <p className="text-slate-400 text-sm">{t("bankDescription")}</p>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <SettingsInput
-              label={t("network")}
-              placeholder="e.g. ERC-20, BEP-20, Regional Bank"
-              value={profileData.bank_network}
-              onChange={(e) => updateField("bank_network", e.target.value)}
-            />
-            <SettingsInput
-              label={t("accountAddress")}
-              placeholder="Paste your wallet address or account number"
-              value={profileData.bank_account}
-              onChange={(e) => updateField("bank_account", e.target.value)}
-            />
-            <SettingsInput
-              label={t("accountName")}
-              placeholder="Full name on account"
-              value={profileData.bank_name}
-              onChange={(e) => updateField("bank_name", e.target.value)}
-            />
-          </div>
-
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold flex gap-3">
-            <ShieldCheck size={18} className="shrink-0" />
-            <p>
-              {t("bankWarning")}
-            </p>
-          </div>
-
-          <div className="flex justify-between items-center pt-6 border-t border-white/5">
-            <div className="text-sm font-bold text-green-500">
-              {saveMessage}
+          <div className="flex flex-col gap-6">
+            {/* Bank/Crypto Toggle */}
+            <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-full max-w-sm mx-auto">
+              {(["bank", "crypto"] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setBankType(type)}
+                  className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    bankType === type 
+                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                      : "text-slate-500 hover:text-white"
+                  }`}
+                >
+                  {type === "bank" ? <Landmark size={14} /> : <Zap size={14} />}
+                  {type === "bank" ? (language === "th" ? "ธนาคารไทย" : "Thai Bank") : (language === "th" ? "คริปโต (USDT)" : "Crypto Wallet")}
+                </button>
+              ))}
             </div>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="btn-primary flex items-center gap-2 disabled:opacity-50"
+
+            <form 
+              onSubmit={async (e) => { 
+                e.preventDefault(); 
+                setIsSaving(true);
+                const { error } = await supabase
+                  .from("profiles")
+                  .update({
+                    bank_network: tempBankNetwork,
+                    bank_account: tempBankAccount,
+                    bank_name: tempBankName
+                  })
+                  .eq("id", userId);
+                
+                if (!error) {
+                  showToast(language === "th" ? "บันทึกข้อมูลสำเร็จ" : "Bank details updated", "success");
+                  await refreshProfile();
+                } else {
+                  showToast(error.message, "error");
+                }
+                setIsSaving(false);
+              }} 
+              className="space-y-8"
             >
-              {isSaving ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Save size={18} />
-              )}
-              {t("save")}
-            </button>
+              <div className="space-y-6">
+                {bankType === "bank" ? (
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
+                      {t("selectBank")}
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {THAI_BANKS.map((bank) => (
+                        <button
+                          key={bank.id}
+                          type="button"
+                          onClick={() => {
+                            setTempBankNetwork(bank.id);
+                            setTempBankName(""); // Reset name to let them fill account holder name
+                          }}
+                          className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all gap-2 h-24 ${
+                            tempBankNetwork === bank.id 
+                              ? "bg-white/10 border-white/30 scale-95" 
+                              : "bg-white/5 border-white/5 hover:border-white/10"
+                          }`}
+                        >
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-xs shadow-inner"
+                            style={{ backgroundColor: bank.color }}
+                          >
+                            {bank.icon}
+                          </div>
+                          <span className="text-[10px] font-bold text-center text-slate-400 line-clamp-1">
+                            {language === "th" ? bank.nameTh : bank.name}
+                          </span>
+                          {tempBankNetwork === bank.id && (
+                             <div className="absolute top-2 right-2 text-primary">
+                               <Check size={12} strokeWidth={4} />
+                             </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
+                      {t("network")}
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {CRYPTO_NETWORKS.map((net) => (
+                        <button
+                          key={net.id}
+                          type="button"
+                          onClick={() => setTempBankNetwork(net.id)}
+                          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all  ${
+                            tempBankNetwork === net.id 
+                              ? "bg-white/10 border-white/30 ring-1 ring-white/10" 
+                              : "bg-white/5 border-white/5 hover:border-white/10"
+                          }`}
+                        >
+                          <div 
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-lg"
+                            style={{ backgroundColor: net.color }}
+                          >
+                            <Cpu size={16} />
+                          </div>
+                          <div className="text-left">
+                            <p className="text-white font-bold text-xs">{net.name}</p>
+                            <p className="text-[10px] text-slate-500 leading-none mt-1">{net.desc}</p>
+                          </div>
+                          {tempBankNetwork === net.id && (
+                             <div className="ml-auto text-primary">
+                               <Check size={14} strokeWidth={4} />
+                             </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-white/5 p-6 rounded-2xl border border-white/10 space-y-4">
+                   <div className="space-y-1">
+                    <SettingsInput
+                      label={bankType === "bank" ? t("accountNumberLabel") : t("walletAddress")}
+                      placeholder={bankType === "bank" ? "xxx-x-xxxxx-x" : "Paste your TRC-20 address"}
+                      value={tempBankAccount || ""}
+                      onChange={(e) => setTempBankAccount(e.target.value)}
+                    />
+                    {accountError && (
+                      <p className="text-red-400 text-[10px] font-bold ml-1 animate-pulse">
+                        ⚠️ {accountError}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <SettingsInput
+                    label={t("accountName")}
+                    placeholder="Full name on account"
+                    value={tempBankName || ""}
+                    onChange={(e) => setTempBankName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold flex gap-3">
+                <ShieldCheck size={18} className="shrink-0" />
+                <p>{t("bankWarning")}</p>
+              </div>
+
+              <div className="flex justify-end pt-6 border-t border-white/5">
+                <button
+                  type="submit"
+                  disabled={isSaving || !tempBankNetwork || !tempBankAccount || !tempBankName || !!accountError}
+                  className="btn-primary flex items-center gap-4 px-10 disabled:opacity-50 h-12"
+                >
+                  {isSaving ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Save size={18} />
+                  )}
+                  <span className="text-base">{t("save")}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </motion.div>
       )}
@@ -693,15 +932,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               </div>
             </div>
           ) : isChangingPassword ? (
-             <div className="space-y-6">
+             <form onSubmit={(e) => { e.preventDefault(); handleNormalPasswordUpdate(); }} className="space-y-6">
                 <div className="flex items-center gap-2 mb-2">
                   <button
+                    type="button"
                     onClick={() => {
                       setIsChangingPassword(false);
                       setCurrentPassword("");
                       setNewPassword("");
                       setConfirmPassword("");
-                      setSaveMessage("");
                     }}
                     className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
                   >
@@ -738,21 +977,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   />
                 </div>
 
-                {saveMessage && (
-                  <div className={`p-3 rounded-lg text-xs font-bold ${saveMessage.includes("success") || saveMessage.includes("สำเร็จ") ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"}`}>
-                    {saveMessage}
-                  </div>
-                )}
-
                 <button
-                  onClick={handleNormalPasswordUpdate}
+                  type="submit"
                   disabled={isSaving}
                   className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
                 >
                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <KeyRound size={18} />}
                   {t("save")}
                 </button>
-             </div>
+             </form>
           ) : isLoginHistoryFlow ? (
              <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-2">
@@ -775,23 +1008,38 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       <Loader2 size={24} className="animate-spin" />
                     </div>
                   ) : loginHistoryList.length > 0 ? (
-                    loginHistoryList.map((hist, i) => (
-                      <div key={hist.id || i} className={`p-4 rounded-xl bg-white/5 border ${i === 0 ? "border-primary/20 relative overflow-hidden" : "border-white/5"}`}>
-                        {i === 0 && <div className="absolute top-0 right-0 p-1 bg-green-500/20 text-green-500 text-[9px] font-bold px-2 rounded-bl-lg">{t("lastSignedIn")}</div>}
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${i === 0 ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400"}`}>
-                              <Globe size={18} />
-                            </div>
-                            <div>
-                               <p className="text-white font-bold text-sm text-shadow-sm">{hist.device_info}</p>
-                               <p className="text-xs text-slate-400">
-                                 {hist.ip_address && hist.ip_address !== "Unknown IP" ? `${hist.ip_address} • ` : ""}
-                                 {new Date(hist.created_at).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                               </p>
-                            </div>
+                    loginHistoryList.map((hist, i) => {
+                      const isMobile = /iPhone|Android|Mobile/i.test(hist.os_name || hist.device_name);
+                      const isTablet = /iPad|Tablet/i.test(hist.os_name || hist.device_name);
+                      
+                      return (
+                        <div key={hist.id || i} className={`p-4 rounded-xl bg-white/5 border ${i === 0 ? "border-primary/20 relative overflow-hidden" : "border-white/5"}`}>
+                          {i === 0 && <div className="absolute top-0 right-0 p-1 bg-green-500/20 text-green-500 text-[9px] font-bold px-2 rounded-bl-lg">{t("lastSignedIn")}</div>}
+                          <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${i === 0 ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400"}`}>
+                                {isTablet ? <Tablet size={18} /> : isMobile ? <Smartphone size={18} /> : <Monitor size={18} />}
+                              </div>
+                              <div className="flex-1">
+                                 <div className="flex items-center justify-between">
+                                   <p className="text-white font-bold text-sm text-shadow-sm">{hist.device_name || "Legacy Session"}</p>
+                                   <p className="text-[10px] text-slate-500 font-medium">{new Date(hist.created_at).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                                 </div>
+                                 <p className="text-xs text-slate-400 mt-0.5">
+                                   <span className="text-primary/80">{hist.os_name || "Unknown OS"}</span>
+                                   <span className="mx-1.5 opacity-30">•</span>
+                                   <span>{hist.browser_name || "Unknown Browser"}</span>
+                                   {hist.ip_address && hist.ip_address !== "Unknown IP" && (
+                                     <>
+                                       <span className="mx-1.5 opacity-30">•</span>
+                                       <span className="opacity-70">{hist.ip_address}</span>
+                                     </>
+                                   )}
+                                 </p>
+                              </div>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="py-8 text-center text-slate-500 text-sm">
                       {t("noRecentActivity")}
@@ -803,12 +1051,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <div className="space-y-6">
               <div className="flex items-center gap-2 mb-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setIsEmailFlow(false);
                     setEmailOtpStep("request_old");
                     setNewEmail("");
                     setEmailOtp("");
-                    setEmailError("");
                   }}
                   className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
                 >
@@ -818,7 +1066,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               </div>
 
               {emailOtpStep === "request_old" && (
-                <div className="text-center space-y-6 py-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendOldEmailOtp(); }} className="text-center space-y-6 py-4">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
                     <Mail size={32} />
                   </div>
@@ -829,23 +1077,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       <span className="text-primary block mt-1">{profileData.email}</span>
                     </p>
                   </div>
-                  {emailError && (
-                    <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center">
-                      {emailError}
-                    </div>
-                  )}
                   <button
-                    onClick={handleSendOldEmailOtp}
+                    type="submit"
                     disabled={emailLoading}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
                   </button>
-                </div>
+                </form>
               )}
 
               {emailOtpStep === "verify_old" && (
-                <div className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleVerifyOldEmailOtp(); }} className="space-y-6">
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("enterVerificationCode")}</p>
                     <p className="text-sm text-slate-400">
@@ -854,34 +1097,30 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </div>
                   <SettingsInput
                     label={t("verifyCodeLabel")}
-                    placeholder="123456"
+                    placeholder={t("otpPlaceholder")}
                     value={emailOtp}
                     onChange={(e) => setEmailOtp(e.target.value)}
                     maxLength={6}
                   />
-                  {emailError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
-                      {emailError}
-                    </div>
-                  )}
                   <button
-                    onClick={handleVerifyOldEmailOtp}
+                    type="submit"
                     disabled={emailLoading || emailOtp.length < 6}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyCode")}
                   </button>
                   <button 
+                    type="button"
                     onClick={handleSendOldEmailOtp}
                     className="w-full text-xs font-bold text-slate-500 hover:text-white"
                   >
                     {t("didntGetCode")}
                   </button>
-                </div>
+                </form>
               )}
 
               {emailOtpStep === "new_email" && (
-                <div className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendEmailOtp(); }} className="space-y-6">
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("newEmail")}</p>
                     <p className="text-sm text-slate-400">
@@ -895,23 +1134,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="example@mail.com"
                   />
-                  {emailError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
-                      {emailError}
-                    </div>
-                  )}
                   <button
-                    onClick={handleSendEmailOtp}
+                    type="submit"
                     disabled={emailLoading || !newEmail.includes("@")}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
                   </button>
-                </div>
+                </form>
               )}
 
               {emailOtpStep === "verify_new" && (
-                <div className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleVerifyEmailOtp(); }} className="space-y-6">
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("verifyNewEmail")}</p>
                     <p className="text-sm text-slate-400">
@@ -920,36 +1154,33 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </div>
                   <SettingsInput
                     label={t("verifyCodeLabel")}
-                    placeholder="123456"
+                    placeholder={t("otpPlaceholder")}
                     value={emailOtp}
                     onChange={(e) => setEmailOtp(e.target.value)}
                     maxLength={6}
                   />
-                  {emailError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
-                      {emailError}
-                    </div>
-                  )}
                   <button
-                    onClick={handleVerifyEmailOtp}
+                    type="submit"
                     disabled={emailLoading || emailOtp.length < 6}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyAndUpdateEmail")}
                   </button>
                   <button 
+                    type="button"
                     onClick={handleSendEmailOtp}
                     className="w-full text-xs font-bold text-slate-500 hover:text-white"
                   >
                     {t("didntGetCode")}
                   </button>
-                </div>
+                </form>
               )}
             </div>
           ) : (
             <div className="space-y-6">
               <div className="flex items-center gap-2 mb-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setIsOtpFlow(false);
                     setOtpStep("request");
@@ -962,7 +1193,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               </div>
 
               {otpStep === "request" && (
-                <div className="text-center space-y-6 py-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendOtp(); }} className="text-center space-y-6 py-4">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
                     <Mail size={32} />
                   </div>
@@ -974,17 +1205,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     </p>
                   </div>
                   <button
-                    onClick={handleSendOtp}
+                    type="submit"
                     disabled={otpLoading}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
                   </button>
-                </div>
+                </form>
               )}
 
               {otpStep === "verify" && (
-                <div className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-6">
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("enterVerificationCode")}</p>
                     <p className="text-sm text-slate-400">
@@ -993,34 +1224,30 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </div>
                   <SettingsInput
                     label={t("verifyCodeLabel")}
-                    placeholder="123456"
+                    placeholder={t("otpPlaceholder")}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
                     maxLength={6}
                   />
-                  {otpError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
-                      {otpError}
-                    </div>
-                  )}
                   <button
-                    onClick={handleVerifyOtp}
+                    type="submit"
                     disabled={otpLoading || otpCode.length < 6}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyCode")}
                   </button>
                   <button 
+                    type="button"
                     onClick={handleSendOtp}
                     className="w-full text-xs font-bold text-slate-500 hover:text-white"
                   >
                     {t("didntGetCode")}
                   </button>
-                </div>
+                </form>
               )}
 
               {otpStep === "new_password" && (
-                <div className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleOtpPasswordUpdate(); }} className="space-y-6">
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("setNewPassword")}</p>
                     <p className="text-sm text-slate-400">
@@ -1043,19 +1270,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       placeholder="••••••••"
                     />
                   </div>
-                  {otpError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
-                      {otpError}
-                    </div>
-                  )}
                   <button
-                    onClick={handleOtpPasswordUpdate}
+                    type="submit"
                     disabled={otpLoading}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("resetPassword")}
                   </button>
-                </div>
+                </form>
               )}
             </div>
           )}
@@ -1291,5 +1513,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 };

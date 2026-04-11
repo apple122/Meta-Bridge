@@ -70,14 +70,16 @@ export const pushNotificationService = {
   async saveSubscriptionToDb(userId: string, subscription: PushSubscription) {
     try {
       // Remove any existing subscriptions for this same user + device identifier (handled by DB UNIQUE constraint)
+      const subJson = subscription.toJSON();
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
           user_id: userId,
-          subscription: subscription.toJSON(),
+          subscription: subJson,
+          endpoint: subJson.endpoint,
           created_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,subscription'
+          onConflict: 'user_id,endpoint'
         });
 
       if (error) {

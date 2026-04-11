@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabase";
 import { getPublicIP } from "../utils/ipUtils";
+import { getDeviceDetails } from "../utils/deviceUtils";
 
 export interface Profile {
   id: string;
@@ -117,16 +118,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // Record login asynchronously
     (async () => {
       try {
-        const ua = navigator.userAgent;
-        let browser = "Unknown Browser";
-        if (ua.includes("Chrome")) browser = "Chrome";
-        else if (ua.includes("Safari")) browser = "Safari";
-        else if (ua.includes("Firefox")) browser = "Firefox";
-        else if (ua.includes("Edge")) browser = "Edge";
+        const { deviceName, osName, browserName } = getDeviceDetails();
         
-        let device = "Desktop";
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) device = "Mobile";
-
         let ip = "Unknown IP";
         try {
            ip = await getPublicIP();
@@ -136,7 +129,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         
         await supabase.from("user_login_history").insert({
            user_id: newProfile.id,
-           device_info: `${device} • ${browser}`,
+           device_name: deviceName,
+           os_name: osName,
+           browser_name: browserName,
            ip_address: ip
         });
       } catch (err) {

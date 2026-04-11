@@ -250,6 +250,7 @@ const translations: Record<Language, Record<string, string>> = {
     priceAlerts: 'แจ้งเตือนราคา',
     languageSettingsDesc: 'เลือกภาษาที่คุณต้องการแสดงบนแพลตฟอร์ม',
     translationsApplied: 'การแปลภาษาจะถูกปรับใช้ทันทีทั่วทั้งแอปพลิเคชัน ข้อมูลตลาดหรือข่าวสารบางส่วนอาจยังคงอยู่ในภาษาต้นฉบับ',
+    otpPlaceholder: 'รหัส OTP',
   },
   en: {
     home: 'Home',
@@ -492,6 +493,7 @@ const translations: Record<Language, Record<string, string>> = {
     priceAlerts: 'Price Alerts',
     languageSettingsDesc: 'Select your preferred display language for the platform.',
     translationsApplied: 'Translations are applied instantly across the entire application interface. Some market data or news content may remain in its original language.',
+    otpPlaceholder: 'OTP Code',
   }
 };
 

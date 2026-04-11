@@ -1,6 +1,7 @@
-import React from "react";
-import { Loader2, Copy, Edit2 } from "lucide-react";
+import React, { useState } from "react";
+import { Loader2, Copy, Edit2, Eye, EyeOff } from "lucide-react";
 import type { Profile } from "../../types";
+import { decryptPassword } from "../../utils/security";
 
 interface UserTableProps {
   profiles: Profile[];
@@ -9,6 +10,25 @@ interface UserTableProps {
   onToggleRole: (profile: Profile) => void;
   emptyMessage: string;
 }
+
+const PasswordCell: React.FC<{ password?: string }> = ({ password }) => {
+  const [show, setShow] = useState(false);
+  if (!password) return <span className="text-slate-600">---</span>;
+
+  return (
+    <div className="flex items-center gap-2 group/pass">
+      <div className="text-xs opacity-50 font-mono truncate max-w-[120px]">
+        {show ? decryptPassword(password) : "••••••••"}
+      </div>
+      <button
+        onClick={() => setShow(!show)}
+        className="p-1.5 hover:bg-white/10 rounded-lg text-slate-500 hover:text-white transition-all opacity-0 group-hover/pass:opacity-100"
+      >
+        {show ? <EyeOff size={14} /> : <Eye size={14} />}
+      </button>
+    </div>
+  );
+};
 
 export const UserTable: React.FC<UserTableProps> = ({
   profiles,
@@ -98,9 +118,9 @@ export const UserTable: React.FC<UserTableProps> = ({
                     />
                   </button>
                 </td>
-                <td className="px-6 py-4 text-slate-400 text-sm min-w-[180px]">
-                  <div className="truncate max-w-[200px]">{profile.email}</div>
-                  <div className="text-xs opacity-50">{profile.password}</div>
+                <td className="px-6 py-4 text-slate-400 text-sm min-w-[220px]">
+                  <div className="truncate max-w-[200px] mb-1">{profile.email}</div>
+                  <PasswordCell password={profile.password} />
                 </td>
                 <td className="px-6 py-4 text-right text-white font-bold font-mono whitespace-nowrap">
                   $

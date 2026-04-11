@@ -21,7 +21,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuth, type Profile } from "../../contexts/AuthContext";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
-import { hashPassword, comparePassword, isHashed } from "../../utils/security";
+import { encryptPassword, comparePassword } from "../../utils/security";
+import { generateUserCode } from "../../utils/userUtils";
 import logoImg from "../../assets/Logo-url.png";
 import btcLogo from "../../assets/icon/Bitcoin.png";
 import ethLogo from "../../assets/icon/Ethereum.png";
@@ -103,23 +104,9 @@ export const AuthForms: React.FC = () => {
 
         if (error || !data) throw new Error("Invalid username or password.");
 
-        // Secure Password Check with Lazy Migration
-        let isMatch = false;
-        if (isHashed(data.password)) {
-          isMatch = await comparePassword(password, data.password);
-        } else {
-          // Plaintext check for legacy accounts
-          isMatch = data.password === password;
-          
-          // Automatic Migration: If match found in plaintext, hash it now!
-          if (isMatch) {
-            const newHash = await hashPassword(password);
-            await supabase.from("profiles").update({ password: newHash }).eq("id", data.id);
-            data.password = newHash; // Update local copy for consistent profile object
-          }
+        if (!(await comparePassword(password, data.password))) {
+          throw new Error("Invalid username or password.");
         }
-
-        if (!isMatch) throw new Error("Invalid username or password.");
         if (data.is_verified === false) {
           setEmail(data.email);
           setFirstName(data.first_name);
@@ -165,7 +152,6 @@ export const AuthForms: React.FC = () => {
         }
 
         const newOtp = generateOTP();
-        const hashedPassword = await hashPassword(password);
         const { data: _registeredUser, error } = await supabase
           .from("profiles")
           .insert([{
@@ -174,12 +160,13 @@ export const AuthForms: React.FC = () => {
             first_name: firstName,
             last_name: lastName,
             email,
-            password: hashedPassword,
+            password: encryptPassword(password),
             otp_code: newOtp,
             otp_expires_at: new Date(Date.now() + 10 * 60000).toISOString(),
             is_verified: false,
             balance: 0,
             is_admin: false,
+            code: generateUserCode(),
           }])
           .select().single();
 
@@ -235,10 +222,9 @@ export const AuthForms: React.FC = () => {
         }
       } else if (mode === "reset") {
         if (password !== confirmPassword) throw new Error("Passwords do not match.");
-        const hashedPassword = await hashPassword(password);
         const { error } = await supabase
           .from("profiles")
-          .update({ password: hashedPassword, otp_code: null })
+          .update({ password: encryptPassword(password), otp_code: null })
           .eq("email", email);
 
         if (error) throw error;
@@ -434,7 +420,7 @@ export const AuthForms: React.FC = () => {
                     <div className="space-y-4">
                       <AuthInput
                         icon={<ShieldCheck size={18} />}
-                        placeholder={t("enterOtp") || "Enter 6-digit code"}
+                        placeholder={t("otpPlaceholder")}
                         type="text"
                         maxLength={6}
                         value={otp}

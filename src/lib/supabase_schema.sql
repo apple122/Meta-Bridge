@@ -1,6 +1,6 @@
 -- 
--- MetaBridge Database Schema for Supabase (Custom Auth - No Supabase Auth dependency)
--- Version: 2.0 (Custom Auth System)
+-- MetaBridge MASTER Database Schema
+-- Version: 4.0 (The One Source of Truth)
 -- 
 -- IMPORTANT: This schema is designed for a CUSTOM authentication system.
 -- It does NOT use Supabase Auth (auth.users). Users are stored directly in profiles.
@@ -12,22 +12,23 @@ create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
 
 -- ============================================================
--- STEP 1: DROP ALL EXISTING TABLES (Clean Reset)
+-- STEP 1: DROP ALL EXISTING TABLES & FUNCTIONS (Clean Reset)
 -- ============================================================
+drop table if exists public.push_subscriptions cascade;
+drop table if exists public.user_login_history cascade;
 drop table if exists public.portfolio cascade;
 drop table if exists public.transactions cascade;
+drop table if exists public.binary_trades cascade;
 drop table if exists public.global_settings cascade;
 drop table if exists public.profiles cascade;
 
--- ============================================================
--- STEP 2: DROP EXISTING FUNCTIONS & TRIGGERS
--- ============================================================
 drop function if exists public.generate_random_code(int) cascade;
-drop function if exists public.handle_new_user() cascade;
-drop function if exists public.update_password(text, text) cascade;
+drop function if exists public.place_binary_trade(uuid, text, text, decimal, decimal, int, bigint) cascade;
+drop function if exists public.resolve_binary_trade(uuid, text, decimal, decimal) cascade;
+drop function if exists public.refund_binary_trade(uuid) cascade;
 
 -- ============================================================
--- STEP 3: HELPER FUNCTIONS
+-- STEP 2: HELPER FUNCTIONS
 -- ============================================================
 
 -- Function to generate a random alphanumeric code
@@ -47,10 +48,10 @@ end;
 $$ language plpgsql;
 
 -- ============================================================
--- STEP 4: CREATE TABLES (No FK to auth.users)
+-- STEP 3: CREATE TABLES
 -- ============================================================
 
--- 1. Profiles: Custom user data table (standalone, no auth.users dependency)
+-- 1. Profiles: Custom user data table
 create table public.profiles (
   id uuid default uuid_generate_v4() primary key,
   username text unique not null,
@@ -75,23 +76,39 @@ create table public.profiles (
   constraint username_length check (char_length(username) >= 3)
 );
 
--- 2. Transactions: Ledger for all buy, sell, deposit, withdraw events
+-- 2. Binary Trades: For Binary Options tracking
+create table public.binary_trades (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null, -- 'up' or 'down'
+  asset_symbol text not null,
+  amount decimal(20, 2) not null,
+  entry_price decimal(20, 8) not null,
+  payout_percent integer not null,
+  expiry_time bigint not null,
+  status text default 'pending', -- 'pending', 'won', 'lost', 'refunded'
+  result_price decimal(20, 8),
+  created_at timestamptz default now(),
+  settled_at timestamptz
+);
+
+-- 3. Transactions: Financial ledger
 create table public.transactions (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
-  type text check (type in ('buy', 'sell', 'deposit', 'withdraw')) not null,
+  type text check (type in ('buy', 'sell', 'deposit', 'withdraw', 'win', 'loss')) not null,
   asset_symbol text not null,
   amount decimal(36,18) not null,
   price decimal(18,2) not null,
   total decimal(20, 2) not null,
   status text default 'pending',
-  binary_type text, -- 'up' or 'down' (for Binary trades)
-  binary_result text, -- 'win' or 'loss'
-  binary_trade_id uuid, -- Reference to binary_trades table
+  binary_type text, 
+  binary_result text, 
+  binary_trade_id uuid references public.binary_trades(id) on delete set null,
   created_at timestamptz default now()
 );
 
--- 3. Portfolio: Current holdings of assets for each user
+-- 4. Portfolio: Asset holdings
 create table public.portfolio (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -102,7 +119,7 @@ create table public.portfolio (
   unique(user_id, asset_symbol)
 );
 
--- 4. Global Settings: Managed by admins
+-- 5. Global Settings: Admin managed
 create table public.global_settings (
   id text primary key default 'main',
   contact_phone text default '',
@@ -111,59 +128,172 @@ create table public.global_settings (
   updated_at timestamp with time zone default now()
 );
 
+-- 6. User Login History: Security logs
+create table public.user_login_history (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  device_name text,
+  os_name text,
+  browser_name text,
+  device_info text,
+  ip_address text,
+  created_at timestamptz default now()
+);
+
+-- 7. Push Subscriptions: Notification tokens
+create table public.push_subscriptions (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  endpoint text not null,
+  subscription jsonb not null,
+  created_at timestamptz default now(),
+  
+  unique(user_id, endpoint)
+);
+
 -- Insert default settings
 insert into public.global_settings (id) 
 values ('main') 
 on conflict (id) do nothing;
 
 -- ============================================================
--- STEP 5: ROW LEVEL SECURITY (RLS)
--- Since we use custom auth (no Supabase JWT), we DISABLE RLS
--- and rely on application-level access control.
--- This is safe because:
---   - The anon key is used (read-only for public, write controlled by app)
---   - All mutations require a valid user_id from the app
+-- STEP 4: TRADING RPC FUNCTIONS (Atomic Transactions)
 -- ============================================================
 
--- Disable RLS on all tables
+-- A. Place Binary Trade
+create or replace function public.place_binary_trade(
+  p_user_id uuid,
+  p_type text,
+  p_asset_symbol text,
+  p_amount decimal,
+  p_entry_price decimal,
+  p_payout_percent integer,
+  p_expiry_time bigint
+) returns jsonb as $$
+declare
+  v_current_balance decimal;
+  v_trade_id uuid;
+begin
+  select balance into v_current_balance from profiles where id = p_user_id for update;
+  if v_current_balance < p_amount then
+    return jsonb_build_object('success', false, 'message', 'Insufficient balance');
+  end if;
+
+  update profiles set balance = balance - p_amount where id = p_user_id;
+
+  insert into binary_trades (user_id, type, asset_symbol, amount, entry_price, payout_percent, expiry_time, status)
+  values (p_user_id, p_type, p_asset_symbol, p_amount, p_entry_price, p_payout_percent, p_expiry_time, 'pending')
+  returning id into v_trade_id;
+
+  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_type, binary_trade_id)
+  values (p_user_id, 'buy', p_asset_symbol, p_amount / p_entry_price, p_entry_price, p_amount, 'success', p_type, v_trade_id);
+
+  return jsonb_build_object('success', true, 'message', 'Trade placed successfully', 'trade_id', v_trade_id);
+end;
+$$ language plpgsql;
+
+-- B. Resolve Binary Trade
+create or replace function public.resolve_binary_trade(
+  p_trade_id uuid,
+  p_new_status text,
+  p_result_price decimal,
+  p_payout_amount decimal
+) returns jsonb as $$
+declare
+  v_user_id uuid;
+  v_current_status text;
+  v_asset_symbol text;
+  v_amount decimal;
+  v_binary_type text;
+begin
+  select user_id, status, asset_symbol, amount, type 
+  into v_user_id, v_current_status, v_asset_symbol, v_amount, v_binary_type 
+  from binary_trades where id = p_trade_id for update;
+  
+  if v_current_status != 'pending' then
+    return jsonb_build_object('success', false, 'message', 'Trade already resolved');
+  end if;
+
+  update binary_trades 
+  set status = p_new_status, result_price = p_result_price, settled_at = now()
+  where id = p_trade_id;
+
+  if p_payout_amount > 0 then
+    update profiles set balance = balance + p_payout_amount where id = v_user_id;
+  end if;
+
+  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_type, binary_result, binary_trade_id)
+  values (
+    v_user_id, 
+    case when p_new_status = 'won' then 'win' else 'loss' end, 
+    v_asset_symbol, 
+    v_amount, 
+    p_result_price, 
+    p_payout_amount, 
+    'success', 
+    v_binary_type, 
+    p_new_status, 
+    p_trade_id
+  );
+
+  return jsonb_build_object('success', true, 'message', 'Trade resolved successfully');
+end;
+$$ language plpgsql;
+
+-- C. Refund Binary Trade
+create or replace function public.refund_binary_trade(
+  p_trade_id uuid
+) returns jsonb as $$
+declare
+  v_user_id uuid;
+  v_trade_amount decimal;
+  v_current_status text;
+  v_asset_symbol text;
+begin
+  select user_id, amount, status, asset_symbol 
+  into v_user_id, v_trade_amount, v_current_status, v_asset_symbol 
+  from binary_trades where id = p_trade_id for update;
+  
+  if v_current_status != 'pending' then
+    return jsonb_build_object('success', false, 'message', 'Trade not pending');
+  end if;
+
+  update binary_trades set status = 'refunded', settled_at = now() where id = p_trade_id;
+  update profiles set balance = balance + v_trade_amount where id = v_user_id;
+
+  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_trade_id)
+  values (v_user_id, 'deposit', v_asset_symbol, 0, 0, v_trade_amount, 'success', p_trade_id);
+
+  return jsonb_build_object('success', true, 'message', 'Trade refunded successfully');
+end;
+$$ language plpgsql;
+
+-- ============================================================
+-- STEP 5: RLS & GRANTS
+-- ============================================================
+
 alter table public.profiles disable row level security;
+alter table public.binary_trades disable row level security;
 alter table public.transactions disable row level security;
 alter table public.portfolio disable row level security;
 alter table public.global_settings disable row level security;
+alter table public.user_login_history disable row level security;
+alter table public.push_subscriptions disable row level security;
+
+grant all on all tables in schema public to anon;
+grant all on all tables in schema public to authenticated;
+grant all on all sequences in schema public to anon;
+grant all on all sequences in schema public to authenticated;
 
 -- ============================================================
--- STEP 6: GRANT PERMISSIONS TO anon AND authenticated ROLES
--- ============================================================
-
--- Profiles
-grant select, insert, update on public.profiles to anon;
-grant select, insert, update on public.profiles to authenticated;
-
--- Transactions
-grant select, insert, update on public.transactions to anon;
-grant select, insert, update on public.transactions to authenticated;
-
--- Portfolio
-grant select, insert, update, delete on public.portfolio to anon;
-grant select, insert, update, delete on public.portfolio to authenticated;
-
--- Global Settings
-grant select on public.global_settings to anon;
-grant select, update on public.global_settings to authenticated;
-
--- ============================================================
--- STEP 7: INDEXES FOR PERFORMANCE
+-- STEP 6: INDEXES
 -- ============================================================
 
 create index if not exists idx_profiles_username on public.profiles(username);
 create index if not exists idx_profiles_email on public.profiles(email);
 create index if not exists idx_transactions_user_id on public.transactions(user_id);
-create index if not exists idx_transactions_created_at on public.transactions(created_at desc);
+create index if not exists idx_binary_trades_user_id on public.binary_trades(user_id);
+create index if not exists idx_binary_trades_status on public.binary_trades(status);
 create index if not exists idx_portfolio_user_id on public.portfolio(user_id);
-create index if not exists idx_portfolio_user_asset on public.portfolio(user_id, asset_symbol);
-
--- ============================================================
--- STEP 8: ADMIN USER (Optional - set manually after creation)
--- To make a user admin, run:
---   UPDATE public.profiles SET is_admin = true WHERE username = 'your_admin_username';
--- ============================================================
+create index if not exists idx_user_login_history_user_id on public.user_login_history(user_id);
+create index if not exists idx_push_subs_user_id on public.push_subscriptions(user_id);
