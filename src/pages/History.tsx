@@ -12,7 +12,11 @@ import {
   Filter,
   Trophy,
   TrendingDown,
-  Zap
+  Zap,
+  Search,
+  CheckCircle2,
+  XCircle,
+  LayoutGrid
 } from "lucide-react";
 import {
   getDaysInMonth,
@@ -31,6 +35,8 @@ export const History: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'win' | 'loss'>('all');
 
   const tradeTransactions = transactions.filter(
     (tx) =>
@@ -88,9 +94,31 @@ export const History: React.FC = () => {
       const isUpToDate = txDate.getTime() <= endOfSelectedDay.getTime();
       const matchesAsset =
         selectedAsset === "all" || tx.asset === selectedAsset;
-      return isUpToDate && matchesAsset;
+        
+      // Status Filter Logic
+      const resLower = tx.binary_result?.toLowerCase() || "";
+      const isWin = resLower.includes('win') || resLower.includes('won') || tx.is_win;
+      const isLoss = resLower.includes('loss') || tx.is_loss;
+      
+      let matchesStatus = true;
+      if (statusFilter === 'win') matchesStatus = isWin;
+      if (statusFilter === 'loss') matchesStatus = isLoss;
+
+      // Search Query Logic
+      let matchesSearch = true;
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const smartId = (tx.smart_id || tx.id.slice(-4)).toLowerCase();
+        matchesSearch = 
+          tx.asset?.toLowerCase().includes(query) || 
+          tx.type?.toLowerCase().includes(query) ||
+          tx.id.toLowerCase().includes(query) ||
+          smartId.includes(query);
+      }
+
+      return isUpToDate && matchesAsset && matchesStatus && matchesSearch;
     });
-  }, [tradeTransactions, selectedDate, selectedAsset]);
+  }, [tradeTransactions, selectedDate, selectedAsset, statusFilter, searchQuery]);
 
   // Month names for display
   const monthNames = [
@@ -220,34 +248,93 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Selected Day View Header with Asset Filter */}
-      <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-white/5 pb-4">
+      {/* Search and Filters Bar */}
+      <div className="space-y-4">
+        {/* Search Input */}
+        <div className="relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">
+            <Search size={18} />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("searchHistory") || "Search ID, Asset, or Type..."}
+            className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white font-bold outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-slate-600"
+          />
+        </div>
+
+        {/* Quick Filter Buttons & Asset Dropdown */}
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          {/* Status Selectors */}
+          <div className="flex items-center gap-2 w-full md:w-auto p-1.5 bg-slate-900/50 border border-white/5 rounded-2xl">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                statusFilter === 'all' 
+                ? "bg-white/10 text-white shadow-lg" 
+                : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              <LayoutGrid size={14} />
+              {t("all") || "All"}
+            </button>
+            <button
+              onClick={() => setStatusFilter('win')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                statusFilter === 'win' 
+                ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10" 
+                : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              <CheckCircle2 size={14} />
+              {t("win") || "Win"}
+            </button>
+            <button
+              onClick={() => setStatusFilter('loss')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                statusFilter === 'loss' 
+                ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10" 
+                : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              <XCircle size={14} />
+              {t("loss") || "Loss"}
+            </button>
+          </div>
+
+          <div className="h-10 w-px bg-white/5 hidden md:block" />
+
+          {/* Asset Dropdown */}
+          <div className="relative group w-full md:flex-1">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
+              <Filter size={16} />
+            </div>
+            <select
+              value={selectedAsset}
+              onChange={(e) => setSelectedAsset(e.target.value)}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
+            >
+              <option value="all"> {t("allAssets") || "All Assets"} </option>
+              {uniqueAssets.map((asset) => (
+                <option key={asset} value={asset}>
+                  {asset}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+              <ChevronRight size={18} className="rotate-90" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Day View Header */}
+      <div className="pt-4 border-b border-white/5 pb-4">
         <h3 className="text-lg font-black text-white">
           {t("transactionsUpTo") || "Transactions up to"}{" "}
           {formatDate(selectedDate, { weekday: "short" })}
         </h3>
-
-        {/* Asset Filter Select */}
-        <div className="relative group min-w-[200px]">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
-            <Filter size={14} strokeWidth={3} />
-          </div>
-          <select
-            value={selectedAsset}
-            onChange={(e) => setSelectedAsset(e.target.value)}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs font-black text-white outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 appearance-none cursor-pointer transition-all"
-          >
-            <option value="all"> {t("allAssets") || "All Assets"} </option>
-            {uniqueAssets.map((asset) => (
-              <option key={asset} value={asset}>
-                {asset}
-              </option>
-            ))}
-          </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-            <ChevronRight size={14} className="rotate-90" />
-          </div>
-        </div>
       </div>
 
       <AnimatePresence mode="wait">
