@@ -1,11 +1,22 @@
 import React from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { Home, BarChart2, Wallet, Settings, Calendar } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export const MobileNav: React.FC = () => {
   const { t } = useLanguage();
+  const location = useLocation();
+
+  const handleNavClick = (path: string, e: React.MouseEvent) => {
+    // If we're already on this path, scroll to top
+    if (location.pathname === path) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+  };
 
   const navItems = [
     { icon: <Home size={26} />, label: t("home"), path: "/" },
@@ -26,6 +37,7 @@ export const MobileNav: React.FC = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={(e) => handleNavClick(item.path, e)}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1.5 py-1 transition-all duration-300 ${
                 isActive
