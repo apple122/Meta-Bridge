@@ -99,6 +99,19 @@ export const Settings: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Close any open modal/panel on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isShareModalOpen) setIsShareModalOpen(false);
+        else if (isInstallModalOpen) setIsInstallModalOpen(false);
+        else if (isModalOpen) setIsModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, isInstallModalOpen, isShareModalOpen]);
+
   const handleTabChange = (
     tab:
       | "profile"

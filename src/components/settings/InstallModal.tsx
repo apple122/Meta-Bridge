@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { X, Share, PlusSquare, ArrowUp } from 'lucide-react';
@@ -12,6 +12,16 @@ interface InstallModalProps {
 
 export const InstallModal: React.FC<InstallModalProps> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0, scale: 0.95, y: 20 },

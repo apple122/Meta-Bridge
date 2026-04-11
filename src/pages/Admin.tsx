@@ -44,6 +44,19 @@ export const Admin: React.FC = () => {
     fetchSettings();
   }, []);
 
+  // Close any open modal/panel on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showCreateModal) setShowCreateModal(false);
+        else if (showTopUpModal) setShowTopUpModal(false);
+        else if (editingProfile) setEditingProfile(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showCreateModal, showTopUpModal, editingProfile]);
+
   const fetchProfiles = async () => {
     setLoading(true);
     const { data, error } = await supabase

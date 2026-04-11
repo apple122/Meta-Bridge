@@ -74,6 +74,18 @@ export const Trade: React.FC = () => {
     return () => clearInterval(interval);
   }, [selectedAsset.symbol]);
 
+  // Close search/market detail panels on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showSearch) setShowSearch(false);
+        else if (showMarketDetails) setShowMarketDetails(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showSearch, showMarketDetails]);
+
   const onTrade = async () => {
     const tradeAmount = Number(amount);
 

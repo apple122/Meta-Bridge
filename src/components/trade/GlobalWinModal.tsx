@@ -70,6 +70,17 @@ export const GlobalWinModal: React.FC = () => {
     return () => window.removeEventListener("binary-trade-result", handler);
   }, []);
 
+  // Close on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && winModalData) {
+        setWinModalData(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [winModalData]);
+
   return (
     <AnimatePresence>
       {winModalData && (

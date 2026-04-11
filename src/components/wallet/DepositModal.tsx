@@ -64,6 +64,17 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
     fetchSettings();
   }, []);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const copyAddress = () => {
     if (!selected) return;
     navigator.clipboard.writeText(selected.account);

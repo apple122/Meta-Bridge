@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useWallet } from "../contexts/WalletContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,6 +32,17 @@ export const Wallet: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const closeModal = () => setActiveModal(null);
+
+  // Close modal on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && activeModal) {
+        setActiveModal(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeModal]);
 
   const actions = [
     {

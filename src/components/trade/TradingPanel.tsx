@@ -75,6 +75,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
     return () => clearInterval(timer);
   }, [showAmountModal, timeLeftAmount]);
 
+  // Close Setup Option modal on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showAmountModal) {
+        setShowAmountModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showAmountModal]);
+
   const handleConfirmAmount = (amt: string) => {
     setAmount(amt);
     setShowAmountModal(false);

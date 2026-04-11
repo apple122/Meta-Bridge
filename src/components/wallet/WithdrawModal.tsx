@@ -66,6 +66,17 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     fetchSettings();
   }, []);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const handleSubmit = async () => {
     const num = parseFloat(amount);
     if (!num || num <= 0) {

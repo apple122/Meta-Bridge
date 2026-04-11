@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, X, Loader2, Plus, ClipboardPaste, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -20,6 +20,16 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [codePasted, setCodePasted] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handlePasteCode = async () => {
     try {

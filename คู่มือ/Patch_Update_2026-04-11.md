@@ -50,4 +50,20 @@
 *   **Installation Guide Updated:** อัปเดตไฟล์ `คู่มือการติดตั้ง_ฉบับสมบูรณ์.md` ให้มีคำอธิบายวิธีก๊อปปี้โค้ด HTML ไปใช้กับตระกูล EmailJS แบบจับมือทำ
 
 ---
+
+## ⌨️ ฟีเจอร์ใหม่: ปิด Modal ด้วยปุ่ม ESC (Global Keyboard Shortcut)
+*   **ครอบคลุมทุก Modal:** เพิ่มการรองรับปุ่ม `Esc` เพื่อปิดหน้าต่าง Popup/Modal ทุกตัวในโปรเจกต์ โดยไม่ต้องกดปุ่มกากบาท `X`
+*   **รายชื่อ Modal ที่รองรับ:**
+    *   `DepositModal` — หน้าต่างฝากเงิน
+    *   `WithdrawModal` — หน้าต่างถอนเงิน
+    *   `Wallet.tsx` — Staking + Deposit + Withdraw (จากหน้า Wallet)
+    *   `TradingPanel` — หน้าต่าง "Setup Option" (เลือกเวลาและจำนวนเงิน)
+    *   `GlobalWinModal` — หน้าต่างแสดงรางวัลชนะการเทรด
+    *   `Settings.tsx` — Sidebar (Mobile), Install Modal, Share Modal
+    *   `Admin.tsx` — Edit User Panel, Create User Modal, Top-Up Modal
+    *   `Trade.tsx` — Asset Search Panel, Market Details Panel
+    *   `ShareModal`, `InstallModal`, `TopUpModal`, `CreateUserModal` — ทุกตัว
+*   **Smart Priority:** หากมีหลาย Layer เปิดพร้อมกัน ระบบจะปิดจากชั้นบนสุดก่อนเสมอ
+
+---
 **ทีมพัฒนา:** Antigravity AI (Google DeepMind Team)
