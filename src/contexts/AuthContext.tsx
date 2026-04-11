@@ -115,12 +115,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const handleLogin = (newProfile: Profile) => {
     // PREVENT STALE OVERWRITE:
     const localLang = localStorage.getItem('appLanguage');
     if (localLang && (localLang === 'th' || localLang === 'en')) {
-      newProfile.language = localLang;
+      newProfile.language = localLang as any;
     }
 
+    const localUser: LocalUser = { id: newProfile.id, email: newProfile.email || undefined };
+    
     // Save to local storage
     localStorage.setItem("metabridge_user_id", newProfile.id);
     localStorage.setItem("user_profile", JSON.stringify(newProfile));
