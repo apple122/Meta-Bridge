@@ -217,11 +217,34 @@ export const History: React.FC = () => {
                 dateObj.toDateString(),
               );
 
+              const handleDateClick = (date: Date) => {
+                setSelectedDate(date);
+                
+                // Enhanced Scroll to the specific date header in the list
+                setTimeout(() => {
+                  const targetId = `date-header-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                  const element = document.getElementById(targetId);
+                  if (element) {
+                    const navbarOffset = 72; // App Navbar height
+                    const stickyHeaderHeight = 48; // Our sticky header height
+                    const totalOffset = navbarOffset + stickyHeaderHeight - 10;
+                    
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - totalOffset;
+
+                    window.scrollTo({
+                      top: offsetPosition,
+                      behavior: "smooth"
+                    });
+                  }
+                }, 100);
+              };
+
               return (
                 <div key={day} className="flex justify-center">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setSelectedDate(dateObj)}
+                    onClick={() => handleDateClick(dateObj)}
                     className={`relative w-10 h-10 flex flex-col items-center justify-center rounded-2xl text-sm font-bold transition-all duration-300
                       ${
                         isSelected
@@ -327,7 +350,10 @@ export const History: React.FC = () => {
       </div>
 
       {/* Unified List Header: Robust Centered Master Marker */}
-      <div className="sticky top-[68px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden">
+      <div 
+        id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`}
+        className="sticky top-[68px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
+      >
         <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
           <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
             {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
@@ -414,7 +440,10 @@ export const History: React.FC = () => {
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div className="sticky top-[68px] z-20 flex items-center h-10 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden">
+                    <div 
+                      id={`date-header-${txDateObj.getFullYear()}-${txDateObj.getMonth()}-${txDateObj.getDate()}`}
+                      className="sticky top-[68px] z-20 flex items-center h-10 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
+                    >
                       <div className="flex-1 basis-0 min-w-0 h-px bg-white/10" />
                       <span className="flex-shrink-0 text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/10 shadow-lg mx-4">
                         {(() => {
