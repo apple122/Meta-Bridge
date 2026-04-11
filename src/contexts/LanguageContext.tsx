@@ -515,12 +515,24 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (storedProfile) {
         try {
           const p = JSON.parse(storedProfile);
-          await supabase
+          if (!p.id) return;
+
+          console.log(`[LanguageContext] Syncing language '${language}' to DB for user ${p.id}...`);
+          const { error } = await supabase
             .from('profiles')
             .update({ language: language })
             .eq('id', p.id);
+          
+          if (error) {
+            console.warn("[LanguageContext] DB Sync failed (Column might be missing?):", error.message);
+          } else {
+            console.log("[LanguageContext] DB Sync successful");
+            // Update the local profile object to keep it in sync
+            p.language = language;
+            localStorage.setItem('user_profile', JSON.stringify(p));
+          }
         } catch (e) {
-          console.warn("Language sync failed", e);
+          console.warn("[LanguageContext] Sync process error:", e);
         }
       }
     };

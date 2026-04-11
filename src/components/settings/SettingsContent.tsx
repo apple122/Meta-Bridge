@@ -346,6 +346,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         email: profileData.email, 
         code, 
         userName: profileData.first_name,
+        lang: language,
         type: 'reset'
       });
 
@@ -420,6 +421,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         email: profileData.email, 
         code, 
         userName: profileData.first_name || "User",
+        lang: language,
         type: 'change_email'
       });
       setEmailOtpStep("verify_old");
@@ -477,6 +479,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         email: newEmail, 
         code, 
         userName: profileData.first_name || "User",
+        lang: language,
         type: 'change_email'
       });
       setEmailOtpStep("verify_new");

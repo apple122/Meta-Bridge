@@ -109,6 +109,7 @@ export const emailService = {
    * Sends a 6-digit OTP to the specified email using EmailJS.
    */
   sendOTP: async ({ email, code, userName, lang = "en", type = "verification" }: SendOptions): Promise<boolean> => {
+    console.log(`[EmailService] Preparing OTP (${type}) for ${email} in lang: ${lang}`);
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -171,6 +172,7 @@ export const emailService = {
    * Sends a deposit confirmation notification email.
    */
   sendDepositNotification: async ({ email, userName, amount, lang = "en" }: NotifyDepositOptions): Promise<boolean> => {
+    console.log(`[EmailService] Preparing Deposit Notification for ${email} in lang: ${lang}`);
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_DEPOSIT_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -224,6 +226,7 @@ export const emailService = {
    * Sends a win celebration notification email.
    */
   sendWinNotification: async ({ email, userName, amount, payout, assetSymbol, orderId, direction, durationMinutes, payoutPercent, lang = "en" }: NotifyWinOptions): Promise<boolean> => {
+    console.log(`[EmailService] Preparing Win Notification for ${email} in lang: ${lang}`);
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_WIN_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
