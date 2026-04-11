@@ -97,8 +97,8 @@ export const History: React.FC = () => {
         
       // Status Filter Logic
       const resLower = tx.binary_result?.toLowerCase() || "";
-      const isWin = resLower.includes('win') || resLower.includes('won') || tx.is_win;
-      const isLoss = resLower.includes('loss') || tx.is_loss;
+      const isWin = resLower.includes('win') || resLower.includes('won') || !!tx.is_win;
+      const isLoss = resLower.includes('loss') || !!tx.is_loss;
       
       let matchesStatus = true;
       if (statusFilter === 'win') matchesStatus = isWin;
