@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { X, Shield } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { AdminInput } from "./AdminInput";
+import { hashPassword } from "../../utils/security";
 
 interface CreateUserModalProps {
   onClose: () => void;
@@ -27,6 +28,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     setError("");
 
     try {
+      const hashedPassword = await hashPassword(formData.password);
       const { data: _data, error: registerError } = await supabase
         .from("profiles")
         .insert([{
@@ -35,7 +37,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
-          password: formData.password,
+          password: hashedPassword,
           is_verified: true,
           balance: 0,
           is_admin: false,
@@ -110,7 +112,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             value={formData.username}
             onChange={(v) => setFormData({ ...formData, username: v })}
             placeholder="somchai123"
-            disabled
           />
           <AdminInput
             label="อีเมล"
@@ -118,7 +119,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             value={formData.email}
             onChange={(v) => setFormData({ ...formData, email: v })}
             placeholder="somchai@example.com"
-            disabled
           />
           <AdminInput
             label="รหัสผ่าน"
@@ -126,7 +126,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             value={formData.password}
             onChange={(v) => setFormData({ ...formData, password: v })}
             placeholder="••••••••"
-            disabled
           />
 
           <div className="pt-4 flex gap-3 text-xs text-slate-500 leading-relaxed italic">

@@ -3,6 +3,11 @@ import type React from "react";
 import { assets } from "../data/marketData";
 const FINNHUB_API_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
 
+// Validation log (internal)
+if (!FINNHUB_API_KEY) {
+  console.warn("[MarketService] VITE_FINNHUB_API_KEY is missing. Stock prices will use mock data.");
+}
+
 export interface StockData {
   id: number;
   name: string;
@@ -22,7 +27,8 @@ export interface StockData {
 async function fetchCryptoDetails(symbol: string): Promise<Partial<StockData> | null> {
   try {
     const binanceSymbol = `${symbol}USDT`;
-    const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`);
+    const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) throw new Error(`Binance API error: ${response.status}`);
     const data = await response.json();
     if (data.lastPrice) {
       return {
@@ -36,7 +42,11 @@ async function fetchCryptoDetails(symbol: string): Promise<Partial<StockData> | 
     }
     return null;
   } catch (error) {
-    console.error(`Error fetching crypto details for ${symbol}:`, error);
+    if ((error as Error).name === 'TimeoutError' || (error as Error).name === 'AbortError') {
+      console.warn(`[MarketService] Timeout fetching crypto details for ${symbol}`);
+    } else {
+      console.error(`[MarketService] Error fetching crypto details for ${symbol}:`, error);
+    }
     return null;
   }
 }
@@ -47,12 +57,19 @@ async function fetchCryptoDetails(symbol: string): Promise<Partial<StockData> | 
 async function fetchStockPrice(symbol: string): Promise<Partial<StockData> | null> {
   if (!FINNHUB_API_KEY) return null;
   try {
-    const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
+    const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`, { signal: AbortSignal.timeout(5000) });
     
     if (response.status === 401) {
-      console.warn(`Finnhub API Key is unauthorized (401). Please check your VITE_FINNHUB_API_KEY in .env. Falling back to current/mock data.`);
+      console.warn(`[MarketService] Finnhub 401: Unauthorized. Check VITE_FINNHUB_API_KEY.`);
       return null;
     }
+    
+    if (response.status === 429) {
+      console.warn(`[MarketService] Finnhub 429: Rate limit exceeded.`);
+      return null;
+    }
+
+    if (!response.ok) throw new Error(`Finnhub API error: ${response.status}`);
 
     const data = await response.json();
     if (data.c && data.c > 0) {
@@ -64,12 +81,13 @@ async function fetchStockPrice(symbol: string): Promise<Partial<StockData> | nul
         open: data.o
       };
     }
-    
-    // Fallback: If Finnhub returns 0 or invalid data, don't return null
-    // return null; 
-    return null; // I'll keep it null but handle it in fetchSymbolPrice
+    return null;
   } catch (error) {
-    console.error(`Error fetching stock price for ${symbol}:`, error);
+    if ((error as Error).name === 'TimeoutError' || (error as Error).name === 'AbortError') {
+      console.warn(`[MarketService] Timeout fetching stock price for ${symbol}`);
+    } else {
+      console.error(`[MarketService] Error fetching stock price for ${symbol}:`, error);
+    }
     return null;
   }
 }

@@ -17,6 +17,26 @@ import { ScrollToTop } from "./components/layout/ScrollToTop";
 function AppContent() {
   const { session, isAdmin, loading } = useAuth();
   
+  // System Integrity Check
+  useEffect(() => {
+    const requiredEnv = [
+      'VITE_SUPABASE_URL',
+      'VITE_SUPABASE_PUBLISHABLE_KEY',
+      'VITE_EMAILJS_SERVICE_ID',
+      'VITE_EMAILJS_TEMPLATE_ID',
+      'VITE_EMAILJS_PUBLIC_KEY',
+      'VITE_FINNHUB_API_KEY'
+    ];
+    
+    const missing = requiredEnv.filter(key => !import.meta.env[key]);
+    if (missing.length > 0) {
+      console.warn(`[System Check] Missing environment variables: ${missing.join(', ')}`);
+      console.warn("The application may not function correctly without these keys.");
+    } else {
+      console.log("[System Check] All core environment variables are present.");
+    }
+  }, []);
+
   // Push Notification Initialization
   useEffect(() => {
     const userId = session?.user?.id;

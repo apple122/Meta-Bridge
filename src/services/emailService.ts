@@ -26,6 +26,7 @@ interface NotifyWinOptions {
   amount: number;
   payout: number;
   assetSymbol: string;
+  orderId?: string;
   direction?: 'up' | 'down';
   durationMinutes?: number;
   payoutPercent?: number;
@@ -64,7 +65,8 @@ const TRANSLATIONS: Record<string, any> = {
     net_profit: "กำไรสุทธิ",
     up: "📈 ทายขึ้น (CALL)",
     down: "📉 ทายลง (PUT)",
-    min: "นาที"
+    min: "นาที",
+    order_id: "เลขที่บิล / Order ID"
   },
   en: {
     verification_subject: "Meta Bridge Account Verification",
@@ -97,7 +99,8 @@ const TRANSLATIONS: Record<string, any> = {
     net_profit: "Net Profit",
     up: "📈 Predict UP (CALL)",
     down: "📉 Predict DOWN (PUT)",
-    min: "min"
+    min: "min",
+    order_id: "Order ID"
   }
 };
 
@@ -111,7 +114,10 @@ export const emailService = {
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-      if (!serviceID || !templateID || !publicKey) return false;
+      if (!serviceID || !templateID || !publicKey) {
+        console.error("[EmailService] Missing EmailJS configuration keys. Please check your .env file.");
+        return false;
+      }
 
       const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
       
@@ -164,7 +170,10 @@ export const emailService = {
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_DEPOSIT_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-      if (!serviceID || !templateID || !publicKey) return false;
+      if (!serviceID || !templateID || !publicKey) {
+        console.error("[EmailService] Missing EmailJS configuration keys for deposit notification.");
+        return false;
+      }
 
       const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
       const formattedAmount = `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -201,13 +210,16 @@ export const emailService = {
   /**
    * Sends a win celebration notification email.
    */
-  sendWinNotification: async ({ email, userName, amount, payout, assetSymbol, direction, durationMinutes, payoutPercent, lang = "th" }: NotifyWinOptions): Promise<boolean> => {
+  sendWinNotification: async ({ email, userName, amount, payout, assetSymbol, orderId, direction, durationMinutes, payoutPercent, lang = "th" }: NotifyWinOptions): Promise<boolean> => {
     try {
       const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_WIN_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-      if (!serviceID || !templateID || !publicKey) return false;
+      if (!serviceID || !templateID || !publicKey) {
+        console.error("[EmailService] Missing EmailJS configuration keys for win notification.");
+        return false;
+      }
 
       const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
       const formattedPayout = `$${payout.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -216,7 +228,17 @@ export const emailService = {
       
       const directionLabel = direction === 'up' ? t.up : t.down;
       
-      const detailLine = `${t.trade_details}\n• ${t.asset}: ${assetSymbol}\n• ${t.direction}: ${directionLabel}\n• ${t.duration}: ${durationMinutes ?? '—'} ${t.min}\n• ${t.payout_rate}: ${payoutPercent ?? '—'}%\n• ${t.stake}: ${formattedStake}\n• ${t.net_profit}: ${formattedProfit}`;
+      const detailLine = `${t.trade_details}\n` +
+        `• ${t.order_id}: #${orderId || '—'}\n` + 
+        `• ${t.asset}: ${assetSymbol}\n` + 
+        `• ${t.direction}: ${directionLabel}\n` + 
+        `• ${t.duration}: ${durationMinutes ?? '—'} ${t.min}\n` + 
+        `• ${t.payout_rate}: ${payoutPercent ?? '—'}%\n` + 
+        `• ${t.stake}: ${formattedStake}\n` + 
+        `• ${t.net_profit}: ${formattedProfit}`;
+  
+      // Add a highlighted Order ID line for visibility
+      const bodyPrefix = orderId ? `📌 ${t.order_id}: #${orderId}\n` : '';
 
       await emailjs.send(
         serviceID,
@@ -225,10 +247,11 @@ export const emailService = {
           to_email: email,
           to_name: userName,
           passcode: formattedPayout,
+          ticket_id: orderId ? `#${orderId}` : '', // New separate field for template
           time: `${new Date().toLocaleString(lang === 'th' ? 'th-TH' : 'en-US')}`,
-          email_subject: t.win_subject,
+          email_subject: `${t.win_subject} (ID: #${orderId || 'Trade'})`,
           email_greeting: t.greeting,
-          email_body: `${t.win_body}\n\n${detailLine}`,
+          email_body: `${bodyPrefix}${t.win_body}\n\n${detailLine}`,
           email_otp_label: t.win_label,
           email_expiry: t.win_warning,
           email_warning: '— Meta Bridge Team',

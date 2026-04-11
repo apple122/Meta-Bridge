@@ -25,6 +25,8 @@ export interface Transaction {
   binary_result?: "win" | "loss";
   trade_id?: string;
   smart_id?: string;
+  is_win?: boolean;
+  is_loss?: boolean;
 }
 export interface BinaryTrade {
   id: string;
@@ -124,8 +126,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           binary_type: tx.binary_type,
           binary_result: tx.binary_result,
           trade_id: tx.binary_trade_id || tx.reference_id || tx.id,
-          smart_id: tx.id.slice(-4).toUpperCase(), // Default fallback
-        })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          smart_id: (tx.binary_trade_id || tx.id).slice(-4).toUpperCase(), 
+        }) as Transaction).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         // 2. Direct Linking & Map of "open" trade Ticket IDs
         const openStacks: Record<string, string[]> = {};
@@ -139,7 +141,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           const isStake = !tx.binary_result;
           
           if (isStake) {
-            const tid = tx.id.slice(-4).toUpperCase();
+            const tid = (tx.trade_id || tx.id).slice(-4).toUpperCase();
             tx.smart_id = tid;
             
             // Map the direct binary_trade_id to this smart_id for future results
@@ -166,8 +168,13 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
             if (parentStake) {
               parentStake.binary_result = tx.binary_result;
               // If it's a win, the 'total' on the ledger should show the Payout
-              if (tx.binary_result === 'win') {
+              const isWin = tx.binary_result?.toLowerCase() === 'win' || tx.binary_result?.toLowerCase() === 'won';
+              if (isWin) {
                 parentStake.total = tx.total;
+                // Force a positive representation for the UI merging
+                parentStake.is_win = true; 
+              } else {
+                parentStake.is_loss = true;
               }
             }
           }
@@ -236,9 +243,18 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
       const notifiedIds = notifiedIdsRaw ? JSON.parse(notifiedIdsRaw) : [];
       
       let newNotifications = 0;
+      const now = new Date();
 
-      // 3. Compare and notify for any "new" settled trades
+      // 3. Compare and notify for any "recent" settled trades
       for (const trade of data) {
+        // --- HARDENING: Time-bound check ---
+        // Only notify if trade was settled in the last 60 seconds.
+        // This prevents old history from triggering popups on page refresh.
+        const settledAt = new Date(trade.settled_at);
+        const diffSeconds = (now.getTime() - settledAt.getTime()) / 1000;
+        
+        if (diffSeconds > 60) continue; 
+
         if (!notifiedIds.includes(trade.id)) {
           const won = trade.status === 'won';
           const payout = won 
@@ -254,7 +270,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
                 won,
                 assetSymbol: trade.asset_symbol,
                 amount: Number(trade.amount),
-                payout: won ? payout : Number(trade.amount),
+                payout: won ? payout : 0, // Fix: Payout is 0 for loss
               },
             })
           );
@@ -269,6 +285,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
               amount: Number(trade.amount),
               payout,
               assetSymbol: trade.asset_symbol,
+              orderId: trade.id.slice(-4).toUpperCase(),
               durationMinutes,
               payoutPercent: Number(trade.payout_percent),
               lang: language,
@@ -352,7 +369,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
                   won,
                   assetSymbol: updatedTrade.asset_symbol,
                   amount: Number(updatedTrade.amount),
-                  payout: won ? payout : Number(updatedTrade.amount),
+                  payout: won ? payout : 0, 
                 },
               })
             );
@@ -367,6 +384,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
                 amount: Number(updatedTrade.amount),
                 payout,
                 assetSymbol: updatedTrade.asset_symbol,
+                orderId: updatedTrade.id.slice(-4).toUpperCase(),
                 durationMinutes,
                 payoutPercent: Number(updatedTrade.payout_percent),
                 lang: language,
@@ -444,17 +462,19 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           const result = await marketService.fetchSymbolPrice(trade.assetSymbol);
           if (!result || typeof result.price !== "number") {
             console.warn(`[WalletContext] Could not fetch price for ${trade.assetSymbol}, refunding.`);
-            const { data: profileData } = await supabase
-              .from("profiles")
-              .select("balance")
-              .eq("id", user.id)
-              .single();
-            const currentBal = Number(profileData?.balance || 0);
-            const newBal = currentBal + trade.amount;
-            await supabase.from("profiles").update({ balance: newBal }).eq("id", user.id);
-            await supabase.from("binary_trades").update({ status: "refunded", settled_at: new Date().toISOString() }).eq("id", trade.id);
-            setBalance(newBal);
-            await refreshProfile();
+            
+            // --- ATOMIC REFUND VIA RPC ---
+            const { data: refundRes, error: refundErr } = await supabase.rpc('refund_binary_trade', {
+              p_trade_id: trade.id
+            });
+
+            if (refundErr || !refundRes?.success) {
+              console.error(`[WalletContext] Atomic refund failed for ${trade.id}:`, refundErr || refundRes?.message);
+            } else {
+              console.log(`[WalletContext] Atomic refund successful for ${trade.id}`);
+              await refreshProfile();
+            }
+            
             processingTradeIds.current.delete(trade.id);
             continue;
           }
@@ -497,7 +517,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
                   won,
                   assetSymbol: trade.assetSymbol,
                   amount: trade.amount,
-                  payout: won ? payout : trade.amount,
+                  payout: won ? payout : 0,
                 },
               }),
             );
@@ -511,6 +531,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
                 amount: trade.amount,
                 payout,
                 assetSymbol: trade.assetSymbol,
+                orderId: trade.id.slice(-4).toUpperCase(),
                 direction: trade.type,
                 durationMinutes,
                 payoutPercent: trade.payoutPercent,

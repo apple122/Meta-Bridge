@@ -6,6 +6,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { supabase } from "../lib/supabase";
+import { getPublicIP } from "../utils/ipUtils";
 
 export interface Profile {
   id: string;
@@ -128,9 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
         let ip = "Unknown IP";
         try {
-           const res = await fetch("https://api.ipify.org?format=json");
-           const data = await res.json();
-           ip = data.ip || "Unknown IP";
+           ip = await getPublicIP();
         } catch (e) {
            console.warn("Could not fetch IP");
         }

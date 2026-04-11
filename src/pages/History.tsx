@@ -10,6 +10,9 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
   Filter,
+  Trophy,
+  TrendingDown,
+  Zap
 } from "lucide-react";
 import {
   getDaysInMonth,
@@ -281,6 +284,8 @@ export const History: React.FC = () => {
                 highlightedSmartId &&
                 tx.smart_id === highlightedSmartId &&
                 tx.id !== expandedId;
+              const resLower = tx.binary_result?.toLowerCase();
+              const isWin = resLower === "win" || resLower === "won" || tx.is_win;
               const isBinaryBet = !!tx.binary_type && !tx.binary_result;
 
               const txDate = new Date(tx.timestamp).toLocaleDateString();
@@ -339,9 +344,10 @@ export const History: React.FC = () => {
                       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                         <div className="relative flex-shrink-0">
                           <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 ${
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 transition-colors ${
                               tx.type === "sell" ||
                               tx.type === "deposit" ||
+                              isWin ||
                               tx.type === "win"
                                 ? "bg-green-500/10 text-green-500 border-green-500/20"
                                 : isBinaryBet
@@ -349,18 +355,21 @@ export const History: React.FC = () => {
                                   : "bg-red-500/10 text-red-500 border-red-500/20"
                             }`}
                           >
-                            {tx.type === "sell" ||
-                            tx.type === "deposit" ||
-                            tx.binary_result === "win" ||
-                            tx.type === "win" ? (
-                              <ArrowUpRight
-                                size={18}
-                                className="stroke-[3] sm:w-5 sm:h-5"
+                            {isWin ? (
+                              <Trophy
+                                size={20}
+                                className="stroke-[2.5] sm:w-6 sm:h-6 drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]"
                               />
+                            ) : isBinaryBet ? (
+                                <Zap size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
+                            ) : tx.type === "sell" || tx.type === "deposit" ? (
+                                <ArrowUpRight size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
+                            ) : tx.binary_result === "loss" ? (
+                                <TrendingDown size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
                             ) : (
                               <ArrowDownLeft
-                                size={18}
-                                className="stroke-[3] sm:w-5 sm:h-5"
+                                size={20}
+                                className="stroke-[2.5] sm:w-6 sm:h-6"
                               />
                             )}
                           </div>
@@ -397,7 +406,7 @@ export const History: React.FC = () => {
                             {tx.binary_result && (
                               <span
                                 className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${
-                                  tx.binary_result === "win"
+                                  isWin
                                     ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
                                     : "bg-red-500 text-white shadow-lg shadow-red-500/30"
                                 }`}
@@ -422,7 +431,7 @@ export const History: React.FC = () => {
                           className={`text-sm sm:text-base font-black ${
                             tx.type === "sell" ||
                             tx.type === "deposit" ||
-                            tx.binary_result === "win" ||
+                            isWin ||
                             tx.type === "win"
                               ? "text-green-400"
                               : isBinaryBet
@@ -432,7 +441,7 @@ export const History: React.FC = () => {
                         >
                           {tx.type === "sell" ||
                           tx.type === "deposit" ||
-                          tx.binary_result === "win" ||
+                          isWin ||
                           tx.type === "win"
                             ? "+"
                             : "-"}

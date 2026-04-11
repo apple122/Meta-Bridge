@@ -11,6 +11,8 @@ import {
   Clock,
   Zap,
   X,
+  Trophy,
+  TrendingDown,
 } from "lucide-react";
 import { DepositModal } from "../components/wallet/DepositModal";
 import { WithdrawModal } from "../components/wallet/WithdrawModal";
@@ -160,6 +162,8 @@ export const Wallet: React.FC = () => {
                     const highlightedSmartId = expandedTx?.smart_id;
                     const isRelated = highlightedSmartId && tx.smart_id === highlightedSmartId && tx.id !== expandedId;
                     const assetInfo = tx.asset ? assets.find((a) => a.symbol === tx.asset) : null;
+                    const resLower = tx.binary_result?.toLowerCase();
+                    const isWin = resLower === "win" || resLower === "won" || tx.is_win;
                     const isBinaryBet = !!tx.binary_type && !tx.binary_result;
 
                     const txDate = new Date(tx.timestamp).toLocaleDateString();
@@ -204,19 +208,19 @@ export const Wallet: React.FC = () => {
                             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                               {/* Visual Icon (Squircle Arrow or Logo) */}
                               <div
-                                className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center relative flex-shrink-0 shadow-lg ${
-                                  tx.type === "deposit" || tx.type === "sell" || tx.type === "win"
-                                    ? "bg-green-500/10 text-green-500"
+                                className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center relative flex-shrink-0 shadow-lg border-2 transition-colors ${
+                                  tx.type === "deposit" || tx.type === "sell" || isWin
+                                    ? "bg-green-500/10 text-green-500 border-green-500/20"
                                     : isBinaryBet
                                       ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                                      : "bg-red-500/10 text-red-500"
+                                      : "bg-red-500/10 text-red-500 border-red-500/20"
                                   }`}
                               >
                                 {tx.asset && assetInfo?.iconUrl ? (
                                   <div className="w-full h-full p-0.5">
                                     <img src={assetInfo.iconUrl} className="w-full h-full object-cover rounded-xl" alt="" />
                                     <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-slate-900 rounded-full ${
-                                      tx.type === "sell" || tx.type === "deposit" || tx.type === "win" 
+                                      tx.type === "sell" || tx.type === "deposit" || isWin 
                                         ? "bg-green-500" 
                                         : isBinaryBet 
                                           ? "bg-indigo-400" 
@@ -225,8 +229,14 @@ export const Wallet: React.FC = () => {
                                   </div>
                                 ) : (
                                   <>
-                                    {tx.type === "deposit" || tx.type === "sell" || tx.type === "win" ? (
+                                    {isWin ? (
+                                      <Trophy size={20} className="stroke-[2.5] drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]" />
+                                    ) : isBinaryBet ? (
+                                      <Zap size={20} className="stroke-[2.5]" />
+                                    ) : tx.type === "deposit" || tx.type === "sell" ? (
                                       <ArrowUpRight size={22} strokeWidth={2.5} />
+                                    ) : tx.binary_result?.toLowerCase().includes("loss") ? (
+                                      <TrendingDown size={22} strokeWidth={2.5} />
                                     ) : (
                                       <ArrowDownLeft size={22} strokeWidth={2.5} />
                                     )}
@@ -271,14 +281,14 @@ export const Wallet: React.FC = () => {
                             <div className="text-right flex-shrink-0">
                               <p
                                 className={`text-xs sm:text-base font-black tabular-nums ${
-                                  tx.type === "deposit" || tx.type === "sell" || tx.type === "win"
+                                  tx.type === "deposit" || tx.type === "sell" || isWin
                                   ? "text-green-500" 
                                   : isBinaryBet
                                     ? "text-indigo-400"
                                     : "text-red-500"
                                   }`}
                               >
-                                {tx.type === "deposit" || tx.type === "sell" || tx.type === "win" ? "+" : "-"} {formatCurrency(tx.total)}
+                                {tx.type === "deposit" || tx.type === "sell" || isWin ? "+" : "-"} {formatCurrency(tx.total)}
                               </p>
                               <span
                                 className={`text-[7px] sm:text-[8px] font-black uppercase tracking-widest px-1 sm:px-1.5 py-0.5 rounded ${

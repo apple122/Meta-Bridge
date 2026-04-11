@@ -7,6 +7,9 @@ import {
   X,
   Clock,
   History as HistoryIcon,
+  Trophy,
+  TrendingDown,
+  Zap
 } from "lucide-react";
 import { formatCurrency } from "../../utils/format";
 import { calculateProfit } from "../../utils/trade";
@@ -271,10 +274,13 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
           {transactions
             .filter((t_tx) => t_tx.asset === selectedAsset.symbol)
             .map((tx) => {
+              const resLower = tx.binary_result?.toLowerCase();
+              const isWin = resLower === "win" || resLower === "won";
               const isPositive =
                 tx.type === "sell" ||
                 tx.type === "deposit" ||
-                tx.type === "win";
+                tx.type === "win" ||
+                isWin;
               const isBinaryBet = tx.binary_type && !tx.binary_result;
 
               return (
@@ -285,16 +291,22 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center relative flex-shrink-0 shadow-sm ${
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center relative flex-shrink-0 shadow-sm border-2 transition-colors ${
                           isPositive 
-                            ? "bg-green-500/10 text-green-500" 
+                            ? "bg-green-500/10 text-green-500 border-green-500/20" 
                             : isBinaryBet 
-                              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" 
-                              : "bg-red-500/10 text-red-500"
+                              ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" 
+                              : "bg-red-500/10 text-red-500 border-red-500/20"
                         }`}
                       >
-                        {isPositive ? (
+                        {isWin ? (
+                          <Trophy size={16} className="stroke-[2.5]" />
+                        ) : isBinaryBet ? (
+                          <Zap size={16} className="stroke-[2.5]" />
+                        ) : tx.type === "sell" || tx.type === "deposit" ? (
                           <ArrowUpRight size={16} strokeWidth={2.5} />
+                        ) : tx.binary_result?.toLowerCase().includes("loss") ? (
+                          <TrendingDown size={16} strokeWidth={2.5} />
                         ) : (
                           <ArrowDownLeft size={16} strokeWidth={2.5} />
                         )}
@@ -320,7 +332,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                           {new Date(tx.timestamp).getMinutes().toString().padStart(2, '0')}
                         </p>
                         {tx.binary_result && (
-                          <span className={`text-[8px] font-black px-1 rounded-full uppercase flex-shrink-0 ${tx.binary_result === "win" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
+                          <span className={`text-[8px] font-black px-1 rounded-full uppercase flex-shrink-0 ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
                             {tx.binary_result}
                           </span>
                         )}

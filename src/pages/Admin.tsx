@@ -20,6 +20,7 @@ import { UserTable } from "../components/admin/UserTable";
 import { AdminInput } from "../components/admin/AdminInput";
 import { CreateUserModal } from "../components/admin/CreateUserModal";
 import { TopUpModal } from "../components/admin/TopUpModal";
+import { hashPassword, isHashed } from "../utils/security";
 
 export const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"users" | "settings">("users");
@@ -74,16 +75,22 @@ export const Admin: React.FC = () => {
 
   const handleUpdateProfile = async (profile: Profile) => {
     setIsSaving(true);
+    const updateData: any = {
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      email: profile.email,
+      phone_number: profile.phone_number,
+      balance: profile.balance,
+    };
+
+    // Only hash and update password if it's not already hashed (meaning it was changed to plaintext by the admin)
+    if (profile.password && !isHashed(profile.password)) {
+      updateData.password = await hashPassword(profile.password);
+    }
+
     const { error } = await supabase
       .from("profiles")
-      .update({
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        email: profile.email,
-        password: profile.password, // Optional plain-text password
-        phone_number: profile.phone_number,
-        balance: profile.balance,
-      })
+      .update(updateData)
       .eq("id", profile.id);
 
     if (!error) {
