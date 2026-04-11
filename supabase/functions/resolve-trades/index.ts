@@ -138,6 +138,9 @@ Deno.serve(async (req) => {
   
     const bodyPrefix = `📌 ${t.order_id}: #${orderId}\n`;
   
+    const subject = `${t.win_subject} (ID: #${orderId})`;
+    const fullBody = `${bodyPrefix}${t.win_body}\n\n${detailLine}`;
+  
     const payload = {
       service_id: EMAILJS_SERVICE_ID,
       template_id: EMAILJS_TEMPLATE_WIN_ID,
@@ -149,16 +152,23 @@ Deno.serve(async (req) => {
         passcode: formattedPayout,
         ticket_id: `#${orderId}`,
         time: `${new Date().toLocaleString(lang === 'th' ? 'th-TH' : 'en-US')}`,
-        email_subject: `${t.win_subject} (ID: #${orderId})`,
+        // Lowercase
+        email_subject: subject,
         email_greeting: t.greeting,
-        email_body: `${bodyPrefix}${t.win_body}\n\n${detailLine}`,
+        email_body: fullBody,
         email_otp_label: t.win_label,
         email_expiry: t.win_warning,
         email_warning: '— Meta Bridge Team',
         email_title: t.win_title,
         email_credited: t.credited_note,
         email_footer_brand: t.footer_brand,
-        email_footer_auto: t.footer_auto
+        email_footer_auto: t.footer_auto,
+        // Uppercase
+        EMAIL_SUBJECT: subject,
+        EMAIL_GREETING: t.greeting,
+        EMAIL_BODY: fullBody,
+        EMAIL_OTP_LABEL: t.win_label,
+        EMAIL_TITLE: t.win_title
       }
     };
   
@@ -248,7 +258,7 @@ Deno.serve(async (req) => {
         console.log(`Trade ${trade.id} WON! Preparing to send email...`);
         const { data: profile, error: profileErr } = await supabase
           .from("profiles")
-          .select("email, first_name, last_name, id")  // Removed non-existent language column
+          .select("email, first_name, last_name, id, language") 
           .eq("id", trade.user_id)
           .single();
           

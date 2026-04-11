@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 type Language = 'th' | 'en';
 
@@ -502,11 +503,28 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('appLanguage');
-    return (saved === 'th' || saved === 'en') ? saved as Language : 'th';
+    return (saved === 'th' || saved === 'en') ? (saved as Language) : 'th';
   });
 
   useEffect(() => {
     localStorage.setItem('appLanguage', language);
+    
+    // Sync with database if user is logged in
+    const syncWithDB = async () => {
+      const storedProfile = localStorage.getItem('user_profile');
+      if (storedProfile) {
+        try {
+          const p = JSON.parse(storedProfile);
+          await supabase
+            .from('profiles')
+            .update({ language: language })
+            .eq('id', p.id);
+        } catch (e) {
+          console.warn("Language sync failed", e);
+        }
+      }
+    };
+    syncWithDB();
   }, [language]);
 
   const t = (key: string) => {

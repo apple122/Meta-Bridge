@@ -30,6 +30,7 @@ export interface Profile {
   otp_code: string | null;
   otp_expires_at: string | null;
   is_verified: boolean;
+  language?: string;
   updated_at: string;
 }
 
@@ -86,6 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         handleLogout();
       } else {
         setProfile(data);
+        localStorage.setItem("user_profile", JSON.stringify(data));
         setIsAdmin(data.is_admin || false);
         // Sync user email if available
         if (data.email) {
@@ -110,6 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     
     // Save to local storage
     localStorage.setItem("metabridge_user_id", newProfile.id);
+    localStorage.setItem("user_profile", JSON.stringify(newProfile));
     setProfile(newProfile);
     setIsAdmin(newProfile.is_admin || false);
     setUser(localUser);
