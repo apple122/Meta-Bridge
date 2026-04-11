@@ -133,26 +133,32 @@ export const emailService = {
 
       const expiryTime = new Date(Date.now() + 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      await emailjs.send(
-        serviceID,
-        templateID,
-        {
-          to_email: email,
-          to_name: userName || 'User',
-          passcode: code,
-          time: expiryTime,
-          email_subject: subject,
-          email_greeting: t.greeting,
-          email_body: body,
-          email_otp_label: t.otp_label,
-          email_expiry: t.expiry,
-          email_warning: t.warning,
-          email_title: subject,
-          email_footer_brand: t.footer_brand,
-          email_footer_auto: t.footer_auto
-        },
-        publicKey
-      );
+      // Build parameters with both case styles to be safe
+      const templateParams = {
+        to_email: email,
+        to_name: userName || 'User',
+        passcode: code,
+        time: expiryTime,
+        // Lowercase versions
+        email_subject: subject,
+        email_greeting: t.greeting,
+        email_body: body,
+        email_otp_label: t.otp_label,
+        email_expiry: t.expiry,
+        email_warning: t.warning,
+        email_title: subject,
+        email_footer_brand: t.footer_brand,
+        email_footer_auto: t.footer_auto,
+        // Uppercase versions (for user template consistency)
+        EMAIL_SUBJECT: subject,
+        EMAIL_GREETING: t.greeting,
+        EMAIL_BODY: body,
+        EMAIL_OTP_LABEL: t.otp_label,
+        EMAIL_EXPIRY: t.expiry,
+        EMAIL_TITLE: subject
+      };
+
+      await emailjs.send(serviceID, templateID, templateParams, publicKey);
       
       return true;
     } catch (error) {
@@ -186,6 +192,7 @@ export const emailService = {
           to_name: userName,
           passcode: formattedAmount,
           time: new Date().toLocaleString(lang === 'th' ? 'th-TH' : 'en-US'),
+          // Lowercase
           email_subject: t.deposit_subject,
           email_greeting: t.greeting,
           email_body: t.deposit_body,
@@ -195,7 +202,13 @@ export const emailService = {
           email_title: t.deposit_subject,
           email_credited: t.credited_note,
           email_footer_brand: t.footer_brand,
-          email_footer_auto: t.footer_auto
+          email_footer_auto: t.footer_auto,
+          // Uppercase
+          EMAIL_SUBJECT: t.deposit_subject,
+          EMAIL_GREETING: t.greeting,
+          EMAIL_BODY: t.deposit_body,
+          EMAIL_OTP_LABEL: t.deposit_label,
+          EMAIL_TITLE: t.deposit_subject
         },
         publicKey
       );
@@ -240,6 +253,9 @@ export const emailService = {
       // Add a highlighted Order ID line for visibility
       const bodyPrefix = orderId ? `📌 ${t.order_id}: #${orderId}\n` : '';
 
+      const subject = `${t.win_subject} (ID: #${orderId || 'Trade'})`;
+      const fullBody = `${bodyPrefix}${t.win_body}\n\n${detailLine}`;
+
       await emailjs.send(
         serviceID,
         templateID,
@@ -249,16 +265,23 @@ export const emailService = {
           passcode: formattedPayout,
           ticket_id: orderId ? `#${orderId}` : '', // New separate field for template
           time: `${new Date().toLocaleString(lang === 'th' ? 'th-TH' : 'en-US')}`,
-          email_subject: `${t.win_subject} (ID: #${orderId || 'Trade'})`,
+          // Lowercase
+          email_subject: subject,
           email_greeting: t.greeting,
-          email_body: `${bodyPrefix}${t.win_body}\n\n${detailLine}`,
+          email_body: fullBody,
           email_otp_label: t.win_label,
           email_expiry: t.win_warning,
           email_warning: '— Meta Bridge Team',
           email_title: t.win_title,
           email_credited: t.credited_note,
           email_footer_brand: t.footer_brand,
-          email_footer_auto: t.footer_auto
+          email_footer_auto: t.footer_auto,
+          // Uppercase
+          EMAIL_SUBJECT: subject,
+          EMAIL_GREETING: t.greeting,
+          EMAIL_BODY: fullBody,
+          EMAIL_OTP_LABEL: t.win_label,
+          EMAIL_TITLE: t.win_title
         },
         publicKey
       );
