@@ -323,9 +323,12 @@ export const History: React.FC = () => {
               <ChevronRight size={14} className="rotate-90" />
             </div>
           </div>
-          {/* List Header with Integrated Date Separator */}
-      <div className="flex items-center gap-4 pt-1 pb-1">
-        <h3 className="text-[10px] font-black text-white opacity-40 uppercase tracking-[0.2em] whitespace-nowrap">
+        </div>
+      </div>
+
+      {/* Unified List Header: "Transactions Up To" + "Date/Today" */}
+      <div className="flex items-center gap-3 pt-2 pb-1">
+        <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] whitespace-nowrap">
           {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
         </h3>
         <div className="h-px flex-grow bg-white/5" />
@@ -388,7 +391,7 @@ export const History: React.FC = () => {
                     ).toLocaleDateString()
                   : null;
               
-              // Hide the date separator if it's the same as the one already shown in the top header
+              // Only show the inside-list header if the date changes AND it's NOT the primary date shown in the top header
               const showDateHeader = txDate !== prevTxDate && txDate !== selectedDate.toLocaleDateString();
 
               return (
