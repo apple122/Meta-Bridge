@@ -326,13 +326,13 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified List Header: Sticky Top Marker */}
-      <div className="sticky top-[68px] z-30 flex items-center gap-3 pt-1.5 pb-1.5 bg-background/90 backdrop-blur-xl -mx-6 px-6 border-b border-white/5">
+      {/* Unified List Header: Sticky Master Marker */}
+      <div className="sticky top-[68px] z-30 flex items-center gap-3 pt-2 pb-2 bg-background/95 backdrop-blur-xl -mx-6 px-6 border-b border-white/5">
         <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
           {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
         </h3>
         <div className="h-px flex-grow bg-white/5" />
-        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-0.5 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
+        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
           {(() => {
             const todayStr = new Date().toLocaleDateString();
             const yesterday = new Date();
@@ -340,8 +340,11 @@ export const History: React.FC = () => {
             const yesterdayStr = yesterday.toLocaleDateString();
             const targetStr = selectedDate.toLocaleDateString();
 
-            if (targetStr === todayStr) return t("today") || "Today";
-            if (targetStr === yesterdayStr) return t("yesterday") || "Yesterday";
+            const dateNum = selectedDate.getDate();
+            const monthShort = selectedDate.toLocaleDateString('en-US', { month: 'short' });
+
+            if (targetStr === todayStr) return `${t("today") || "Today"} (${dateNum} ${monthShort})`;
+            if (targetStr === yesterdayStr) return `${t("yesterday") || "Yesterday"} (${dateNum} ${monthShort})`;
             return formatDate(selectedDate, {
               weekday: "short",
               month: "short",
@@ -405,26 +408,29 @@ export const History: React.FC = () => {
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div className="sticky top-[96px] z-20 flex items-center gap-4 py-2.5 bg-background/70 backdrop-blur-md -mx-6 px-6">
-                      <div className="h-px flex-grow bg-white/5" />
-                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-0.5 px-3 rounded-full border border-white/5">
+                    <div className="sticky top-[68px] z-20 flex items-center gap-4 py-2 bg-background/95 backdrop-blur-xl -mx-6 px-6 border-b border-white/5">
+                      <div className="h-px flex-grow bg-white/10" />
+                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/5">
                         {(() => {
                           const todayStr = new Date().toLocaleDateString();
                           const yesterday = new Date();
                           yesterday.setDate(yesterday.getDate() - 1);
                           const yesterdayStr = yesterday.toLocaleDateString();
+                          
+                          const d = txDateObj.getDate();
+                          const m = txDateObj.toLocaleDateString('en-US', { month: 'short' });
 
-                          if (txDate === todayStr) return t("today") || "Today";
-                          if (txDate === yesterdayStr) return t("yesterday") || "Yesterday";
+                          if (txDate === todayStr) return `${t("today") || "Today"} (${d} ${m})`;
+                          if (txDate === yesterdayStr) return `${t("yesterday") || "Yesterday"} (${d} ${m})`;
                           return formatDate(txDateObj, {
-                            weekday: "long",
-                            month: "long",
+                            weekday: "short",
+                            month: "short",
                             day: "numeric",
                             year: "numeric",
                           });
                         })()}
                       </span>
-                      <div className="h-px flex-grow bg-white/5" />
+                      <div className="h-px flex-grow bg-white/10" />
                     </div>
                   )}
 
