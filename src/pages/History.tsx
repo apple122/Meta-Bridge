@@ -327,20 +327,28 @@ export const History: React.FC = () => {
       </div>
 
       {/* Unified List Header: Sticky Top Marker */}
-      <div className="sticky top-[72px] z-30 flex items-center gap-3 pt-2 pb-2 bg-background/80 backdrop-blur-md -mx-6 px-6">
-        <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] whitespace-nowrap">
+      <div className="sticky top-[68px] z-30 flex items-center gap-3 pt-1.5 pb-1.5 bg-background/90 backdrop-blur-xl -mx-6 px-6 border-b border-white/5">
+        <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
           {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
         </h3>
         <div className="h-px flex-grow bg-white/5" />
-        <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
-          {selectedDate.toLocaleDateString() === new Date().toLocaleDateString()
-            ? (t("today") || "Today")
-            : formatDate(selectedDate, {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-0.5 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
+          {(() => {
+            const todayStr = new Date().toLocaleDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toLocaleDateString();
+            const targetStr = selectedDate.toLocaleDateString();
+
+            if (targetStr === todayStr) return t("today") || "Today";
+            if (targetStr === yesterdayStr) return t("yesterday") || "Yesterday";
+            return formatDate(selectedDate, {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          })()}
         </span>
         <div className="h-px flex-grow bg-white/5" />
       </div>
@@ -383,7 +391,8 @@ export const History: React.FC = () => {
               const isWin = resLower === "win" || resLower === "won" || !!tx.is_win;
               const isBinaryBet = !!tx.binary_type && !tx.binary_result;
 
-              const txDate = new Date(tx.timestamp).toLocaleDateString();
+              const txDateObj = new Date(tx.timestamp);
+              const txDate = txDateObj.toLocaleDateString();
               const prevTxDate =
                 idx > 0
                   ? new Date(
@@ -396,17 +405,24 @@ export const History: React.FC = () => {
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div className="sticky top-[108px] z-20 flex items-center gap-4 py-3 bg-background/60 backdrop-blur-sm -mx-6 px-6">
+                    <div className="sticky top-[96px] z-20 flex items-center gap-4 py-2.5 bg-background/70 backdrop-blur-md -mx-6 px-6">
                       <div className="h-px flex-grow bg-white/5" />
-                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/5">
-                        {txDate === new Date().toLocaleDateString()
-                          ? t("today")
-                          : formatDate(new Date(tx.timestamp), {
-                              weekday: "long",
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
+                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-0.5 px-3 rounded-full border border-white/5">
+                        {(() => {
+                          const todayStr = new Date().toLocaleDateString();
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          const yesterdayStr = yesterday.toLocaleDateString();
+
+                          if (txDate === todayStr) return t("today") || "Today";
+                          if (txDate === yesterdayStr) return t("yesterday") || "Yesterday";
+                          return formatDate(txDateObj, {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          });
+                        })()}
                       </span>
                       <div className="h-px flex-grow bg-white/5" />
                     </div>
