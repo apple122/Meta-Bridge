@@ -326,9 +326,9 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified List Header: Perfect Centered Master Marker */}
-      <div className="sticky top-[68px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl">
-        <div className="flex-1 flex items-center gap-3 overflow-hidden">
+      {/* Unified List Header: Robust Centered Master Marker */}
+      <div className="sticky top-[68px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden">
+        <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
           <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
             {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
           </h3>
@@ -357,7 +357,7 @@ export const History: React.FC = () => {
           })()}
         </span>
 
-        <div className="flex-1 flex items-center gap-3 overflow-hidden">
+        <div className="flex-1 basis-0 min-w-0 flex items-center">
           <div className="h-px flex-grow bg-white/5" />
         </div>
       </div>
@@ -414,8 +414,8 @@ export const History: React.FC = () => {
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div className="sticky top-[68px] z-20 flex items-center h-10 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl">
-                      <div className="flex-1 h-px bg-white/10" />
+                    <div className="sticky top-[68px] z-20 flex items-center h-10 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden">
+                      <div className="flex-1 basis-0 min-w-0 h-px bg-white/10" />
                       <span className="flex-shrink-0 text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/10 shadow-lg mx-4">
                         {(() => {
                           const todayStr = new Date().toLocaleDateString();
@@ -436,7 +436,7 @@ export const History: React.FC = () => {
                           });
                         })()}
                       </span>
-                      <div className="flex-1 h-px bg-white/10" />
+                      <div className="flex-1 basis-0 min-w-0 h-px bg-white/10" />
                     </div>
                   )}
 
