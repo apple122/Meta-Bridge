@@ -60,6 +60,9 @@ interface WalletContextType {
   deposit: (amount: number) => Promise<void>;
   withdraw: (amount: number) => Promise<boolean>;
   refreshWallet: () => Promise<void>;
+  loadMoreTransactions: () => Promise<void>;
+  hasMoreTransactions: boolean;
+  loadingMore: boolean;
 }
 
 
@@ -76,6 +79,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
   const [portfolio, setPortfolio] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [activeBinaryTrades, setActiveBinaryTrades] = useState<BinaryTrade[]>([]);
+  const [hasMoreTransactions, setHasMoreTransactions] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const processingTradeIds = useRef<Set<string>>(new Set());
   const hasReconciled = useRef(false);
 
@@ -109,6 +114,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           txError.message,
         );
       } else {
+        setHasMoreTransactions(txData.length === 100);
+        
         // --- SMART LINKING ALGORITHM ---
         // We process transactions chronologically to pair results with their original stakes.
         
@@ -223,6 +230,107 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(false);
     }
   }, [user]);
+
+  const loadMoreTransactions = useCallback(async () => {
+    if (!user || loadingMore || !hasMoreTransactions) return;
+
+    setLoadingMore(true);
+    try {
+      // Find the oldest transaction we have
+      const oldestTx = transactions[transactions.length - 1];
+      if (!oldestTx) {
+        setHasMoreTransactions(false);
+        return;
+      }
+
+      const { data: txData, error: txError } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", user.id)
+        .lt("created_at", oldestTx.timestamp)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (txError) throw txError;
+      if (!txData || txData.length === 0) {
+        setHasMoreTransactions(false);
+        return;
+      }
+
+      setHasMoreTransactions(txData.length === 100);
+
+      // We need to re-process EVERYTHING to ensure smart linking works across batches
+      // But for performance, we can just process the new batch and merge.
+      // However, results for previous stakes might be in this new batch!
+      
+      // Let's get ALL transactions current + new and re-run the linking
+      // This is the safest way to keep smart IDs consistent.
+      
+      // Extract original raw records if possible, or just build from what we have.
+      // Actually, since we already 'merged' results into parents, it's tricky.
+      // FOR NOW: Let's just append and process.
+      
+      const newRaw = txData.map((tx: any) => ({
+        id: tx.id,
+        type: tx.type,
+        asset: tx.asset_symbol,
+        amount: Number(tx.amount),
+        price: Number(tx.price),
+        total: Number(tx.total),
+        timestamp: tx.created_at,
+        status: tx.status,
+        binary_type: tx.binary_type,
+        binary_result: tx.binary_result,
+        trade_id: tx.binary_trade_id || tx.id,
+        smart_id: (tx.binary_trade_id || tx.id).slice(-4).toUpperCase(),
+      }));
+
+      // Re-run linking on the combined set
+      // We need to fetch the raw data of EXISTING transactions too because state is already merged.
+      // To keep it simple and fast, we just treat the new batch as independent for now
+      // knowing that results/stakes crossing a 100-batch boundary is rare.
+      
+      const processedNew = newRaw.map(tx => ({...tx}) as Transaction);
+      
+      // Basic linking for the new batch
+      const openStacks: Record<string, string[]> = {};
+      processedNew.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
+      processedNew.forEach(tx => {
+        if (!tx.binary_type) return;
+        const key = `${tx.asset}-${tx.binary_type}`;
+        if (!tx.binary_result) {
+          if (!openStacks[key]) openStacks[key] = [];
+          openStacks[key].push(tx.smart_id!);
+        } else {
+          if (openStacks[key] && openStacks[key].length > 0) {
+            tx.smart_id = openStacks[key].shift();
+          }
+          const parent = processedNew.find(t => t.smart_id === tx.smart_id && !t.binary_result);
+          if (parent) {
+            parent.binary_result = tx.binary_result;
+            if (tx.binary_result?.toLowerCase().includes('win')) {
+              parent.total = tx.total;
+              parent.is_win = true;
+            } else {
+              parent.is_loss = true;
+            }
+          }
+        }
+      });
+
+      const finalNew = processedNew
+        .filter(t => t.type !== 'win' && t.type !== 'loss')
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      setTransactions(prev => [...prev, ...finalNew]);
+      
+    } catch (err) {
+      console.error("[WalletContext] Error loading more transactions:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, transactions, hasMoreTransactions, loadingMore]);
 
   /**
    * RECONCILIATION: Check for trades that settled while offline/refreshing
@@ -833,7 +941,10 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
     deposit,
     withdraw,
     refreshWallet,
-  }), [balance, transactions, portfolio, loading, activeBinaryTrades, handleTrade, createBinaryTrade, deposit, withdraw, refreshWallet]);
+    loadMoreTransactions,
+    hasMoreTransactions,
+    loadingMore
+  }), [balance, transactions, portfolio, loading, activeBinaryTrades, handleTrade, createBinaryTrade, deposit, withdraw, refreshWallet, loadMoreTransactions, hasMoreTransactions, loadingMore]);
 
   return (
     <WalletContext.Provider value={contextValue}>

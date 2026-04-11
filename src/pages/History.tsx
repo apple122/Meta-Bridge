@@ -25,7 +25,7 @@ import { formatCurrency, formatUnits } from "../utils/format";
 
 export const History: React.FC = () => {
   const { t } = useLanguage();
-  const { transactions } = useWallet();
+  const { transactions, hasMoreTransactions, loadMoreTransactions, loadingMore } = useWallet();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -505,6 +505,39 @@ export const History: React.FC = () => {
                 </React.Fragment>
               );
             })}
+          </motion.div>
+        )}
+
+        {/* Load More Button */}
+        {hasMoreTransactions && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="pt-6 pb-10 flex justify-center"
+          >
+            <button
+              onClick={loadMoreTransactions}
+              disabled={loadingMore}
+              className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all
+                ${
+                  loadingMore
+                    ? "bg-white/5 text-slate-500 cursor-not-allowed"
+                    : "bg-white/10 hover:bg-white/20 text-white active:scale-95 shadow-lg hover:shadow-primary/10"
+                }
+              `}
+            >
+              {loadingMore ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" />
+                  {t("loading") || "Loading..."}
+                </>
+              ) : (
+                <>
+                  <Zap size={18} className="text-primary" />
+                  {t("loadMore") || "Load More"}
+                </>
+              )}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
