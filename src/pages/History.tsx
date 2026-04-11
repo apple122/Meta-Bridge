@@ -323,15 +323,23 @@ export const History: React.FC = () => {
               <ChevronRight size={14} className="rotate-90" />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Results Header */}
-      <div className="pt-1 border-b border-white/5 pb-2">
-        <h3 className="text-sm font-black text-white opacity-80 uppercase tracking-widest">
-          {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}{" "}
-          {formatDate(selectedDate, { weekday: "short" })}
+          {/* List Header with Integrated Date Separator */}
+      <div className="flex items-center gap-4 pt-1 pb-1">
+        <h3 className="text-[10px] font-black text-white opacity-40 uppercase tracking-[0.2em] whitespace-nowrap">
+          {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
         </h3>
+        <div className="h-px flex-grow bg-white/5" />
+        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1.5 px-4 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
+          {selectedDate.toLocaleDateString() === new Date().toLocaleDateString()
+            ? (t("today") || "Today")
+            : formatDate(selectedDate, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+        </span>
+        <div className="h-px flex-grow bg-white/5" />
       </div>
 
       <AnimatePresence mode="wait">
@@ -347,7 +355,7 @@ export const History: React.FC = () => {
               <ClipboardList size={32} />
             </div>
             <p className="text-slate-500 font-medium tracking-wide text-sm">
-              No trading activity on this day.
+              No trading activity found.
             </p>
           </motion.div>
         ) : (
@@ -356,7 +364,7 @@ export const History: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-3"
+            className="space-y-2.5"
           >
             {filteredTransactions.map((tx, idx) => {
               const isExpanded = expandedId === tx.id;
@@ -369,7 +377,7 @@ export const History: React.FC = () => {
                 tx.smart_id === highlightedSmartId &&
                 tx.id !== expandedId;
               const resLower = tx.binary_result?.toLowerCase();
-              const isWin = resLower === "win" || resLower === "won" || tx.is_win;
+              const isWin = resLower === "win" || resLower === "won" || !!tx.is_win;
               const isBinaryBet = !!tx.binary_type && !tx.binary_result;
 
               const txDate = new Date(tx.timestamp).toLocaleDateString();
@@ -379,7 +387,9 @@ export const History: React.FC = () => {
                       filteredTransactions[idx - 1].timestamp,
                     ).toLocaleDateString()
                   : null;
-              const showDateHeader = txDate !== prevTxDate;
+              
+              // Hide the date separator if it's the same as the one already shown in the top header
+              const showDateHeader = txDate !== prevTxDate && txDate !== selectedDate.toLocaleDateString();
 
               return (
                 <React.Fragment key={tx.id}>
