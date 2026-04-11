@@ -248,72 +248,69 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Search and Filters Bar */}
-      <div className="space-y-4">
-        {/* Search Input */}
-        <div className="relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">
-            <Search size={18} />
+      {/* Advanced Filter Panel - Compact Version */}
+      <div className="glass-card bg-slate-900/40 border border-white/5 rounded-3xl p-3 sm:p-4 space-y-3 shadow-xl">
+        <div className="flex flex-col lg:flex-row gap-3">
+          {/* Search Row */}
+          <div className="relative group flex-grow">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">
+              <Search size={16} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("searchHistory") === "searchHistory" ? "ค้นหา Order ID, สินทรัพย์..." : t("searchHistory")}
+              className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-slate-600"
+            />
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t("searchHistory") || "Search ID, Asset, or Type..."}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white font-bold outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-slate-600"
-          />
-        </div>
 
-        {/* Quick Filter Buttons & Asset Dropdown */}
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          {/* Status Selectors */}
-          <div className="flex items-center gap-2 w-full md:w-auto p-1.5 bg-slate-900/50 border border-white/5 rounded-2xl">
+          {/* Quick Filter Buttons */}
+          <div className="flex items-center gap-1 p-1 bg-slate-950/50 border border-white/5 rounded-2xl flex-shrink-0">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                 statusFilter === 'all' 
                 ? "bg-white/10 text-white shadow-lg" 
                 : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              <LayoutGrid size={14} />
+              <LayoutGrid size={12} />
               {t("all") || "All"}
             </button>
             <button
               onClick={() => setStatusFilter('win')}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                 statusFilter === 'win' 
                 ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10" 
-                : "text-slate-500 hover:text-slate-300"
+                : "text-slate-500 hover:text-slate-400"
               }`}
             >
-              <CheckCircle2 size={14} />
+              <CheckCircle2 size={12} />
               {t("win") || "Win"}
             </button>
             <button
               onClick={() => setStatusFilter('loss')}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                 statusFilter === 'loss' 
                 ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10" 
-                : "text-slate-500 hover:text-slate-300"
+                : "text-slate-500 hover:text-slate-400"
               }`}
             >
-              <XCircle size={14} />
+              <XCircle size={12} />
               {t("loss") || "Loss"}
             </button>
           </div>
 
-          <div className="h-10 w-px bg-white/5 hidden md:block" />
-
           {/* Asset Dropdown */}
-          <div className="relative group w-full md:flex-1">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
-              <Filter size={16} />
+          <div className="relative group lg:w-48">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
+              <Filter size={14} />
             </div>
             <select
               value={selectedAsset}
               onChange={(e) => setSelectedAsset(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
+              className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-[10px] font-black text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
             >
               <option value="all"> {t("allAssets") || "All Assets"} </option>
               {uniqueAssets.map((asset) => (
@@ -322,17 +319,17 @@ export const History: React.FC = () => {
                 </option>
               ))}
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-              <ChevronRight size={18} className="rotate-90" />
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+              <ChevronRight size={14} className="rotate-90" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Selected Day View Header */}
-      <div className="pt-4 border-b border-white/5 pb-4">
-        <h3 className="text-lg font-black text-white">
-          {t("transactionsUpTo") || "Transactions up to"}{" "}
+      {/* Results Header */}
+      <div className="pt-1 border-b border-white/5 pb-2">
+        <h3 className="text-sm font-black text-white opacity-80 uppercase tracking-widest">
+          {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}{" "}
           {formatDate(selectedDate, { weekday: "short" })}
         </h3>
       </div>
