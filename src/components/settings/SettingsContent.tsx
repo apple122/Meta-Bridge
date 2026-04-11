@@ -749,41 +749,51 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             >
               <div className="space-y-6">
                 {bankType === "bank" ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
                       {t("selectBank")}
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {THAI_BANKS.map((bank) => (
-                        <button
-                          key={bank.id}
-                          type="button"
-                          onClick={() => {
-                            setTempBankNetwork(bank.id);
-                            setTempBankName(""); // Reset name to let them fill account holder name
-                          }}
-                          className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all gap-2 h-24 ${
-                            tempBankNetwork === bank.id 
-                              ? "bg-white/10 border-white/30 scale-95" 
-                              : "bg-white/5 border-white/5 hover:border-white/10"
-                          }`}
-                        >
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-xs shadow-inner"
-                            style={{ backgroundColor: bank.color }}
-                          >
-                            {bank.icon}
-                          </div>
-                          <span className="text-[10px] font-bold text-center text-slate-400 line-clamp-1">
+                    {/* Custom Dropdown */}
+                    <div className="relative">
+                      <select
+                        value={tempBankNetwork || ""}
+                        onChange={(e) => {
+                          setTempBankNetwork(e.target.value);
+                          setTempBankName("");
+                        }}
+                        className="w-full appearance-none bg-slate-900 border border-white/10 rounded-2xl py-4 pl-16 pr-10 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                      >
+                        <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
+                        {THAI_BANKS.map((bank) => (
+                          <option key={bank.id} value={bank.id}>
                             {language === "th" ? bank.nameTh : bank.name}
-                          </span>
-                          {tempBankNetwork === bank.id && (
-                             <div className="absolute top-2 right-2 text-primary">
-                               <Check size={12} strokeWidth={4} />
-                             </div>
-                          )}
-                        </button>
-                      ))}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Left: colored bank logo */}
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        {(() => {
+                          const bank = THAI_BANKS.find(b => b.id === tempBankNetwork);
+                          return bank ? (
+                            <div
+                              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-md"
+                              style={{ backgroundColor: bank.color }}
+                            >
+                              {bank.icon}
+                            </div>
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                              <Landmark size={16} className="text-slate-500" />
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Right: chevron arrow */}
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                        <ChevronRight size={16} className="rotate-90" />
+                      </div>
                     </div>
                   </div>
                 ) : (

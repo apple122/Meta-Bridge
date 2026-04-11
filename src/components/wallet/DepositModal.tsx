@@ -124,11 +124,21 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
               </div>
               <p className="text-slate-300 text-sm leading-relaxed mb-4">
                 {language === 'th' 
-                  ? "เพื่อความปลอดภัยของบัญชี กรุณายืนยันตัวตน (KYC) ให้เสร็จสมบูรณ์ก่อนทำรายการฝาก-ถอนเงินครับ" 
-                  : "For account security, please complete KYC verification before depositing or withdrawing funds."}
+                  ? (<>เพื่อความปลอดภัยของบัญชี กรุณายืนยันตัวตน{" "}
+                      <button
+                        onClick={() => { onClose(); sessionStorage.setItem("settings_active_tab", "profile"); navigate("/settings"); }}
+                        className="text-amber-400 underline underline-offset-2 hover:text-amber-300 font-bold transition-colors cursor-pointer"
+                      >(KYC)</button>{" "}
+                      ให้เสร็จสมบูรณ์ก่อนทำรายการฝาก-ถอนเงินครับ</>) 
+                  : (<>For account security, please complete{" "}
+                      <button
+                        onClick={() => { onClose(); sessionStorage.setItem("settings_active_tab", "profile"); navigate("/settings"); }}
+                        className="text-amber-400 underline underline-offset-2 hover:text-amber-300 font-bold transition-colors cursor-pointer"
+                      >KYC verification</button>{" "}
+                      before depositing or withdrawing funds.</>)}
               </p>
               <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-400">{profile?.kyc_status || 'Unverified'}</span>
+                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-400">{profile?.kyc_status?.toUpperCase() || 'UNVERIFIED'}</span>
               </p>
             </div>
 
@@ -136,24 +146,12 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
               <SupportContactList settings={settings} />
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  onClose();
-                  sessionStorage.setItem("settings_active_tab", "profile");
-                  navigate("/settings");
-                }}
-                className="flex-1 py-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition-all tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
-              >
-                {language === 'th' ? "ไปหน้ายืนยันตัวตน" : "Go to Verify"} <ChevronRight size={16} />
-              </button>
-              <button
-                onClick={onClose}
-                className="py-4 px-6 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-sm transition-all"
-              >
-                {t('closeLabel')}
-              </button>
-            </div>
+            <button
+              onClick={onClose}
+              className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-sm transition-all"
+            >
+              {t('closeLabel')}
+            </button>
           </div>
         </motion.div>
       )}

@@ -66,4 +66,18 @@
 *   **Smart Priority:** หากมีหลาย Layer เปิดพร้อมกัน ระบบจะปิดจากชั้นบนสุดก่อนเสมอ
 
 ---
+
+## 🎨 อัปเกรด UX หน้า Settings (Settings UX Polish)
+
+### 🏦 Bank Details — Dropdown Selector
+*   **เปลี่ยนจาก List → Dropdown:** แทนที่รายการธนาคารแบบ Full-List ด้วย Custom Dropdown ที่กะทัดรัดและสวยงามกว่า
+*   **Quick-pick Style:** Dropdown แสดงโลโก้วงกลมสีของธนาคารที่เลือกอยู่ทางซ้าย พร้อมชื่อธนาคารเต็มๆ ทั้งภาษาไทยและอังกฤษ
+*   **ประหยัดพื้นที่:** จากรายการยาวหลาย Row → กลายเป็น 1 บรรทัด ลดการ Scroll และดูสะอาดตากว่าเดิมมาก
+
+### 🔗 KYC Inline Navigation
+*   **ลบปุ่ม "ไปหน้ายืนยันตัวตน":** ลบปุ่มสีส้มขนาดใหญ่ที่ซ้ำซ้อนออก
+*   **Inline Clickable Text:** คำว่า **(KYC)** ในประโยคแจ้งเตือนกลายเป็น Link ขีดเส้นใต้สีส้ม กดได้โดยตรงเพื่อไปยังหน้า Settings ทันที ทั้งใน DepositModal และ WithdrawModal
+*   **สถานะ KYC:** แสดงเป็นตัวพิมพ์ใหญ่ `UNVERIFIED` เพื่อความชัดเจนยิ่งขึ้น
+
+---
 **ทีมพัฒนา:** Antigravity AI (Google DeepMind Team)
