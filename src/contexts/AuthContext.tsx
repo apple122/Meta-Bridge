@@ -86,12 +86,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         // If profile fetch fails, logout
         handleLogout();
       } else {
-        setProfile(data);
-        localStorage.setItem("user_profile", JSON.stringify(data));
-        setIsAdmin(data.is_admin || false);
+        // PREVENT STALE OVERWRITE:
+        // If we have a preference in localStorage, keep it instead of DB default
+        const localLang = localStorage.getItem('appLanguage');
+        const finalProfile = { ...data };
+        if (localLang && (localLang === 'th' || localLang === 'en')) {
+          finalProfile.language = localLang;
+        }
+
+        setProfile(finalProfile);
+        localStorage.setItem("user_profile", JSON.stringify(finalProfile));
+        setIsAdmin(finalProfile.is_admin || false);
         // Sync user email if available
-        if (data.email) {
-          setUser(prev => prev ? { ...prev, email: data.email } : { id: userId, email: data.email });
+        if (finalProfile.email) {
+          setUser(prev => prev ? { ...prev, email: finalProfile.email } : { id: userId, email: finalProfile.email });
         }
       }
     } catch (err) {
@@ -107,9 +115,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const handleLogin = (newProfile: Profile) => {
-    const localUser: LocalUser = { id: newProfile.id, email: newProfile.email || undefined };
-    
+    // PREVENT STALE OVERWRITE:
+    const localLang = localStorage.getItem('appLanguage');
+    if (localLang && (localLang === 'th' || localLang === 'en')) {
+      newProfile.language = localLang;
+    }
+
     // Save to local storage
     localStorage.setItem("metabridge_user_id", newProfile.id);
     localStorage.setItem("user_profile", JSON.stringify(newProfile));
