@@ -326,13 +326,13 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified List Header: "Transactions Up To" + "Date/Today" */}
-      <div className="flex items-center gap-3 pt-2 pb-1">
-        <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] whitespace-nowrap">
+      {/* Unified List Header: Sticky Top Marker */}
+      <div className="sticky top-[72px] z-30 flex items-center gap-3 pt-2 pb-2 bg-background/80 backdrop-blur-md -mx-6 px-6">
+        <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] whitespace-nowrap">
           {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
         </h3>
         <div className="h-px flex-grow bg-white/5" />
-        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1.5 px-4 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
+        <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
           {selectedDate.toLocaleDateString() === new Date().toLocaleDateString()
             ? (t("today") || "Today")
             : formatDate(selectedDate, {
@@ -391,15 +391,14 @@ export const History: React.FC = () => {
                     ).toLocaleDateString()
                   : null;
               
-              // Only show the inside-list header if the date changes AND it's NOT the primary date shown in the top header
               const showDateHeader = txDate !== prevTxDate && txDate !== selectedDate.toLocaleDateString();
 
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div className="flex items-center gap-4 py-4 first:pt-0">
+                    <div className="sticky top-[108px] z-20 flex items-center gap-4 py-3 bg-background/60 backdrop-blur-sm -mx-6 px-6">
                       <div className="h-px flex-grow bg-white/5" />
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/5">
+                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/5">
                         {txDate === new Date().toLocaleDateString()
                           ? t("today")
                           : formatDate(new Date(tx.timestamp), {
