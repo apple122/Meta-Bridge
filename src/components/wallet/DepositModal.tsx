@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -15,8 +16,10 @@ import { depositMethods } from "../../data/depositMethods";
 import qrImage from "../../assets/qr_placeholder.png";
 import { SupportContactList } from "./SupportContactList";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { UserX } from "lucide-react";
 
-type DepositStep = "select" | "qr" | "submitted";
+type DepositStep = "select" | "qr" | "submitted" | "kyc_required";
 
 interface DepositModalProps {
   onClose: () => void;
@@ -24,7 +27,13 @@ interface DepositModalProps {
 
 export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
   const { t, language } = useLanguage();
-  const [step, setStep] = useState<DepositStep>("select");
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  
+  const [step, setStep] = useState<DepositStep>(() => {
+    return profile?.kyc_status === 'verified' ? "select" : "kyc_required";
+  });
+  
   const [selected, setSelected] = useState<(typeof depositMethods)[0] | null>(
     null,
   );
@@ -75,6 +84,69 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
 
   return (
     <AnimatePresence mode="wait">
+      {/* ── Step 0: KYC Required ── */}
+      {step === "kyc_required" && (
+        <motion.div
+          key="kyc_required"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="flex flex-col"
+        >
+          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+               <UserX size={20} className="text-amber-500" />
+               {language === 'th' ? "ต้องยืนยันตัวตน (KYC)" : "KYC Verification Required"}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-6">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+                <AlertCircle size={32} className="text-amber-400" />
+              </div>
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                {language === 'th' 
+                  ? "เพื่อความปลอดภัยของบัญชี กรุณายืนยันตัวตน (KYC) ให้เสร็จสมบูรณ์ก่อนทำรายการฝาก-ถอนเงินครับ" 
+                  : "For account security, please complete KYC verification before depositing or withdrawing funds."}
+              </p>
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
+                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-400">{profile?.kyc_status || 'Unverified'}</span>
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <SupportContactList settings={settings} />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  onClose();
+                  sessionStorage.setItem("settings_active_tab", "profile");
+                  navigate("/settings");
+                }}
+                className="flex-1 py-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition-all tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              >
+                {language === 'th' ? "ไปหน้ายืนยันตัวตน" : "Go to Verify"} <ChevronRight size={16} />
+              </button>
+              <button
+                onClick={onClose}
+                className="py-4 px-6 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-sm transition-all"
+              >
+                {t('closeLabel')}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Step 1: select currency ── */}
       {step === "select" && (
         <motion.div

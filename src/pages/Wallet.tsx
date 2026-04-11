@@ -171,7 +171,7 @@ export const Wallet: React.FC = () => {
                     const showDateHeader = txDate !== prevTxDate;
 
                     return (
-                      <React.Fragment key={tx.id}>
+                      <div key={tx.id} className="flex flex-col w-full">
                         {showDateHeader && (
                           <div className="flex items-center gap-4 py-4 px-2 first:pt-0">
                             <div className="h-px flex-grow bg-white/5" />
@@ -335,7 +335,7 @@ export const Wallet: React.FC = () => {
                             )}
                           </AnimatePresence>
                         </motion.div>
-                      </React.Fragment>
+                      </div>
                     );
                   });
                 })()}

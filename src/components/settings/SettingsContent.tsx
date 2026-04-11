@@ -224,18 +224,37 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
     setIsSaving(true);
     try {
+      let newKycStatus = profileData.kyc_status;
+      const isProfileComplete = Boolean(
+        profileData.first_name?.trim() && 
+        profileData.last_name?.trim() && 
+        profileData.phone_number?.trim() && 
+        profileData.address?.trim()
+      );
+      const isBankComplete = Boolean(
+        profileData.bank_network?.trim() && 
+        profileData.bank_account?.trim() && 
+        profileData.bank_name?.trim()
+      );
+      
+      if (isProfileComplete && isBankComplete && newKycStatus !== "verified") {
+        newKycStatus = "verified";
+      } else if ((!isProfileComplete || !isBankComplete) && newKycStatus === "verified") {
+        newKycStatus = "unverified";
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
           first_name: profileData.first_name.trim(),
           last_name: profileData.last_name.trim(),
-          // full_name: `${profileData.first_name.trim()} ${profileData.last_name.trim()}`, // Database column missing
           username: profileData.username?.trim(),
           phone_number: profileData.phone_number?.trim(),
           address: profileData.address?.trim(),
           bank_network: profileData.bank_network?.trim(),
           bank_account: profileData.bank_account?.trim(),
           bank_name: profileData.bank_name?.trim(),
+          kyc_status: newKycStatus,
         })
         .eq("id", userId);
 
@@ -680,13 +699,41 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <form 
               onSubmit={async (e) => { 
                 e.preventDefault(); 
+                
+                // Block saving if there's a validation error
+                if (accountError) {
+                  showToast(accountError, "error");
+                  return;
+                }
+
                 setIsSaving(true);
+                
+                let newKycStatus = profileData.kyc_status;
+                const isProfileComplete = Boolean(
+                  profileData.first_name?.trim() && 
+                  profileData.last_name?.trim() && 
+                  profileData.phone_number?.trim() && 
+                  profileData.address?.trim()
+                );
+                const isBankComplete = Boolean(
+                  tempBankNetwork?.trim() && 
+                  tempBankAccount?.trim() && 
+                  tempBankName?.trim()
+                );
+                
+                if (isProfileComplete && isBankComplete && newKycStatus !== "verified") {
+                  newKycStatus = "verified";
+                } else if ((!isProfileComplete || !isBankComplete) && newKycStatus === "verified") {
+                  newKycStatus = "unverified";
+                }
+
                 const { error } = await supabase
                   .from("profiles")
                   .update({
                     bank_network: tempBankNetwork,
                     bank_account: tempBankAccount,
-                    bank_name: tempBankName
+                    bank_name: tempBankName,
+                    kyc_status: newKycStatus
                   })
                   .eq("id", userId);
                 

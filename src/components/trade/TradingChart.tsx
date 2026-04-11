@@ -11,8 +11,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol, interval = 
   useEffect(() => {
     if (!container.current) return;
 
-    // Clean up previous widget
-    container.current.innerHTML = '';
+    // Clean up previous widget but preserve the required container structure for TradingView
+    container.current.innerHTML = '<div class="tradingview-widget-container__widget h-full w-full"></div>';
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
