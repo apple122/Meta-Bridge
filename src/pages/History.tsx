@@ -94,12 +94,12 @@ export const History: React.FC = () => {
       const isUpToDate = txDate.getTime() <= endOfSelectedDay.getTime();
       const matchesAsset =
         selectedAsset === "all" || tx.asset === selectedAsset;
-        
+
       // Status Filter Logic
       const resLower = tx.binary_result?.toLowerCase() || "";
       const isWin = resLower.includes('win') || resLower.includes('won') || !!tx.is_win;
       const isLoss = resLower.includes('loss') || !!tx.is_loss;
-      
+
       let matchesStatus = true;
       if (statusFilter === 'win') matchesStatus = isWin;
       if (statusFilter === 'loss') matchesStatus = isLoss;
@@ -109,8 +109,8 @@ export const History: React.FC = () => {
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const smartId = (tx.smart_id || tx.id.slice(-4)).toLowerCase();
-        matchesSearch = 
-          tx.asset?.toLowerCase().includes(query) || 
+        matchesSearch =
+          tx.asset?.toLowerCase().includes(query) ||
           tx.type?.toLowerCase().includes(query) ||
           tx.id.toLowerCase().includes(query) ||
           smartId.includes(query);
@@ -219,7 +219,7 @@ export const History: React.FC = () => {
 
               const handleDateClick = (date: Date) => {
                 setSelectedDate(date);
-                
+
                 // Enhanced Scroll to the specific date header in the list
                 setTimeout(() => {
                   const targetId = `date-header-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -228,7 +228,7 @@ export const History: React.FC = () => {
                     const navbarOffset = 72; // App Navbar height
                     const stickyHeaderHeight = 48; // Our sticky header height
                     const totalOffset = navbarOffset + stickyHeaderHeight - 10;
-                    
+
                     const elementPosition = element.getBoundingClientRect().top;
                     const offsetPosition = elementPosition + window.pageYOffset - totalOffset;
 
@@ -246,12 +246,11 @@ export const History: React.FC = () => {
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleDateClick(dateObj)}
                     className={`relative w-10 h-10 flex flex-col items-center justify-center rounded-2xl text-sm font-bold transition-all duration-300
-                      ${
-                        isSelected
-                          ? "bg-gradient-to-tr from-primary to-accent text-white shadow-lg shadow-primary/30"
-                          : isToday
-                            ? "bg-white/10 text-white border border-white/20"
-                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ${isSelected
+                        ? "bg-gradient-to-tr from-primary to-accent text-white shadow-lg shadow-primary/30"
+                        : isToday
+                          ? "bg-white/10 text-white border border-white/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5"
                       }
                     `}
                   >
@@ -292,33 +291,30 @@ export const History: React.FC = () => {
           <div className="flex items-center gap-1 p-1 bg-slate-950/50 border border-white/5 rounded-2xl flex-shrink-0">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-                statusFilter === 'all' 
-                ? "bg-white/10 text-white shadow-lg" 
+              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all'
+                ? "bg-white/10 text-white shadow-lg"
                 : "text-slate-500 hover:text-slate-300"
-              }`}
+                }`}
             >
               <LayoutGrid size={12} />
               {t("all") || "All"}
             </button>
             <button
               onClick={() => setStatusFilter('win')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-                statusFilter === 'win' 
-                ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10" 
+              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win'
+                ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10"
                 : "text-slate-500 hover:text-slate-400"
-              }`}
+                }`}
             >
               <CheckCircle2 size={12} />
               {t("win") || "Win"}
             </button>
             <button
               onClick={() => setStatusFilter('loss')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-                statusFilter === 'loss' 
-                ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10" 
+              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss'
+                ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10"
                 : "text-slate-500 hover:text-slate-400"
-              }`}
+                }`}
             >
               <XCircle size={12} />
               {t("loss") || "Loss"}
@@ -350,9 +346,9 @@ export const History: React.FC = () => {
       </div>
 
       {/* Unified List Header: Robust Centered Master Marker */}
-      <div 
+      <div
         id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`}
-        className="sticky top-[68px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
+        className="sticky md:top-[74px] top-[64px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
       >
         <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
           <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
@@ -360,7 +356,7 @@ export const History: React.FC = () => {
           </h3>
           <div className="h-px flex-grow bg-white/5" />
         </div>
-        
+
         <span className="flex-shrink-0 text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5 mx-4">
           {(() => {
             const todayStr = new Date().toLocaleDateString();
@@ -431,16 +427,16 @@ export const History: React.FC = () => {
               const prevTxDate =
                 idx > 0
                   ? new Date(
-                      filteredTransactions[idx - 1].timestamp,
-                    ).toLocaleDateString()
+                    filteredTransactions[idx - 1].timestamp,
+                  ).toLocaleDateString()
                   : null;
-              
+
               const showDateHeader = txDate !== prevTxDate && txDate !== selectedDate.toLocaleDateString();
 
               return (
                 <React.Fragment key={tx.id}>
                   {showDateHeader && (
-                    <div 
+                    <div
                       id={`date-header-${txDateObj.getFullYear()}-${txDateObj.getMonth()}-${txDateObj.getDate()}`}
                       className="sticky top-[68px] z-20 flex items-center h-10 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
                     >
@@ -451,7 +447,7 @@ export const History: React.FC = () => {
                           const yesterday = new Date();
                           yesterday.setDate(yesterday.getDate() - 1);
                           const yesterdayStr = yesterday.toLocaleDateString();
-                          
+
                           const d = txDateObj.getDate();
                           const m = txDateObj.toLocaleDateString('en-US', { month: 'short' });
 
@@ -474,13 +470,12 @@ export const History: React.FC = () => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-                    className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col group p-2.5 sm:p-4 rounded-2xl cursor-pointer relative overflow-hidden ${
-                      isExpanded
-                        ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5"
-                        : isRelated
-                          ? "border-indigo-500/40 ring-1 ring-indigo-500/20 bg-indigo-500/5"
-                          : ""
-                    }`}
+                    className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col group p-2.5 sm:p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded
+                      ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5"
+                      : isRelated
+                        ? "border-indigo-500/40 ring-1 ring-indigo-500/20 bg-indigo-500/5"
+                        : ""
+                      }`}
                   >
                     {/* Related Match Indicator */}
                     {isRelated && (
@@ -497,16 +492,15 @@ export const History: React.FC = () => {
                       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                         <div className="relative flex-shrink-0">
                           <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 transition-colors ${
-                              tx.type === "sell" ||
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 transition-colors ${tx.type === "sell" ||
                               tx.type === "deposit" ||
                               isWin ||
                               tx.type === "win"
-                                ? "bg-green-500/10 text-green-500 border-green-500/20"
-                                : isBinaryBet
-                                  ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                                  : "bg-red-500/10 text-red-500 border-red-500/20"
-                            }`}
+                              ? "bg-green-500/10 text-green-500 border-green-500/20"
+                              : isBinaryBet
+                                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                                : "bg-red-500/10 text-red-500 border-red-500/20"
+                              }`}
                           >
                             {isWin ? (
                               <Trophy
@@ -514,11 +508,11 @@ export const History: React.FC = () => {
                                 className="stroke-[2.5] sm:w-6 sm:h-6 drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]"
                               />
                             ) : isBinaryBet ? (
-                                <Zap size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
+                              <Zap size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
                             ) : tx.type === "sell" || tx.type === "deposit" ? (
-                                <ArrowUpRight size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
+                              <ArrowUpRight size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
                             ) : tx.binary_result === "loss" ? (
-                                <TrendingDown size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
+                              <TrendingDown size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
                             ) : (
                               <ArrowDownLeft
                                 size={20}
@@ -542,11 +536,10 @@ export const History: React.FC = () => {
                             </h3>
                             {tx.binary_type && (
                               <span
-                                className={`px-1 sm:px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-black border ${
-                                  tx.binary_type === "up"
-                                    ? "bg-green-500/10 border-green-500/20 text-green-500"
-                                    : "bg-red-500/10 border-red-500/20 text-red-500"
-                                }`}
+                                className={`px-1 sm:px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-black border ${tx.binary_type === "up"
+                                  ? "bg-green-500/10 border-green-500/20 text-green-500"
+                                  : "bg-red-500/10 border-red-500/20 text-red-500"
+                                  }`}
                               >
                                 {tx.binary_type === "up" ? "▲ UP" : "▼ DOWN"}
                               </span>
@@ -558,11 +551,10 @@ export const History: React.FC = () => {
                             </span>
                             {tx.binary_result && (
                               <span
-                                className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${
-                                  isWin
-                                    ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
-                                    : "bg-red-500 text-white shadow-lg shadow-red-500/30"
-                                }`}
+                                className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${isWin
+                                  ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
+                                  : "bg-red-500 text-white shadow-lg shadow-red-500/30"
+                                  }`}
                               >
                                 {tx.binary_result}
                               </span>
@@ -581,21 +573,20 @@ export const History: React.FC = () => {
                       </div>
                       <div className="text-right flex flex-col justify-center flex-shrink-0">
                         <p
-                          className={`text-sm sm:text-base font-black ${
-                            tx.type === "sell" ||
+                          className={`text-sm sm:text-base font-black ${tx.type === "sell" ||
                             tx.type === "deposit" ||
                             isWin ||
                             tx.type === "win"
-                              ? "text-green-400"
-                              : isBinaryBet
-                                ? "text-indigo-400"
-                                : "text-red-400"
-                          }`}
+                            ? "text-green-400"
+                            : isBinaryBet
+                              ? "text-indigo-400"
+                              : "text-red-400"
+                            }`}
                         >
                           {tx.type === "sell" ||
-                          tx.type === "deposit" ||
-                          isWin ||
-                          tx.type === "win"
+                            tx.type === "deposit" ||
+                            isWin ||
+                            tx.type === "win"
                             ? "+"
                             : "-"}
                           {formatCurrency(tx.total)}
@@ -672,10 +663,9 @@ export const History: React.FC = () => {
               onClick={loadMoreTransactions}
               disabled={loadingMore}
               className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all
-                ${
-                  loadingMore
-                    ? "bg-white/5 text-slate-500 cursor-not-allowed"
-                    : "bg-white/10 hover:bg-white/20 text-white active:scale-95 shadow-lg hover:shadow-primary/10"
+                ${loadingMore
+                  ? "bg-white/5 text-slate-500 cursor-not-allowed"
+                  : "bg-white/10 hover:bg-white/20 text-white active:scale-95 shadow-lg hover:shadow-primary/10"
                 }
               `}
             >
