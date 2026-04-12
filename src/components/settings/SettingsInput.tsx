@@ -24,8 +24,8 @@ interface SettingsInputProps {
   const isPassword = type === "password";
 
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
+    <div className="space-y-1">
+      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">
         {label}
       </label>
       <div className="relative group">
@@ -36,7 +36,7 @@ interface SettingsInputProps {
           placeholder={placeholder}
           maxLength={maxLength}
           disabled={disabled}
-          className="w-full bg-slate-900 border border-white/5 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-slate-700 pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-slate-900 border border-white/5 rounded-xl py-2 px-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-slate-700 pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
         />
         {isPassword && (
           <button

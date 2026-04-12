@@ -153,7 +153,7 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="pt-24 pb-32 px-6 max-w-5xl mx-auto flex flex-col md:flex-row gap-8">
+    <div className="pt-24 pb-32 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col md:flex-row gap-6 sm:gap-8">
       {/* Sidebar Tabs */}
       <div className="md:w-64 space-y-5">
         {/* Account Section */}
@@ -197,7 +197,7 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">{t("totalBalance")}</p>
-                  <p className="text-xl font-black text-white tracking-tighter tabular-nums">
+                  <p className="text-lg sm:text-xl font-black text-white tracking-tighter tabular-nums">
                     ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -271,26 +271,26 @@ export const Settings: React.FC = () => {
           <div className="grid grid-cols-1 gap-1.5">
             <button
               onClick={handleCreateShortcut}
-              className="group flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-white/[0.03] text-white hover:bg-white/[0.08] transition-all duration-300 border border-white/5 hover:border-primary/30"
+              className="group flex items-center justify-between gap-3 px-4 py-2 sm:py-2.5 rounded-xl bg-white/[0.03] text-white hover:bg-white/[0.08] transition-all duration-300 border border-white/5 hover:border-primary/30"
             >
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <LayoutGrid size={14} className="text-primary" />
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-widest">{t("createShortcut")}</span>
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{t("createShortcut")}</span>
               </div>
               <ChevronRight size={12} className="text-slate-600 group-hover:text-primary transition-colors" />
             </button>
 
             <button
               onClick={handleShare}
-              className="group flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-background hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 border border-white/10"
+              className="group flex items-center justify-between gap-3 px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-background hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 border border-white/10"
             >
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
                   {copied ? <Check size={14} /> : <Share2 size={14} />}
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-widest">{copied ? t("linkCopied") : t("shareApp")}</span>
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{copied ? t("linkCopied") : t("shareApp")}</span>
               </div>
               {!copied && <ChevronRight size={12} className="opacity-40" />}
             </button>

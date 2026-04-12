@@ -30,7 +30,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
-import { Check, Globe, Zap, Cpu } from "lucide-react";
+import { Check, Globe, Zap } from "lucide-react";
 
 const THAI_BANKS = [
   { id: 'KBank', name: 'Kasikorn Bank', nameTh: 'ธนาคารกสิกรไทย', color: '#00A950', icon: 'K' },
@@ -42,10 +42,29 @@ const THAI_BANKS = [
   { id: 'GSB', name: 'Government Savings Bank', nameTh: 'ธนาคารออมสิน', color: '#EC068D', icon: 'GSB' },
 ];
 
+// Custom Crypto Icons
+const USDTLogo = () => (
+  <svg viewBox="0 0 24 24" className="w-full h-full fill-white">
+    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm.875 14.875v3h-1.75v-3c-1.89-.074-3.375-.623-3.375-.623v-1.354s1.614.545 3.375.62v-4.137h-3.375v-1.75H16.25v1.75h-3.375v4.137c1.76-.075 3.375-.62 3.375-.62v1.354s-1.485.549-3.375.623z" />
+  </svg>
+);
+
+const ETHLogo = () => (
+  <svg viewBox="0 0 24 24" className="w-full h-full fill-white">
+    <path d="M11.944 17.97L4.58 13.62l7.36 10.38 7.366-10.38-7.362 4.35v.001zm0-17.97L4.58 12.326l7.364 4.352 7.362-4.352L11.944 0z" />
+  </svg>
+);
+
+const BNBLogo = () => (
+  <svg viewBox="0 0 24 24" className="w-full h-full fill-white">
+    <path d="M16.624 13.92l2.817-2.819 2.819 2.819-2.819 2.818-2.817-2.818zm-3.384-3.384l2.819-2.819 2.818 2.819-2.818 2.818-2.819-2.818zm.003 6.771l2.818-2.819 2.819 2.819-2.819 2.818-2.818-2.818zm-3.387-3.387l2.818-2.819 2.819 2.819-2.819 2.818-2.818-2.818zm0-6.774l2.818-2.819 2.819 2.819-2.819 2.818-2.818-2.818zm-3.384 3.384l2.819-2.819 2.818 2.819-2.818 2.818-2.819-2.818zm.003 6.771l2.818-2.819 2.819 2.819-2.819 2.818-2.818-2.818zM12 21.485l-2.819-2.819 2.819-2.818 2.818 2.818L12 21.485zM12 5.334l-2.819-2.818L12-.303l2.818 2.819L12 5.334z" />
+  </svg>
+);
+
 const CRYPTO_NETWORKS = [
-  { id: 'TRC-20', name: 'USDT (TRC-20)', desc: 'Tron Network (Low Fee)', color: '#FF0013' },
-  { id: 'ERC-20', name: 'USDT (ERC-20)', desc: 'Ethereum Network', color: '#627EEA' },
-  { id: 'BEP-20', name: 'USDT (BEP-20)', desc: 'Binance Smart Chain', color: '#F3BA2F' },
+  { id: 'TRC-20', name: 'USDT (TRC-20)', desc: 'Tron Network (Low Fee)', color: '#26A17B', icon: <USDTLogo /> },
+  { id: 'ERC-20', name: 'USDT (ERC-20)', desc: 'Ethereum Network', color: '#627EEA', icon: <ETHLogo /> },
+  { id: 'BEP-20', name: 'USDT (BEP-20)', desc: 'Binance Smart Chain', color: '#F3BA2F', icon: <BNBLogo /> },
 ];
 
 interface SettingsContentProps {
@@ -576,13 +595,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <ChevronRight className="rotate-180" size={24} />
             </button>
           )}
-          <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-              <User size={24} />
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+              <User size={20} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white">{t("verification")}</h2>
-              <p className="text-slate-400 text-sm">{t("managePersonalInfo")}</p>
+              <h2 className="text-base font-bold text-white leading-tight">{t("verification")}</h2>
+              <p className="text-slate-400 text-[11px]">{t("managePersonalInfo")}</p>
             </div>
           </div>
 
@@ -639,7 +658,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2 rounded-xl bg-primary text-white font-bold text-sm flex items-center gap-2 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
+                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
               >
                 {isSaving ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -670,13 +689,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </button>
           )}
 
-          <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent">
-              <Landmark size={24} />
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center text-accent shrink-0">
+              <Landmark size={18} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white">{t("bankDetails")}</h2>
-              <p className="text-slate-400 text-sm">{t("bankDescription")}</p>
+              <h2 className="text-base font-bold text-white leading-tight">{t("bankDetails")}</h2>
+              <p className="text-slate-400 text-[11px]">{t("bankDescription")}</p>
             </div>
           </div>
 
@@ -687,7 +706,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <button
                   key={type}
                   onClick={() => setBankType(type)}
-                  className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     bankType === type 
                       ? "bg-primary text-white shadow-lg shadow-primary/20" 
                       : "text-slate-500 hover:text-white"
@@ -753,7 +772,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <div className="space-y-6">
                 {bankType === "bank" ? (
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
+                    <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
                       {t("selectBank")}
                     </label>
                     {/* Custom Dropdown */}
@@ -764,7 +783,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                           setTempBankNetwork(e.target.value);
                           setTempBankName("");
                         }}
-                        className="w-full appearance-none bg-slate-900 border border-white/10 rounded-2xl py-4 pl-16 pr-10 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                        className="w-full appearance-none bg-slate-900 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
                       >
                         <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
                         {THAI_BANKS.map((bank) => (
@@ -801,7 +820,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
+                    <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
                       {t("network")}
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -810,25 +829,25 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                           key={net.id}
                           type="button"
                           onClick={() => setTempBankNetwork(net.id)}
-                          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all  ${
+                          className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all  ${
                             tempBankNetwork === net.id 
                               ? "bg-white/10 border-white/30 ring-1 ring-white/10" 
                               : "bg-white/5 border-white/5 hover:border-white/10"
                           }`}
                         >
-                          <div 
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-lg"
-                            style={{ backgroundColor: net.color }}
-                          >
-                            <Cpu size={16} />
-                          </div>
+                           <div 
+                             className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg shrink-0 p-1.5"
+                             style={{ backgroundColor: net.color }}
+                           >
+                             {net.icon}
+                           </div>
                           <div className="text-left">
-                            <p className="text-white font-bold text-xs">{net.name}</p>
-                            <p className="text-[10px] text-slate-500 leading-none mt-1">{net.desc}</p>
+                            <p className="text-white font-bold text-[11px] leading-tight">{net.name}</p>
+                            <p className="text-[9px] text-slate-500 leading-none mt-1">{net.desc}</p>
                           </div>
                           {tempBankNetwork === net.id && (
                              <div className="ml-auto text-primary">
-                               <Check size={14} strokeWidth={4} />
+                               <Check size={12} strokeWidth={4} />
                              </div>
                           )}
                         </button>
@@ -837,7 +856,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </div>
                 )}
 
-                <div className="bg-white/5 p-6 rounded-2xl border border-white/10 space-y-4">
+                <div className="bg-white/5 p-3.5 sm:p-4 rounded-2xl border border-white/10 space-y-3">
                    <div className="space-y-1">
                     <SettingsInput
                       label={bankType === "bank" ? t("accountNumberLabel") : t("walletAddress")}
@@ -870,7 +889,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <button
                   type="submit"
                   disabled={isSaving || !tempBankNetwork || !tempBankAccount || !tempBankName || !!accountError}
-                  className="btn-primary flex items-center gap-4 px-10 disabled:opacity-50 h-12"
+                  className="btn-primary flex items-center justify-center gap-4 px-10 disabled:opacity-50 h-11 sm:h-12 w-full sm:w-auto"
                 >
                   {isSaving ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -906,10 +925,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <div className="space-y-8">
               {/* Account Binding Section */}
               <div>
-                <h2 className="text-2xl font-black text-white mb-2">
+                <h2 className="text-base font-bold text-white mb-1">
                   {t("accountSecurity") || t("changePassword")}
                 </h2>
-                <p className="text-slate-400 text-sm mb-6">
+                <p className="text-slate-400 text-[11px] mb-3">
                   {t("securityDescription")}
                 </p>
 
@@ -918,23 +937,23 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   {t("loginMethods") || "Login Methods"}
                 </h3>
                 
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
                       <Mail size={20} />
                     </div>
-                    <div>
-                      <p className="text-white font-bold text-sm">{t("emailLogin")}</p>
-                      <p className="text-xs text-slate-400">{profileData.email}</p>
+                    <div className="overflow-hidden">
+                      <p className="text-white font-bold text-sm truncate">{t("emailLogin")}</p>
+                      <p className="text-xs text-slate-400 truncate">{profileData.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider hidden sm:block">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider hidden lg:block">
                       {t("connected") || "Connected"}
                     </span>
                     <button 
                       onClick={() => setIsEmailFlow(true)}
-                      className="text-xs font-bold text-primary hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary"
+                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary whitespace-nowrap"
                     >
                       {t("changeEmail") || "Change Email"}
                     </button>
@@ -948,14 +967,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   <History size={16} className="text-primary" />
                   {t("loginHistory")}
                 </h3>
-                <div className="p-4 flex items-center justify-between rounded-xl bg-white/5 border border-white/10">
-                  <div>
-                    <p className="text-white font-bold text-sm">{t("recentActivity")}</p>
-                    <p className="text-xs text-slate-400">{t("viewRecentSignins")}</p>
+                <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="overflow-hidden">
+                    <p className="text-white font-bold text-sm truncate">{t("recentActivity")}</p>
+                    <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("viewRecentSignins")}</p>
                   </div>
                   <button 
                     onClick={() => setIsLoginHistoryFlow(true)}
-                    className="text-xs font-bold text-primary hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary"
+                    className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
                   >
                     {t("viewHistory")}
                   </button>
@@ -977,14 +996,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </button>
                 </div>
 
-                <div className="p-4 flex items-center justify-between rounded-xl bg-white/5 border border-white/10">
-                  <div>
-                    <p className="text-white font-bold text-sm">{t("accountPassword")}</p>
-                    <p className="text-xs text-slate-400">{t("updatePasswordDesc")}</p>
+                <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="overflow-hidden">
+                    <p className="text-white font-bold text-sm truncate">{t("accountPassword")}</p>
+                    <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("updatePasswordDesc")}</p>
                   </div>
                   <button 
                     onClick={() => setIsChangingPassword(true)}
-                    className="text-xs font-bold text-primary hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary"
+                    className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
                   >
                     {t("changePassword")}
                   </button>
@@ -1006,7 +1025,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   >
                     <ArrowLeft size={20} />
                   </button>
-                  <h2 className="text-2xl font-black text-white">{t("changePassword")}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">{t("changePassword")}</h2>
                 </div>
                 
                 <p className="text-slate-400 text-sm mb-6">
@@ -1055,7 +1074,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   >
                     <ArrowLeft size={20} />
                   </button>
-                  <h2 className="text-2xl font-black text-white">{t("loginHistory")}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">{t("loginHistory")}</h2>
                 </div>
                 
                 <p className="text-slate-400 text-sm mb-6">
@@ -1122,7 +1141,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="text-2xl font-black text-white">{t("updateEmail")}</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-white">{t("updateEmail")}</h2>
               </div>
 
               {emailOtpStep === "request_old" && (
@@ -1249,7 +1268,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="text-2xl font-black text-white">{t("resetPassword")}</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-white">{t("resetPassword")}</h2>
               </div>
 
               {otpStep === "request" && (
@@ -1357,13 +1376,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               onClick={onClose}
               className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
             >
-              <ChevronRight className="rotate-180" size={24} />
+              <ChevronRight className="rotate-180" size={20} />
             </button>
           )}
-          <h2 className="text-2xl font-black text-white mb-2">
+          <h2 className="text-base font-bold text-white mb-1">
             {t("historyDeposit")}
           </h2>
-          <p className="text-slate-400 text-sm mb-6">
+          <p className="text-slate-400 text-[11px] mb-4">
             {t("historyDepositDesc")}
           </p>
 
@@ -1371,8 +1390,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             {transactions.filter((t) => t.type === "deposit").length === 0 ? (
               <div className="text-center py-8">
                 <History
-                  size={48}
-                  className="mx-auto text-slate-600 mb-4 opacity-50"
+                  size={32}
+                  className="mx-auto text-slate-600 mb-1.5 opacity-50"
                 />
                 <p className="text-slate-400 text-sm font-bold">
                   {t("noDepositHistory")}
@@ -1384,10 +1403,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 .map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5"
+                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center font-black">
+                      <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center font-bold text-xs">
                         +
                       </div>
                       <div>
@@ -1400,13 +1419,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-green-500 font-bold text-sm">
+                      <p className="text-green-500 font-bold text-[13px]">
                         +$
                         {tx.amount.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                         })}
                       </p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">
+                      <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 font-bold">
                         {tx.status}
                       </p>
                     </div>
@@ -1430,32 +1449,32 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               onClick={onClose}
               className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
             >
-              <ChevronRight className="rotate-180" size={24} />
+              <ChevronRight className="rotate-180" size={20} />
             </button>
           )}
-          <h2 className="text-2xl font-black text-white mb-2">
+          <h2 className="text-base font-bold text-white mb-1">
             {t("systemNotifications")}
           </h2>
-          <p className="text-slate-400 text-sm mb-8">
+          <p className="text-slate-400 text-[11px] mb-5">
             {t("systemNotificationsDesc")}
           </p>
 
-          <div className="space-y-6">
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+          <div className="space-y-5">
+            <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                   notificationPermission === 'granted' ? 'bg-green-500/20 text-green-500' : 
                   notificationPermission === 'denied' ? 'bg-red-500/20 text-red-500' : 'bg-primary/20 text-primary'
                 }`}>
-                  {notificationPermission === 'granted' ? <Bell size={24} /> : 
-                   notificationPermission === 'denied' ? <BellOff size={24} /> : <Bell size={24} />}
+                  {notificationPermission === 'granted' ? <Bell size={16} /> : 
+                   notificationPermission === 'denied' ? <BellOff size={16} /> : <Bell size={16} />}
                 </div>
                 <div>
-                  <p className="text-white font-bold">
+                  <p className="text-white font-bold text-xs">
                     {notificationPermission === 'granted' ? t("notificationsEnabled") : 
                      notificationPermission === 'denied' ? t("notificationsDisabled") : t("enableNotifications")}
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-[10px] text-slate-500 mt-0.5">
                     {notificationPermission === 'unsupported' ? t("notificationsUnsupported") : 
                      notificationPermission === 'denied' ? t("notificationsDenied") : 'Web Push Notifications'}
                   </p>
@@ -1466,7 +1485,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <button
                   onClick={handleRequestPermission}
                   disabled={notificationPermission === 'granted'}
-                  className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${
+                  className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all ${
                     notificationPermission === 'granted' 
                     ? 'bg-green-500/20 text-green-500 cursor-default' 
                     : 'bg-primary text-white hover:bg-primary/80 active:scale-95'
@@ -1478,25 +1497,25 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </div>
 
             {notificationPermission === 'denied' && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex gap-3">
-                <AlertCircle size={18} className="shrink-0" />
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] flex gap-2">
+                <AlertCircle size={16} className="shrink-0" />
                 <p>{t("notificationsDenied")}</p>
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t("notificationTypes")}</h4>
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-                  <span className="text-sm font-bold text-white">{t("tradeOutcomes")}</span>
-                  <div className="w-10 h-5 rounded-full bg-green-500 relative cursor-default">
-                    <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 shadow-sm">
+                  <span className="text-xs font-bold text-white">{t("tradeOutcomes")}</span>
+                  <div className="w-8 h-4 rounded-full bg-green-500 relative cursor-default">
+                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm" />
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 opacity-50">
-                  <span className="text-sm font-bold text-white">{t("priceAlerts")}</span>
-                  <div className="w-10 h-5 rounded-full bg-slate-700 relative cursor-not-allowed">
-                    <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-slate-500 rounded-full" />
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 opacity-50">
+                  <span className="text-xs font-bold text-white">{t("priceAlerts")}</span>
+                  <div className="w-8 h-4 rounded-full bg-slate-700 relative cursor-not-allowed">
+                    <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-slate-500 rounded-full" />
                   </div>
                 </div>
               </div>
@@ -1518,17 +1537,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               onClick={onClose}
               className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
             >
-              <ChevronRight className="rotate-180" size={24} />
+              <ChevronRight className="rotate-180" size={20} />
             </button>
           )}
-          <h2 className="text-2xl font-black text-white mb-2">
+          <h2 className="text-base font-bold text-white mb-1">
             {t("languageSettings")}
           </h2>
-          <p className="text-slate-400 text-sm mb-8">
+          <p className="text-slate-400 text-[11px] mb-5">
             {t("languageSettingsDesc")}
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[
               { id: 'th', label: 'ภาษาไทย (Thai)', icon: '🇹🇭' },
               { id: 'en', label: 'English (US)', icon: '🇺🇸' },

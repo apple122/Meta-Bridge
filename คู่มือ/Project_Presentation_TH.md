@@ -71,9 +71,13 @@ sequenceDiagram
 เครื่องมือสำหรับเจ้าของโครงการในการบริหารจัดการ
 
 - **User Management**: ค้นหาผู้ใช้รายบุคคล, จัดการสถานะเจ้าหน้าที่ (Admin/User) และดูประวัติย้อนหลัง
-- **Balance Override**: แอดมินสามารถ "เติมเงิน" หรือ "แก้ไยอดเงิน" ให้ผู้ใช้ได้โดยตรง
+- **Balance Override**: แอดมินสามารถ "เติมเงิน" หรือ "แก้ไขยอดเงิน" ให้ผู้ใช้ได้โดยตรง
 - **Identity & Access**: ระบบตรวจสอบสิทธิ์การใช้งานแบบ Step-by-step มั่นใจได้ในความปลอดภัยของข้อมูล
 - **Contact Setup**: ตั้งค่า Line, Telegram, เบอร์โทรศัพท์ ที่จะแสดงให้ลูกค้ารายย่อยเห็น
+- **Activity Dashboard 3.0**: ดูความเคลื่อนไหวของผู้ใช้แบบ Unified จากทุกแหล่ง (Transaction, Trade, Login) พร้อม:
+  - กรองตามช่วงวันที่และประเภทกิจกรรม
+  - ค้นหาผู้ใช้ด้วยรหัสลับ (Private Code) 6 หลัก พร้อมปุ่ม Paste
+  - ระบบ Pagination 50 รายการ/หน้า เพื่อประสิทธิภาพสูงสุด
 
 ---
 
@@ -82,9 +86,9 @@ sequenceDiagram
 
 | เทคโนโลยี | หน้าที่ |
 | :--- | :--- |
-| **React 19** | หน้าจอการใช้งานที่รวดเร็วและทันสมัย |
+| **React 19** | หน้าจอการใช้งานที่รวดเร็วและทันสมัย (ใช้ `React.memo` + `useTransition`) |
 | **Supabase** | ฐานข้อมูลแบบ Real-time และระบบจัดการสิทธิ์ |
-| **Framer Motion** | ระบบแอนิเมชันที่ลื่นไหลระดับพรีเมียม |
+| **Framer Motion** | ระบบแอนิเมชันที่ใช้เฉพาะจุด (Toast, Modals) — ถอดออกจากส่วนแสดงข้อมูลจำนวนมากเพื่อ Performance |
 | **Tailwind CSS** | การออกแบบที่สวยงามและรองรับทุกหน้าจอ (Responsive) |
 | **PostgreSQL** | ระบบจัดเก็บข้อมูลสำคัญและ Atomic RPC Functions |
 | **EmailJS** | ระบบส่งรหัส OTP และการสื่อสารผ่านอีเมลที่รวดเร็ว |
@@ -92,4 +96,4 @@ sequenceDiagram
 ---
 
 > [!TIP]
-> **หมายเหตุ**: คู่มือ SQL และการตั้งค่าเชิงลึกสำหรับโปรแกรมเมอร์ สามารถดูได้ที่ไฟล์ [Setup_Guide_TH.md](file:///d:/Dev/MetaStock/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD/Setup_Guide_TH.md) ครับ
+> **หมายเหตุ**: คู่มือ SQL และการตั้งค่าเชิงลึก ดูได้ที่ไฟล์ [คู่มือการติดตั้ง_ฉบับสมบูรณ์.md](file:///c:/Users/xzhen/OneDrive/Documents/Dev/clone/Meta-Bridge/คู่มือ/คู่มือการติดตั้ง_ฉบับสมบูรณ์.md) และดู Release Notes ล่าสุดที่ [Patch_Update_2026-04-12.md](file:///c:/Users/xzhen/OneDrive/Documents/Dev/clone/Meta-Bridge/คู่มือ/Patch_Update_2026-04-12.md)

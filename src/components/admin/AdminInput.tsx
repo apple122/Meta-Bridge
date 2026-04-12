@@ -26,8 +26,8 @@ export const AdminInput: React.FC<AdminInputProps> = ({
   const isPassword = type === "password";
 
   return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+    <div className="space-y-1">
+      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
         {label}
       </label>
       <div className="relative group/input">
@@ -44,7 +44,7 @@ export const AdminInput: React.FC<AdminInputProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 ${icon ? "pl-12" : "px-4"} ${isPassword ? "pr-12" : "pr-4"} text-white focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-slate-700 ${disabled ? "opacity-50 cursor-not-allowed bg-slate-900/80" : ""}`}
+          className={`w-full bg-slate-900/50 border border-white/10 rounded-xl py-2 ${icon ? "pl-12" : "px-4"} ${isPassword ? "pr-12" : "pr-4"} text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-slate-700 ${disabled ? "opacity-50 cursor-not-allowed bg-slate-900/80" : ""}`}
         />
         {isPassword && (
           <button

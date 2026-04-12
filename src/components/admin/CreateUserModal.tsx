@@ -5,6 +5,9 @@ import { supabase } from "../../lib/supabase";
 import { AdminInput } from "./AdminInput";
 import { encryptPassword } from "../../utils/security";
 import { generateUserCode } from "../../utils/userUtils";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { auditService } from "../../services/auditService";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface CreateUserModalProps {
   onClose: () => void;
@@ -15,6 +18,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useLanguage();
+  const { profile: currentAdmin } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -57,12 +62,27 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         .select().single();
 
       if (registerError) throw registerError;
-      console.log("[DEBUG] Admin-Created User Success:", _data);
+      
+      // Log the admin action
+      if (currentAdmin && currentAdmin.id) {
+        try {
+          await auditService.logAction({
+            adminId: currentAdmin.id,
+            adminEmail: currentAdmin.email || 'unknown',
+            targetUserEmail: formData.email,
+            actionType: 'CREATE_USER',
+            description: `Created new user account for ${formData.username}`,
+            details: { email: formData.email, username: formData.username }
+          });
+        } catch (e) {
+          console.error("Failed to log user creation action", e);
+        }
+      }
 
-      alert(`สร้างผู้ใช้งาน ${formData.username} สำเร็จแล้ว!`);
+      alert(t("createUserSuccess"));
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Failed to create user");
+      setError(err.message || t("createUserError"));
     }
   };
 
@@ -80,12 +100,12 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-xl relative z-10 p-5 md:p-8 max-h-[90vh] md:max-h-[95vh] overflow-y-auto scrollbar-hide mb-16 md:mb-0"
+        className="glass-card w-full max-w-lg relative z-10 p-4 sm:p-6 max-h-[90vh] md:max-h-[95vh] overflow-y-auto scrollbar-hide mb-16 md:mb-0"
       >
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col">
-            <h3 className="text-xl md:text-2xl font-black text-white">
-              ลงทะเบียนผู้ใช้งานใหม่
+            <h3 className="text-lg font-bold text-white">
+              {t("registerNewUser")}
             </h3>
           </div>
           <button
@@ -96,54 +116,68 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           </button>
         </div>
 
+        {/* Maintenance Alert */}
+        <div className="mb-6 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 items-center">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+            <Shield size={18} className="animate-pulse" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-amber-500 uppercase tracking-wider">{t("maintenanceTitle")}</p>
+            <p className="text-[10px] text-amber-500/80 leading-tight">{t("maintenanceDesc")}</p>
+          </div>
+        </div>
+
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs md:text-sm font-bold rounded-xl">
+          <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] font-bold rounded-xl text-center">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-
+        <form onSubmit={handleSubmit} className="space-y-4 pointer-events-none opacity-50 selection:none">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <AdminInput
-              label="ชื่อ"
+              label={t("firstName")}
               value={formData.first_name}
               onChange={(v) => setFormData({ ...formData, first_name: v })}
-              placeholder="สมชาย"
+              placeholder={t("firstNamePlaceholder") || "Somchai"}
+              disabled={true}
             />
             <AdminInput
-              label="นามสกุล"
+              label={t("lastName")}
               value={formData.last_name}
               onChange={(v) => setFormData({ ...formData, last_name: v })}
-              placeholder="ใจดี"
+              placeholder={t("lastNamePlaceholder") || "Jaidee"}
+              disabled={true}
             />
           </div>
           <AdminInput
-            label="ชื่อผู้ใช้ (Username)"
+            label={t("username")}
             value={formData.username}
             onChange={(v) => setFormData({ ...formData, username: v })}
-            placeholder="somchai123"
+            placeholder={t("usernamePlaceholder") || "somchai123"}
+            disabled={true}
           />
           <AdminInput
-            label="อีเมล"
+            label={t("email")}
             type="email"
             value={formData.email}
             onChange={(v) => setFormData({ ...formData, email: v })}
-            placeholder="somchai@example.com"
+            placeholder={t("emailPlaceholder") || "somchai@example.com"}
+            disabled={true}
           />
           <AdminInput
-            label="รหัสผ่าน"
+            label={t("password")}
             type="password"
             value={formData.password}
             onChange={(v) => setFormData({ ...formData, password: v })}
             placeholder="••••••••"
+            disabled={true}
           />
 
-          <div className="pt-4 flex gap-3 text-xs text-slate-500 leading-relaxed italic">
-            <Shield size={24} className="shrink-0 text-slate-700" />
+          <div className="pt-3 flex gap-2.5 text-[10px] text-slate-500 leading-relaxed italic">
+            <Shield size={18} className="shrink-0 text-slate-700" />
             <p>
-              การสร้างผู้ใช้งานผ่านฟอร์มนี้ ข้อมูลจะถูกบันทึกเข้าสู่ระบบโดยตรง 
-              และผู้ใช้งานจะสามารถเข้าสู่ระบบได้ทันทีโดยไม่ต้องยืนยัน OTP
+              {t("registerNewUserDesc") || "Creating a user through this form will save the information directly to the system and the user can log in immediately without OTP verification."}
             </p>
           </div>
 
@@ -151,15 +185,16 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-4 rounded-xl bg-white/5 text-slate-400 font-bold hover:text-white transition-all text-sm"
+              className="flex-1 px-5 py-2.5 rounded-xl bg-white/5 text-slate-400 font-bold hover:text-white transition-all text-xs pointer-events-auto"
             >
-              ยกเลิก
+              {t("cancel")}
             </button>
             <button
-              type="submit"
-              className="flex-[2] bg-primary text-white flex items-center justify-center gap-2 text-sm md:text-base font-bold rounded-xl py-4 hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95"
+              type="button"
+              disabled={true}
+              className="flex-[2] bg-slate-800 text-slate-500 flex items-center justify-center gap-2 text-xs font-bold rounded-xl py-2.5 cursor-not-allowed"
             >
-              สร้างผู้ใช้งาน
+              {t("systemTemporarilyClosed")}
             </button>
           </div>
         </form>

@@ -1,6 +1,6 @@
 -- 
 -- MetaBridge MASTER Database Schema
--- Version: 4.0 (The One Source of Truth)
+-- Version: 4.1 (Performance & Activity Dashboard)
 -- 
 -- IMPORTANT: This schema is designed for a CUSTOM authentication system.
 -- It does NOT use Supabase Auth (auth.users). Users are stored directly in profiles.
@@ -15,6 +15,7 @@ create extension if not exists "pgcrypto";
 -- STEP 1: DROP ALL EXISTING TABLES & FUNCTIONS (Clean Reset)
 -- ============================================================
 drop table if exists public.push_subscriptions cascade;
+drop table if exists public.admin_audit_logs cascade;
 drop table if exists public.user_login_history cascade;
 drop table if exists public.portfolio cascade;
 drop table if exists public.transactions cascade;
@@ -152,6 +153,19 @@ create table public.push_subscriptions (
   unique(user_id, endpoint)
 );
 
+-- 8. Admin Audit Logs: Track admin actions (top-up, edit, role changes, etc.)
+create table public.admin_audit_logs (
+  id uuid default uuid_generate_v4() primary key,
+  admin_id uuid references public.profiles(id) on delete set null,
+  admin_email text,
+  target_user_id uuid references public.profiles(id) on delete set null,
+  target_user_email text,
+  action_type text not null, -- 'TOP_UP','EDIT_PROFILE','TOGGLE_ROLE','CREATE_USER','UPDATE_SETTINGS'
+  description text,
+  details jsonb,
+  created_at timestamptz default now()
+);
+
 -- Insert default settings
 insert into public.global_settings (id) 
 values ('main') 
@@ -280,6 +294,7 @@ alter table public.portfolio disable row level security;
 alter table public.global_settings disable row level security;
 alter table public.user_login_history disable row level security;
 alter table public.push_subscriptions disable row level security;
+alter table public.admin_audit_logs disable row level security;
 
 grant all on all tables in schema public to anon;
 grant all on all tables in schema public to authenticated;
@@ -296,8 +311,15 @@ create index if not exists idx_transactions_user_id on public.transactions(user_
 create index if not exists idx_binary_trades_user_id on public.binary_trades(user_id);
 create index if not exists idx_binary_trades_status on public.binary_trades(status);
 create index if not exists idx_portfolio_user_id on public.portfolio(user_id);
+create index if not exists idx_transactions_created_at on public.transactions(created_at desc);
+create index if not exists idx_transactions_type on public.transactions(type);
+create index if not exists idx_binary_trades_created_at on public.binary_trades(created_at desc);
+create index if not exists idx_login_history_created_at on public.user_login_history(created_at desc);
 create index if not exists idx_user_login_history_user_id on public.user_login_history(user_id);
+create index if not exists idx_profiles_code on public.profiles(code);
 create index if not exists idx_push_subs_user_id on public.push_subscriptions(user_id);
+create index if not exists idx_audit_logs_admin_id on public.admin_audit_logs(admin_id);
+create index if not exists idx_audit_logs_created_at on public.admin_audit_logs(created_at desc);
 
 -- ============================================================
 -- STEP 7: BACKGROUND SETTLEMENT (Edge Functions & pg_cron)

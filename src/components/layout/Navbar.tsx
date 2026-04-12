@@ -34,14 +34,14 @@ export const Navbar: React.FC = () => {
           <motion.div
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[10px] font-black border-2 border-white/20"
+            className="w-7 h-7 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[9px] font-black border border-white/20"
           >
             {initials}
           </motion.div>
           <motion.span
             initial={{ opacity: 0, x: 4 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-xl font-bold text-slate-300 max-w-[120px] truncate"
+            className="text-base font-bold text-slate-200 max-w-[100px] truncate"
           >
             {displayName}
           </motion.span>
@@ -75,7 +75,7 @@ export const Navbar: React.FC = () => {
               size={14}
               className="group-hover:rotate-180 transition-transform duration-700"
             />
-            <span>{t("news")}</span>
+            <span className="hidden sm:inline">{t("news")}</span>
           </button>
 
           <button
@@ -86,7 +86,8 @@ export const Navbar: React.FC = () => {
               size={14}
               className="group-hover:rotate-180 transition-transform duration-700"
             />
-            <span>{language === "th" ? "EN" : "ไทย"}</span>
+            <span className="hidden sm:inline">{language === "th" ? "EN" : "ไทย"}</span>
+            <span className="sm:hidden">{language === "th" ? "EN" : "TH"}</span>
           </button>
 
           {/* User avatar & name */}

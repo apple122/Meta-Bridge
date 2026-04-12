@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Loader2, Copy, Edit2, Eye, EyeOff } from "lucide-react";
 import type { Profile } from "../../types";
 import { decryptPassword } from "../../utils/security";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface UserTableProps {
   profiles: Profile[];
@@ -16,16 +17,16 @@ const PasswordCell: React.FC<{ password?: string }> = ({ password }) => {
   if (!password) return <span className="text-slate-600">---</span>;
 
   return (
-    <div className="flex items-center gap-2 group/pass">
-      <div className="text-xs opacity-50 font-mono truncate max-w-[120px]">
+    <div 
+      className="flex items-center gap-2 group/pass cursor-pointer"
+      onClick={() => setShow(!show)}
+    >
+      <div className="text-xs opacity-50 font-mono truncate max-w-[120px] transition-colors group-hover/pass:opacity-100 group-hover/pass:text-white">
         {show ? decryptPassword(password) : "••••••••"}
       </div>
-      <button
-        onClick={() => setShow(!show)}
-        className="p-1.5 hover:bg-white/10 rounded-lg text-slate-500 hover:text-white transition-all opacity-0 group-hover/pass:opacity-100"
-      >
+      <div className="p-1 hover:bg-white/10 rounded-lg text-slate-500 hover:text-white transition-all opacity-0 group-hover/pass:opacity-100 shrink-0">
         {show ? <EyeOff size={14} /> : <Eye size={14} />}
-      </button>
+      </div>
     </div>
   );
 };
@@ -36,18 +37,20 @@ export const UserTable: React.FC<UserTableProps> = ({
   onEdit,
   onToggleRole,
   emptyMessage,
-}) => (
-  <div className="glass-card overflow-hidden p-0">
+}) => {
+  const { t } = useLanguage();
+  return (
+    <div className="glass-card overflow-hidden p-0">
     <div className="overflow-x-auto">
       <table className="w-full text-left">
         <thead>
-          <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-            <th className="px-6 py-4">ผู้ใช้งาน</th>
-            <th className="px-6 py-4">รหัส</th>
-            <th className="px-6 py-4">อีเมลและรหัสผ่าน</th>
-            <th className="px-6 py-4 text-right">ยอดเงิน</th>
-            <th className="px-6 py-4">สถานะ</th>
-            <th className="px-6 py-4 text-right">จัดการ</th>
+          <tr className="border-b border-white/5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+            <th className="px-4 py-3">{t("users")}</th>
+            <th className="px-4 py-3">{t("codeLabel") || t("code")}</th>
+            <th className="px-4 py-3">{t("email") + " & " + t("password")}</th>
+            <th className="px-4 py-3 text-right">{t("balance")}</th>
+            <th className="px-4 py-3">{t("type")}</th>
+            <th className="px-4 py-3 text-right">{t("manage")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
@@ -58,7 +61,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 className="px-6 py-12 text-center text-slate-500 text-sm"
               >
                 <Loader2 className="animate-spin inline-block mr-2" />
-                กำลังโหลด...
+                {t("loading") || "Loading..."}
               </td>
             </tr>
           ) : profiles.length === 0 ? (
@@ -76,9 +79,9 @@ export const UserTable: React.FC<UserTableProps> = ({
                 key={profile.id}
                 className="group hover:bg-white/5 transition-colors"
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-black text-white shrink-0">
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-bold text-white text-[10px] shrink-0">
                       {profile.first_name?.[0]}
                       {profile.last_name?.[0]}
                     </div>
@@ -92,7 +95,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 font-mono text-primary font-bold whitespace-nowrap">
+                <td className="px-4 py-2.5 font-mono text-primary font-bold whitespace-nowrap text-xs">
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(profile.code || "");
@@ -118,31 +121,31 @@ export const UserTable: React.FC<UserTableProps> = ({
                     />
                   </button>
                 </td>
-                <td className="px-6 py-4 text-slate-400 text-sm min-w-[220px]">
-                  <div className="truncate max-w-[200px] mb-1">{profile.email}</div>
+                <td className="px-4 py-2.5 text-slate-400 text-[11px] min-w-[200px]">
+                  <div className="truncate max-w-[180px] mb-0.5">{profile.email}</div>
                   <PasswordCell password={profile.password} />
                 </td>
-                <td className="px-6 py-4 text-right text-white font-bold font-mono whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right text-white font-bold font-mono whitespace-nowrap text-xs">
                   $
                   {profile.balance.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-2.5 whitespace-nowrap">
                   <button
                     onClick={() => onToggleRole(profile)}
-                    className={`px-2 py-1 rounded-md text-[10px] font-black uppercase transition-all active:scale-95 ${profile.is_admin ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all active:scale-95 ${profile.is_admin ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
                   >
-                    {profile.is_admin ? "แอดมิน" : "ผู้ใช้"}
+                    {profile.is_admin ? t("adminLabel") : t("userLabel")}
                   </button>
                 </td>
-                <td className="px-6 py-4 text-right whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right whitespace-nowrap">
                   <button
                     onClick={() => onEdit(profile)}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                   >
-                    <Edit2 size={16} />
+                    <Edit2 size={14} />
                   </button>
                 </td>
               </tr>
@@ -153,4 +156,5 @@ export const UserTable: React.FC<UserTableProps> = ({
     </div>
   </div>
 );
+};
 

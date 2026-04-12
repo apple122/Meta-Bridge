@@ -1,5 +1,6 @@
 -- ============================================================
 -- QUICK FIX: BINARY TRADES SCHEMA & TRANSACTION LOGGING
+-- Version: 4.1 — Updated 2026-04-12
 -- Run this in your Supabase SQL Editor to fix missing history data
 -- ============================================================
 
@@ -125,3 +126,47 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'message', 'Trade resolved successfully');
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================
+-- PATCH 4.1: Language column + Activity Dashboard Indexes
+-- Run this block if upgrading from Schema 4.0 to 4.1
+-- ============================================================
+
+-- Add language preference column to profiles (if missing)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS language text DEFAULT 'en';
+
+-- Performance indexes for Admin Activity Dashboard date-range queries
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON public.transactions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON public.transactions(type);
+CREATE INDEX IF NOT EXISTS idx_binary_trades_created_at ON public.binary_trades(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_login_history_created_at ON public.user_login_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_login_history_user_id ON public.user_login_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_code ON public.profiles(code);
+
+-- ============================================================
+-- PATCH 4.1b: Admin Audit Logs Table (new table)
+-- Run this block if admin_audit_logs table is missing
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  admin_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  admin_email text,
+  target_user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  target_user_email text,
+  action_type text NOT NULL,
+  description text,
+  details jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Disable RLS (consistent with project policy)
+ALTER TABLE public.admin_audit_logs DISABLE ROW LEVEL SECURITY;
+
+-- Grant access
+GRANT ALL ON public.admin_audit_logs TO anon;
+GRANT ALL ON public.admin_audit_logs TO authenticated;
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_audit_logs_admin_id ON public.admin_audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.admin_audit_logs(created_at DESC);
