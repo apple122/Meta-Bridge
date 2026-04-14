@@ -49,33 +49,7 @@ export const getDeviceDetails = (): DeviceInfo => {
 
   } else if (/iPhone|iPad|iPod/i.test(ua)) {
     deviceType = ua.includes("iPad") ? 'tablet' : 'mobile';
-    
-    if (ua.includes("iPad")) {
-      deviceName = "iPad";
-    } else {
-      // iPhone Model Detection via Resolution Mapping
-      const width = Math.min(w, h);
-      const height = Math.max(w, h);
-      
-      if (pr === 3) {
-        if (width === 430 && height === 932) deviceName = "iPhone 14-16 Pro Max";
-        else if (width === 393 && height === 852) deviceName = "iPhone 14-16 Pro / 15-16";
-        else if (width === 428 && height === 926) deviceName = "iPhone 12-14 Pro Max";
-        else if (width === 390 && height === 844) deviceName = "iPhone 12-14 / Pro";
-        else if (width === 375 && height === 812) deviceName = "iPhone X / XS / 11 Pro";
-        else if (width === 414 && height === 896) deviceName = "iPhone XS Max / 11 Pro Max";
-        else if (width === 414 && height === 736) deviceName = "iPhone 6-8 Plus";
-        else if (width === 360 && height === 780) deviceName = "iPhone 12-13 mini";
-        else deviceName = "iPhone (Retina)";
-      } else if (pr === 2) {
-        if (width === 414 && height === 896) deviceName = "iPhone XR / 11";
-        else if (width === 375 && height === 667) deviceName = "iPhone 6-8 / SE2-3";
-        else if (width === 320 && height === 568) deviceName = "iPhone 5 / SE1";
-        else deviceName = "iPhone";
-      } else {
-        deviceName = "iPhone";
-      }
-    }
+    deviceName = ua.includes("iPad") ? "iPad" : "iPhone";
     
     const osVersionMatch = ua.match(/OS\s([0-9_]+)/);
     if (osVersionMatch) osName = `iOS ${osVersionMatch[1].replace(/_/g, '.')}`;
