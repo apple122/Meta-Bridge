@@ -20,9 +20,9 @@ import {
   Tablet,
   Monitor,
 } from "lucide-react";
-import { 
-  getNotificationPermissionStatus, 
-  requestNotificationPermission, 
+import {
+  getNotificationPermissionStatus,
+  requestNotificationPermission,
 } from "../../utils/notifications";
 import { supabase } from "../../lib/supabase";
 import { SettingsInput } from "./SettingsInput";
@@ -32,6 +32,8 @@ import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
 import { Check, Globe, Zap } from "lucide-react";
+import { activityService } from "../../services/activityService";
+import { useAuth } from "../../contexts/AuthContext";
 
 const THAI_BANKS = [
   { id: 'KBank', name: 'Kasikorn Bank', nameTh: 'ธนาคารกสิกรไทย', color: '#00A950', icon: 'K' },
@@ -93,8 +95,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   transactions = [],
 }) => {
   const { language } = useLanguage();
+  const { session } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Password States
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -113,11 +116,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, 4000);
   };
-  
+
   React.useEffect(() => {
     sessionStorage.setItem("settings_is_changing_password", isChangingPassword.toString());
   }, [isChangingPassword]);
-  
+
   // OTP States
   const [isOtpFlow, setIsOtpFlow] = useState(() => {
     return sessionStorage.getItem("settings_is_otp_flow") === "true";
@@ -149,7 +152,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [isLoginHistoryFlow, setIsLoginHistoryFlow] = useState(false);
   const [loginHistoryList, setLoginHistoryList] = useState<any[]>([]);
   const [isLoginHistoryLoading, setIsLoginHistoryLoading] = useState(false);
-  
+
   // Bank 2.0 States
   const [bankType, setBankType] = useState<"bank" | "crypto">(() => {
     const net = profileData.bank_network?.toUpperCase() || "";
@@ -162,7 +165,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   // Validation functions
   const getAccountError = () => {
     if (!tempBankAccount) return "";
-    
+
     if (bankType === "bank") {
       const digitsOnly = tempBankAccount.replace(/[^0-9]/g, "");
       if (digitsOnly.length !== tempBankAccount.length) {
@@ -202,22 +205,59 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       setBankType((net.includes("RC-") || net.includes("EP-")) ? "crypto" : "bank");
     }
   }, [activeTab, profileData]);
-  
+
   React.useEffect(() => {
     if (isLoginHistoryFlow && userId) {
       const fetchHistory = async () => {
-         setIsLoginHistoryLoading(true);
-         const { data } = await supabase
-           .from("user_login_history")
-           .select("*")
-           .eq("user_id", userId)
-           .order("created_at", { ascending: false });
-         if (data) setLoginHistoryList(data);
-         setIsLoginHistoryLoading(false);
+        setIsLoginHistoryLoading(true);
+        try {
+          const data = await activityService.fetchActivities({ userId, type: 'login' });
+          setLoginHistoryList(data);
+        } catch (err) {
+          console.error("[Settings] fetchHistory Error:", err);
+        } finally {
+          setIsLoginHistoryLoading(false);
+        }
       };
       fetchHistory();
     }
   }, [isLoginHistoryFlow, userId]);
+
+  const handleLogoutSession = async (historyId: string, sessionId?: string) => {
+    if (!window.confirm(language === 'th' ? "คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบและลบประวัตินี้?" : "Are you sure you want to logout and delete this record?")) return;
+    try {
+      if (sessionId) {
+        await activityService.kickSession(sessionId);
+      }
+      await activityService.deleteActivity(historyId);
+      
+      setLoginHistoryList(prev => prev.filter(a => a.id !== historyId));
+      showToast(language === 'th' ? "ออกจากระบบเรียบร้อยแล้ว" : "Logged out successfully", "success");
+    } catch (err: any) {
+      console.error("[Settings] handleLogoutSession Error:", err);
+      showToast(language === 'th' ? "เกิดข้อผิดพลาด: " + err.message : "Error: " + err.message, "error");
+    }
+  };
+
+  const handleLogoutAllOther = async () => {
+    const sessId = (session as any)?.session_id;
+    if (!sessId || !userId) return;
+    if (!window.confirm(language === 'th' ? "ออกจากระบบเครื่องอื่นทั้งหมดและล้างประวัติ?" : "Logout all other devices and clear history?")) return;
+    
+    try {
+      await activityService.kickAllOtherSessions(userId!, sessId);
+      await activityService.clearLoginHistory(userId!, sessId);
+      
+      const data = await activityService.fetchActivities({ userId, type: 'login' });
+      setLoginHistoryList(data);
+      
+      showToast(language === 'th' ? "ออกจากระบบเครื่องอื่นทั้งหมดแล้ว" : "All other sessions logged out", "success");
+    } catch (err: any) {
+      console.error("[Settings] handleLogoutAllOther Error:", err);
+      showToast(language === 'th' ? "เกิดข้อผิดพลาด: " + err.message : "Error: " + err.message, "error");
+    }
+  };
+
 
   const [newEmail, setNewEmail] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
@@ -228,7 +268,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const handleSave = async () => {
     if (!userId) return;
-    
+
     // Basic Validation
     if (!profileData.first_name?.trim() || !profileData.last_name?.trim()) {
       const fallbackMsg = language === "th" ? "กรุณาระบุชื่อและนามสกุล" : "First name and last name are required";
@@ -245,17 +285,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     try {
       let newKycStatus = profileData.kyc_status;
       const isProfileComplete = Boolean(
-        profileData.first_name?.trim() && 
-        profileData.last_name?.trim() && 
-        profileData.phone_number?.trim() && 
+        profileData.first_name?.trim() &&
+        profileData.last_name?.trim() &&
+        profileData.phone_number?.trim() &&
         profileData.address?.trim()
       );
       const isBankComplete = Boolean(
-        profileData.bank_network?.trim() && 
-        profileData.bank_account?.trim() && 
+        profileData.bank_network?.trim() &&
+        profileData.bank_account?.trim() &&
         profileData.bank_name?.trim()
       );
-      
+
       if (isProfileComplete && isBankComplete && newKycStatus !== "verified") {
         newKycStatus = "verified";
       } else if ((!isProfileComplete || !isBankComplete) && newKycStatus === "verified") {
@@ -285,7 +325,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         console.error("[Settings] handleSave Error Object:", error);
         throw error;
       };
-      
+
       showToast(t("saveSuccess") || "Settings saved successfully", "success");
       await refreshProfile();
     } catch (err: any) {
@@ -318,18 +358,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .select("password")
         .eq("id", userId)
         .single();
-        
+
       if (fetchError || !userProfile) throw new Error("User not found");
-      
+
       if (!(await comparePassword(currentPassword, userProfile.password))) {
         throw new Error("Current password incorrect");
       }
-      
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ password: encryptPassword(newPassword) })
         .eq("id", userId);
-        
+
       if (updateError) throw updateError;
 
       showToast("Password updated successfully!", "success");
@@ -353,7 +393,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     try {
       const code = generateOTP();
       const expires_at = new Date(Date.now() + 10 * 60000).toISOString();
-      
+
       const { error } = await supabase
         .from("profiles")
         .update({ otp_code: code, otp_expires_at: expires_at })
@@ -361,9 +401,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
       if (error) throw error;
 
-      await emailService.sendOTP({ 
-        email: profileData.email, 
-        code, 
+      await emailService.sendOTP({
+        email: profileData.email,
+        code,
         userName: profileData.first_name,
         lang: language,
         type: 'reset'
@@ -381,7 +421,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const handleVerifyOtp = async () => {
     setOtpLoading(true);
     try {
-       const { data, error } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
@@ -389,7 +429,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .single();
 
       if (error || !data) throw new Error(t("invalidOtp"));
-      
+
       // Check expiry
       if (new Date(data.otp_expires_at) < new Date()) throw new Error(t("invalidOtp"));
 
@@ -436,9 +476,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .update({ otp_code: code, otp_expires_at: expires_at })
         .eq("id", userId);
       if (error) throw error;
-      await emailService.sendOTP({ 
-        email: profileData.email, 
-        code, 
+      await emailService.sendOTP({
+        email: profileData.email,
+        code,
         userName: profileData.first_name || "User",
         lang: language,
         type: 'change_email'
@@ -463,14 +503,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .single();
       if (error || !data) throw new Error(t("invalidOtp"));
       if (new Date(data.otp_expires_at) < new Date()) throw new Error(t("invalidOtp"));
-      
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ otp_code: null })
         .eq("id", userId);
-      
+
       if (updateError) throw updateError;
-      
+
       setEmailOtpStep("new_email");
       setEmailOtp("");
     } catch (err: any) {
@@ -494,9 +534,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .update({ otp_code: code, otp_expires_at: expires_at })
         .eq("id", userId);
       if (error) throw error;
-      await emailService.sendOTP({ 
-        email: newEmail, 
-        code, 
+      await emailService.sendOTP({
+        email: newEmail,
+        code,
         userName: profileData.first_name || "User",
         lang: language,
         type: 'change_email'
@@ -521,15 +561,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .single();
       if (error || !data) throw new Error(t("invalidOtp"));
       if (new Date(data.otp_expires_at) < new Date()) throw new Error(t("invalidOtp"));
-      
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ email: newEmail, otp_code: null })
         .eq("id", userId);
-      
+
       if (updateError) throw updateError;
-      
-      setProfileData((prev: any) => ({...prev, email: newEmail}));
+
+      setProfileData((prev: any) => ({ ...prev, email: newEmail }));
       showToast(t("emailUpdated"), "success");
       setIsEmailFlow(false);
       setEmailOtpStep("request_old");
@@ -557,17 +597,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               initial={{ opacity: 0, x: 50, scale: 0.9 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 20, scale: 0.9 }}
-              className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto backdrop-blur-xl border ${
-                n.type === "success" 
-                  ? "bg-green-500/10 border-green-500/20 text-green-500" 
-                  : "bg-red-500/10 border-red-500/20 text-red-500"
-              }`}
+              className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto backdrop-blur-xl border ${n.type === "success"
+                ? "bg-green-500/10 border-green-500/20 text-green-500"
+                : "bg-red-500/10 border-red-500/20 text-red-500"
+                }`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${n.type === "success" ? "bg-green-500/20" : "bg-red-500/20"}`}>
                 {n.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
               </div>
               <span className="font-bold text-sm">{n.message}</span>
-              <button 
+              <button
                 onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
                 className="ml-2 hover:opacity-70 transition-opacity"
               >
@@ -580,438 +619,436 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
       <AnimatePresence mode="wait">
         {activeTab === "profile" && (
-        <motion.div
-          key="profile"
-          initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card relative"
-        >
-          {isMobile && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
-            >
-              <ChevronRight className="rotate-180" size={24} />
-            </button>
-          )}
-          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
-              <User size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white leading-tight">{t("verification")}</h2>
-              <p className="text-slate-400 text-[11px]">{t("managePersonalInfo")}</p>
-            </div>
-          </div>
-
-          <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-8 mt-8">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SettingsInput
-                  label={t("firstName")}
-                  placeholder="สมชาย"
-                  value={profileData.first_name}
-                  onChange={(e) => updateField("first_name", e.target.value)}
-                />
-                <SettingsInput
-                  label={t("lastName")}
-                  placeholder="ใจดี"
-                  value={profileData.last_name}
-                  onChange={(e) => updateField("last_name", e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SettingsInput
-                  label={t("username")}
-                  placeholder="somchai123"
-                  value={profileData.username}
-                  onChange={(e) => updateField("username", e.target.value)}
-                />
-                <SettingsInput
-                  label={t("phone")}
-                  placeholder="08x-xxx-xxxx"
-                  value={profileData.phone_number}
-                  onChange={(e) => updateField("phone_number", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <SettingsInput
-                  label={t("address")}
-                  placeholder="123 Example St."
-                  value={profileData.address}
-                  onChange={(e) => updateField("address", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end items-center pt-6 border-t border-white/5 gap-3">
+          <motion.div
+            key="profile"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card relative"
+          >
+            {isMobile && (
               <button
-                type="button"
-                onClick={() => refreshProfile()}
-                className="px-6 py-2 rounded-xl bg-white/5 text-slate-400 font-bold text-sm hover:text-white transition-colors"
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
               >
-                {t("discard")}
+                <ChevronRight className="rotate-180" size={24} />
               </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
-              >
-                {isSaving ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Save size={16} />
-                )}
-                {t("save")}
-              </button>
-            </div>
-          </form>
-        </motion.div>
-      )}
-
-      {activeTab === "bank" && (
-        <motion.div
-          key="bank"
-          initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card space-y-8 relative"
-        >
-          {isMobile && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
-            >
-              <ChevronRight className="rotate-180" size={24} />
-            </button>
-          )}
-
-          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-            <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center text-accent shrink-0">
-              <Landmark size={18} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white leading-tight">{t("bankDetails")}</h2>
-              <p className="text-slate-400 text-[11px]">{t("bankDescription")}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            {/* Bank/Crypto Toggle */}
-            <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-full max-w-sm mx-auto">
-              {(["bank", "crypto"] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setBankType(type)}
-                  className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                    bankType === type 
-                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                      : "text-slate-500 hover:text-white"
-                  }`}
-                >
-                  {type === "bank" ? <Landmark size={14} /> : <Zap size={14} />}
-                  {type === "bank" ? (language === "th" ? "ธนาคารไทย" : "Thai Bank") : (language === "th" ? "คริปโต (USDT)" : "Crypto Wallet")}
-                </button>
-              ))}
+            )}
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                <User size={20} />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white leading-tight">{t("verification")}</h2>
+                <p className="text-slate-400 text-[11px]">{t("managePersonalInfo")}</p>
+              </div>
             </div>
 
-            <form 
-              onSubmit={async (e) => { 
-                e.preventDefault(); 
-                
-                // Block saving if there's a validation error
-                if (accountError) {
-                  showToast(accountError, "error");
-                  return;
-                }
-
-                setIsSaving(true);
-                
-                let newKycStatus = profileData.kyc_status;
-                const isProfileComplete = Boolean(
-                  profileData.first_name?.trim() && 
-                  profileData.last_name?.trim() && 
-                  profileData.phone_number?.trim() && 
-                  profileData.address?.trim()
-                );
-                const isBankComplete = Boolean(
-                  tempBankNetwork?.trim() && 
-                  tempBankAccount?.trim() && 
-                  tempBankName?.trim()
-                );
-                
-                if (isProfileComplete && isBankComplete && newKycStatus !== "verified") {
-                  newKycStatus = "verified";
-                } else if ((!isProfileComplete || !isBankComplete) && newKycStatus === "verified") {
-                  newKycStatus = "unverified";
-                }
-
-                const { error } = await supabase
-                  .from("profiles")
-                  .update({
-                    bank_network: tempBankNetwork,
-                    bank_account: tempBankAccount,
-                    bank_name: tempBankName,
-                    kyc_status: newKycStatus
-                  })
-                  .eq("id", userId);
-                
-                if (!error) {
-                  showToast(language === "th" ? "บันทึกข้อมูลสำเร็จ" : "Bank details updated", "success");
-                  await refreshProfile();
-                } else {
-                  showToast(error.message, "error");
-                }
-                setIsSaving(false);
-              }} 
-              className="space-y-8"
-            >
+            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-8 mt-8">
               <div className="space-y-6">
-                {bankType === "bank" ? (
-                  <div className="space-y-3">
-                    <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
-                      {t("selectBank")}
-                    </label>
-                    {/* Custom Dropdown */}
-                    <div className="relative">
-                      <select
-                        value={tempBankNetwork || ""}
-                        onChange={(e) => {
-                          setTempBankNetwork(e.target.value);
-                          setTempBankName("");
-                        }}
-                        className="w-full appearance-none bg-slate-900 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
-                      >
-                        <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
-                        {THAI_BANKS.map((bank) => (
-                          <option key={bank.id} value={bank.id}>
-                            {language === "th" ? bank.nameTh : bank.name}
-                          </option>
-                        ))}
-                      </select>
-
-                      {/* Left: colored bank logo */}
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        {(() => {
-                          const bank = THAI_BANKS.find(b => b.id === tempBankNetwork);
-                          return bank ? (
-                            <div
-                              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-md"
-                              style={{ backgroundColor: bank.color }}
-                            >
-                              {bank.icon}
-                            </div>
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                              <Landmark size={16} className="text-slate-500" />
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Right: chevron arrow */}
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                        <ChevronRight size={16} className="rotate-90" />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
-                      {t("network")}
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {CRYPTO_NETWORKS.map((net) => (
-                        <button
-                          key={net.id}
-                          type="button"
-                          onClick={() => setTempBankNetwork(net.id)}
-                          className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all  ${
-                            tempBankNetwork === net.id 
-                              ? "bg-white/10 border-white/30 ring-1 ring-white/10" 
-                              : "bg-white/5 border-white/5 hover:border-white/10"
-                          }`}
-                        >
-                           <div 
-                             className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg shrink-0 p-1.5"
-                             style={{ backgroundColor: net.color }}
-                           >
-                             {net.icon}
-                           </div>
-                          <div className="text-left">
-                            <p className="text-white font-bold text-[11px] leading-tight">{net.name}</p>
-                            <p className="text-[9px] text-slate-500 leading-none mt-1">{net.desc}</p>
-                          </div>
-                          {tempBankNetwork === net.id && (
-                             <div className="ml-auto text-primary">
-                               <Check size={12} strokeWidth={4} />
-                             </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="bg-white/5 p-3.5 sm:p-4 rounded-2xl border border-white/10 space-y-3">
-                   <div className="space-y-1">
-                    <SettingsInput
-                      label={bankType === "bank" ? t("accountNumberLabel") : t("walletAddress")}
-                      placeholder={bankType === "bank" ? "xxx-x-xxxxx-x" : "Paste your TRC-20 address"}
-                      value={tempBankAccount || ""}
-                      onChange={(e) => setTempBankAccount(e.target.value)}
-                    />
-                    {accountError && (
-                      <p className="text-red-400 text-[10px] font-bold ml-1 animate-pulse">
-                        ⚠️ {accountError}
-                      </p>
-                    )}
-                  </div>
-                  
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <SettingsInput
-                    label={t("accountName")}
-                    placeholder="Full name on account"
-                    value={tempBankName || ""}
-                    onChange={(e) => setTempBankName(e.target.value)}
+                    label={t("firstName")}
+                    placeholder="สมชาย"
+                    value={profileData.first_name}
+                    onChange={(e) => updateField("first_name", e.target.value)}
+                  />
+                  <SettingsInput
+                    label={t("lastName")}
+                    placeholder="ใจดี"
+                    value={profileData.last_name}
+                    onChange={(e) => updateField("last_name", e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <SettingsInput
+                    label={t("username")}
+                    placeholder="somchai123"
+                    value={profileData.username}
+                    onChange={(e) => updateField("username", e.target.value)}
+                  />
+                  <SettingsInput
+                    label={t("phone")}
+                    placeholder="08x-xxx-xxxx"
+                    value={profileData.phone_number}
+                    onChange={(e) => updateField("phone_number", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <SettingsInput
+                    label={t("address")}
+                    placeholder="123 Example St."
+                    value={profileData.address}
+                    onChange={(e) => updateField("address", e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold flex gap-3">
-                <ShieldCheck size={18} className="shrink-0" />
-                <p>{t("bankWarning")}</p>
-              </div>
-
-              <div className="flex justify-end pt-6 border-t border-white/5">
+              <div className="flex justify-end items-center pt-6 border-t border-white/5 gap-3">
+                <button
+                  type="button"
+                  onClick={() => refreshProfile()}
+                  className="px-6 py-2 rounded-xl bg-white/5 text-slate-400 font-bold text-sm hover:text-white transition-colors"
+                >
+                  {t("discard")}
+                </button>
                 <button
                   type="submit"
-                  disabled={isSaving || !tempBankNetwork || !tempBankAccount || !tempBankName || !!accountError}
-                  className="btn-primary flex items-center justify-center gap-4 px-10 disabled:opacity-50 h-11 sm:h-12 w-full sm:w-auto"
+                  disabled={isSaving}
+                  className="w-full sm:w-auto px-5 py-2 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
                 >
                   {isSaving ? (
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    <Save size={18} />
+                    <Save size={16} />
                   )}
-                  <span className="text-base">{t("save")}</span>
+                  {t("save")}
                 </button>
               </div>
             </form>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
 
-      {activeTab === "security" && (
-        <motion.div
-          key="security"
-          initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card max-w-lg relative"
-        >
-          {isMobile && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
-            >
-              <ChevronRight className="rotate-180" size={24} />
-            </button>
-          )}
+        {activeTab === "bank" && (
+          <motion.div
+            key="bank"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card space-y-8 relative"
+          >
+            {isMobile && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+              >
+                <ChevronRight className="rotate-180" size={24} />
+              </button>
+            )}
 
-          {!isOtpFlow && !isEmailFlow && !isChangingPassword && !isLoginHistoryFlow ? (
-            <div className="space-y-8">
-              {/* Account Binding Section */}
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+              <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center text-accent shrink-0">
+                <Landmark size={18} />
+              </div>
               <div>
-                <h2 className="text-base font-bold text-white mb-1">
-                  {t("accountSecurity") || t("changePassword")}
-                </h2>
-                <p className="text-slate-400 text-[11px] mb-3">
-                  {t("securityDescription")}
-                </p>
+                <h2 className="text-base font-bold text-white leading-tight">{t("bankDetails")}</h2>
+                <p className="text-slate-400 text-[11px]">{t("bankDescription")}</p>
+              </div>
+            </div>
 
-                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                  <Globe size={16} className="text-primary" />
-                  {t("loginMethods") || "Login Methods"}
-                </h3>
-                
-                <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                      <Mail size={20} />
+            <div className="flex flex-col gap-6">
+              {/* Bank/Crypto Toggle */}
+              <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-full max-w-sm mx-auto">
+                {(["bank", "crypto"] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setBankType(type)}
+                    className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${bankType === type
+                      ? "bg-primary text-white shadow-lg shadow-primary/20"
+                      : "text-slate-500 hover:text-white"
+                      }`}
+                  >
+                    {type === "bank" ? <Landmark size={14} /> : <Zap size={14} />}
+                    {type === "bank" ? (language === "th" ? "ธนาคารไทย" : "Thai Bank") : (language === "th" ? "คริปโต (USDT)" : "Crypto Wallet")}
+                  </button>
+                ))}
+              </div>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+
+                  // Block saving if there's a validation error
+                  if (accountError) {
+                    showToast(accountError, "error");
+                    return;
+                  }
+
+                  setIsSaving(true);
+
+                  let newKycStatus = profileData.kyc_status;
+                  const isProfileComplete = Boolean(
+                    profileData.first_name?.trim() &&
+                    profileData.last_name?.trim() &&
+                    profileData.phone_number?.trim() &&
+                    profileData.address?.trim()
+                  );
+                  const isBankComplete = Boolean(
+                    tempBankNetwork?.trim() &&
+                    tempBankAccount?.trim() &&
+                    tempBankName?.trim()
+                  );
+
+                  if (isProfileComplete && isBankComplete && newKycStatus !== "verified") {
+                    newKycStatus = "verified";
+                  } else if ((!isProfileComplete || !isBankComplete) && newKycStatus === "verified") {
+                    newKycStatus = "unverified";
+                  }
+
+                  const { error } = await supabase
+                    .from("profiles")
+                    .update({
+                      bank_network: tempBankNetwork,
+                      bank_account: tempBankAccount,
+                      bank_name: tempBankName,
+                      kyc_status: newKycStatus
+                    })
+                    .eq("id", userId);
+
+                  if (!error) {
+                    showToast(language === "th" ? "บันทึกข้อมูลสำเร็จ" : "Bank details updated", "success");
+                    await refreshProfile();
+                  } else {
+                    showToast(error.message, "error");
+                  }
+                  setIsSaving(false);
+                }}
+                className="space-y-8"
+              >
+                <div className="space-y-6">
+                  {bankType === "bank" ? (
+                    <div className="space-y-3">
+                      <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
+                        {t("selectBank")}
+                      </label>
+                      {/* Custom Dropdown */}
+                      <div className="relative">
+                        <select
+                          value={tempBankNetwork || ""}
+                          onChange={(e) => {
+                            setTempBankNetwork(e.target.value);
+                            setTempBankName("");
+                          }}
+                          className="w-full appearance-none bg-slate-900 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                        >
+                          <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
+                          {THAI_BANKS.map((bank) => (
+                            <option key={bank.id} value={bank.id}>
+                              {language === "th" ? bank.nameTh : bank.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Left: colored bank logo */}
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                          {(() => {
+                            const bank = THAI_BANKS.find(b => b.id === tempBankNetwork);
+                            return bank ? (
+                              <div
+                                className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-md"
+                                style={{ backgroundColor: bank.color }}
+                              >
+                                {bank.icon}
+                              </div>
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                                <Landmark size={16} className="text-slate-500" />
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Right: chevron arrow */}
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                          <ChevronRight size={16} className="rotate-90" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="overflow-hidden">
-                      <p className="text-white font-bold text-sm truncate">{t("emailLogin")}</p>
-                      <p className="text-xs text-slate-400 truncate">{maskEmail(profileData.email)}</p>
+                  ) : (
+                    <div className="space-y-4">
+                      <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
+                        {t("network")}
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {CRYPTO_NETWORKS.map((net) => (
+                          <button
+                            key={net.id}
+                            type="button"
+                            onClick={() => setTempBankNetwork(net.id)}
+                            className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all  ${tempBankNetwork === net.id
+                              ? "bg-white/10 border-white/30 ring-1 ring-white/10"
+                              : "bg-white/5 border-white/5 hover:border-white/10"
+                              }`}
+                          >
+                            <div
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg shrink-0 p-1.5"
+                              style={{ backgroundColor: net.color }}
+                            >
+                              {net.icon}
+                            </div>
+                            <div className="text-left">
+                              <p className="text-white font-bold text-[11px] leading-tight">{net.name}</p>
+                              <p className="text-[9px] text-slate-500 leading-none mt-1">{net.desc}</p>
+                            </div>
+                            {tempBankNetwork === net.id && (
+                              <div className="ml-auto text-primary">
+                                <Check size={12} strokeWidth={4} />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-white/5 p-3.5 sm:p-4 rounded-2xl border border-white/10 space-y-3">
+                    <div className="space-y-1">
+                      <SettingsInput
+                        label={bankType === "bank" ? t("accountNumberLabel") : t("walletAddress")}
+                        placeholder={bankType === "bank" ? "xxx-x-xxxxx-x" : "Paste your TRC-20 address"}
+                        value={tempBankAccount || ""}
+                        onChange={(e) => setTempBankAccount(e.target.value)}
+                      />
+                      {accountError && (
+                        <p className="text-red-400 text-[10px] font-bold ml-1 animate-pulse">
+                          ⚠️ {accountError}
+                        </p>
+                      )}
+                    </div>
+
+                    <SettingsInput
+                      label={t("accountName")}
+                      placeholder="Full name on account"
+                      value={tempBankName || ""}
+                      onChange={(e) => setTempBankName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold flex gap-3">
+                  <ShieldCheck size={18} className="shrink-0" />
+                  <p>{t("bankWarning")}</p>
+                </div>
+
+                <div className="flex justify-end pt-6 border-t border-white/5">
+                  <button
+                    type="submit"
+                    disabled={isSaving || !tempBankNetwork || !tempBankAccount || !tempBankName || !!accountError}
+                    className="btn-primary flex items-center justify-center gap-4 px-10 disabled:opacity-50 h-11 sm:h-12 w-full sm:w-auto"
+                  >
+                    {isSaving ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Save size={18} />
+                    )}
+                    <span className="text-base">{t("save")}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === "security" && (
+          <motion.div
+            key="security"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card max-w-lg relative"
+          >
+            {isMobile && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+              >
+                <ChevronRight className="rotate-180" size={24} />
+              </button>
+            )}
+
+            {!isOtpFlow && !isEmailFlow && !isChangingPassword && !isLoginHistoryFlow ? (
+              <div className="space-y-8">
+                {/* Account Binding Section */}
+                <div>
+                  <h2 className="text-base font-bold text-white mb-1">
+                    {t("accountSecurity") || t("changePassword")}
+                  </h2>
+                  <p className="text-slate-400 text-[11px] mb-3">
+                    {t("securityDescription")}
+                  </p>
+
+                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                    <Globe size={16} className="text-primary" />
+                    {t("loginMethods") || "Login Methods"}
+                  </h3>
+
+                  <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                        <Mail size={20} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-white font-bold text-sm truncate">{t("emailLogin")}</p>
+                        <p className="text-xs text-slate-400 truncate">{maskEmail(profileData.email)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                      <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider hidden lg:block">
+                        {t("connected") || "Connected"}
+                      </span>
+                      <button
+                        onClick={() => setIsEmailFlow(true)}
+                        className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary whitespace-nowrap"
+                      >
+                        {t("changeEmail") || "Change Email"}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider hidden lg:block">
-                      {t("connected") || "Connected"}
-                    </span>
-                    <button 
-                      onClick={() => setIsEmailFlow(true)}
-                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary whitespace-nowrap"
+                </div>
+
+                {/* Login History Section */}
+                <div className="pt-6 border-t border-white/5">
+                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                    <History size={16} className="text-primary" />
+                    {t("loginHistory")}
+                  </h3>
+                  <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="overflow-hidden">
+                      <p className="text-white font-bold text-sm truncate">{t("recentActivity")}</p>
+                      <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("viewRecentSignins")}</p>
+                    </div>
+                    <button
+                      onClick={() => setIsLoginHistoryFlow(true)}
+                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
                     >
-                      {t("changeEmail") || "Change Email"}
+                      {t("viewHistory")}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Password Section */}
+                <div className="pt-6 border-t border-white/5">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <KeyRound size={16} className="text-primary" />
+                      {t("changePassword")}
+                    </h3>
+                    <button
+                      onClick={() => setIsOtpFlow(true)}
+                      className="text-xs font-bold text-primary hover:underline transition-all"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+
+                  <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="overflow-hidden">
+                      <p className="text-white font-bold text-sm truncate">{t("accountPassword")}</p>
+                      <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("updatePasswordDesc")}</p>
+                    </div>
+                    <button
+                      onClick={() => setIsChangingPassword(true)}
+                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
+                    >
+                      {t("changePassword")}
                     </button>
                   </div>
                 </div>
               </div>
-
-              {/* Login History Section */}
-              <div className="pt-6 border-t border-white/5">
-                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                  <History size={16} className="text-primary" />
-                  {t("loginHistory")}
-                </h3>
-                <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
-                  <div className="overflow-hidden">
-                    <p className="text-white font-bold text-sm truncate">{t("recentActivity")}</p>
-                    <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("viewRecentSignins")}</p>
-                  </div>
-                  <button 
-                    onClick={() => setIsLoginHistoryFlow(true)}
-                    className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
-                  >
-                    {t("viewHistory")}
-                  </button>
-                </div>
-              </div>
-
-              {/* Password Section */}
-              <div className="pt-6 border-t border-white/5">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <KeyRound size={16} className="text-primary" />
-                    {t("changePassword")}
-                  </h3>
-                  <button
-                    onClick={() => setIsOtpFlow(true)}
-                    className="text-xs font-bold text-primary hover:underline transition-all"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-
-                <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
-                  <div className="overflow-hidden">
-                    <p className="text-white font-bold text-sm truncate">{t("accountPassword")}</p>
-                    <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("updatePasswordDesc")}</p>
-                  </div>
-                  <button 
-                    onClick={() => setIsChangingPassword(true)}
-                    className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
-                  >
-                    {t("changePassword")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : isChangingPassword ? (
-             <form onSubmit={(e) => { e.preventDefault(); handleNormalPasswordUpdate(); }} className="space-y-6">
+            ) : isChangingPassword ? (
+              <form onSubmit={(e) => { e.preventDefault(); handleNormalPasswordUpdate(); }} className="space-y-6">
                 <div className="flex items-center gap-2 mb-2">
                   <button
                     type="button"
@@ -1027,7 +1064,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </button>
                   <h2 className="text-xl sm:text-2xl font-black text-white">{t("changePassword")}</h2>
                 </div>
-                
+
                 <p className="text-slate-400 text-sm mb-6">
                   {t("ensureStrongPassword")}
                 </p>
@@ -1064,9 +1101,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <KeyRound size={18} />}
                   {t("save")}
                 </button>
-             </form>
-          ) : isLoginHistoryFlow ? (
-             <div className="space-y-6">
+              </form>
+            ) : isLoginHistoryFlow ? (
+              <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-2">
                   <button
                     onClick={() => setIsLoginHistoryFlow(false)}
@@ -1076,10 +1113,22 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </button>
                   <h2 className="text-xl sm:text-2xl font-black text-white">{t("loginHistory")}</h2>
                 </div>
-                
-                <p className="text-slate-400 text-sm mb-6">
-                  {t("loginHistoryDesc")}
-                </p>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                  <p className="text-slate-400 text-xs sm:text-sm">
+                    {t("loginHistoryDesc")}
+                  </p>
+                  {loginHistoryList.length > 0 && (
+                    <div className="w-full sm:w-auto shrink-0">
+                       <button
+                         onClick={handleLogoutAllOther}
+                         className="w-full sm:w-auto px-4 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all hover:bg-rose-500 hover:text-white shadow-lg shadow-rose-500/5"
+                       >
+                         {language === 'th' ? 'ออกจากระบบทั้งหมด' : 'Logout All Devices'}
+                       </button>
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-3">
                   {isLoginHistoryLoading ? (
@@ -1088,33 +1137,61 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     </div>
                   ) : loginHistoryList.length > 0 ? (
                     loginHistoryList.map((hist, i) => {
-                      const isMobile = /iPhone|Android|Mobile/i.test(hist.os_name || hist.device_name);
-                      const isTablet = /iPad|Tablet/i.test(hist.os_name || hist.device_name);
-                      
+                      const isMobile = /iPhone|Android|Mobile/i.test(hist.os_name || hist.device || hist.device_name);
+                      const isTablet = /iPad|Tablet/i.test(hist.os_name || hist.device || hist.device_name);
+                      const currentUserSessionId = (session as any)?.session_id;
+                      const isCurrent = hist.sessionId && currentUserSessionId && hist.sessionId === currentUserSessionId;
+
                       return (
-                        <div key={hist.id || i} className={`p-4 rounded-xl bg-white/5 border ${i === 0 ? "border-primary/20 relative overflow-hidden" : "border-white/5"}`}>
-                          {i === 0 && <div className="absolute top-0 right-0 p-1 bg-green-500/20 text-green-500 text-[9px] font-bold px-2 rounded-bl-lg">{t("lastSignedIn")}</div>}
-                          <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${i === 0 ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400"}`}>
-                                {isTablet ? <Tablet size={18} /> : isMobile ? <Smartphone size={18} /> : <Monitor size={18} />}
+                        <div key={hist.id || i} className={`p-4 rounded-xl bg-white/5 border transition-all ${isCurrent ? "border-primary/40 shadow-lg shadow-primary/5" : "border-white/5 hover:bg-white/10"}`}>
+                          <div className="flex items-start sm:items-center gap-3 md:gap-4">
+                            <div className={`mt-0.5 sm:mt-0 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400"}`}>
+                              {isTablet ? <Tablet size={20} /> : isMobile ? <Smartphone size={20} /> : <Monitor size={20} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-white font-bold text-sm truncate">{hist.device || hist.device_name || "Legacy Session"}</p>
+                                {isCurrent && (
+                                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black text-primary whitespace-nowrap shrink-0">
+                                    {language === 'th' ? 'ปัจจุบัน' : 'Current'}
+                                  </span>
+                                )}
+                                {!isCurrent && hist.isActive && (
+                                  <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[9px] font-bold text-emerald-500 whitespace-nowrap">{language === 'th' ? 'กำลังออนไลน์' : 'Active'}</span>
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex-1">
-                                 <div className="flex items-center justify-between">
-                                   <p className="text-white font-bold text-sm text-shadow-sm">{hist.device_name || "Legacy Session"}</p>
-                                   <p className="text-[10px] text-slate-500 font-medium">{new Date(hist.created_at).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                                 </div>
-                                 <p className="text-xs text-slate-400 mt-0.5">
-                                   <span className="text-primary/80">{hist.os_name || "Unknown OS"}</span>
-                                   <span className="mx-1.5 opacity-30">•</span>
-                                   <span>{hist.browser_name || "Unknown Browser"}</span>
-                                   {hist.ip_address && hist.ip_address !== "Unknown IP" && (
-                                     <>
-                                       <span className="mx-1.5 opacity-30">•</span>
-                                       <span className="opacity-70">{hist.ip_address}</span>
-                                     </>
-                                   )}
-                                 </p>
+
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                                <div className="space-y-0.5">
+                                  <p className="text-xs text-slate-400 flex items-center gap-2 truncate">
+                                    <span className="text-primary/80 font-medium">{hist.os_name || "Unknown OS"}</span>
+                                    <span className="w-1 h-1 rounded-full bg-white/20 shrink-0" />
+                                    <span className="opacity-70 font-mono text-[11px]">{hist.ip || hist.ip_address}</span>
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1 whitespace-nowrap">
+                                    <History size={10} className="opacity-50" />
+                                    {new Date(hist.createdAt || hist.created_at).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+
+                                {!isCurrent && (
+                                  <button
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      handleLogoutSession(hist.id, (hist.isActive && hist.sessionId) ? hist.sessionId : undefined); 
+                                    }}
+                                    className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-rose-500 hover:border-rose-500 hover:text-white"
+                                  >
+                                    {language === 'th' ? 'ออกจากระบบ' : 'Logout'}
+                                  </button>
+                                )}
                               </div>
+
+                            </div>
                           </div>
                         </div>
                       );
@@ -1125,473 +1202,470 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     </div>
                   )}
                 </div>
-             </div>
-          ) : isEmailFlow ? (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEmailFlow(false);
-                    setEmailOtpStep("request_old");
-                    setNewEmail("");
-                    setEmailOtp("");
-                  }}
-                  className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="text-xl sm:text-2xl font-black text-white">{t("updateEmail")}</h2>
               </div>
-
-              {emailOtpStep === "request_old" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleSendOldEmailOtp(); }} className="text-center space-y-6 py-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
-                    <Mail size={32} />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-white font-bold">{t("verifyCurrentEmail")}</p>
-                    <p className="text-sm text-slate-400 px-8">
-                      {t("verifyCurrentEmailDesc")}
-                      <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
-                    </p>
-                  </div>
+            ) : isEmailFlow ? (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-2">
                   <button
-                    type="submit"
-                    disabled={emailLoading}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
-                  </button>
-                </form>
-              )}
-
-              {emailOtpStep === "verify_old" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleVerifyOldEmailOtp(); }} className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-white font-bold">{t("enterVerificationCode")}</p>
-                    <p className="text-sm text-slate-400">
-                      {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
-                    </p>
-                  </div>
-                  <SettingsInput
-                    label={t("verifyCodeLabel")}
-                    placeholder={t("otpPlaceholder")}
-                    value={emailOtp}
-                    onChange={(e) => setEmailOtp(e.target.value)}
-                    maxLength={6}
-                  />
-                  <button
-                    type="submit"
-                    disabled={emailLoading || emailOtp.length < 6}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyCode")}
-                  </button>
-                  <button 
                     type="button"
-                    onClick={handleSendOldEmailOtp}
-                    className="w-full text-xs font-bold text-slate-500 hover:text-white"
+                    onClick={() => {
+                      setIsEmailFlow(false);
+                      setEmailOtpStep("request_old");
+                      setNewEmail("");
+                      setEmailOtp("");
+                    }}
+                    className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
                   >
-                    {t("didntGetCode")}
+                    <ArrowLeft size={20} />
                   </button>
-                </form>
-              )}
+                  <h2 className="text-xl sm:text-2xl font-black text-white">{t("updateEmail")}</h2>
+                </div>
 
-              {emailOtpStep === "new_email" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleSendEmailOtp(); }} className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-white font-bold">{t("newEmail")}</p>
-                    <p className="text-sm text-slate-400">
-                      {t("enterNewEmailDesc")}
-                    </p>
-                  </div>
-                  <SettingsInput
-                    label={t("newEmail")}
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="example@mail.com"
-                  />
-                  <button
-                    type="submit"
-                    disabled={emailLoading || !newEmail.includes("@")}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
-                  </button>
-                </form>
-              )}
+                {emailOtpStep === "request_old" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleSendOldEmailOtp(); }} className="text-center space-y-6 py-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
+                      <Mail size={32} />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-white font-bold">{t("verifyCurrentEmail")}</p>
+                      <p className="text-sm text-slate-400 px-8">
+                        {t("verifyCurrentEmailDesc")}
+                        <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={emailLoading}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
+                    </button>
+                  </form>
+                )}
 
-              {emailOtpStep === "verify_new" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleVerifyEmailOtp(); }} className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-white font-bold">{t("verifyNewEmail")}</p>
-                    <p className="text-sm text-slate-400">
-                      {t("checkInboxNewEmail")} <span className="text-primary font-bold">{maskEmail(newEmail)}</span>
-                    </p>
-                  </div>
-                  <SettingsInput
-                    label={t("verifyCodeLabel")}
-                    placeholder={t("otpPlaceholder")}
-                    value={emailOtp}
-                    onChange={(e) => setEmailOtp(e.target.value)}
-                    maxLength={6}
-                  />
-                  <button
-                    type="submit"
-                    disabled={emailLoading || emailOtp.length < 6}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyAndUpdateEmail")}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={handleSendEmailOtp}
-                    className="w-full text-xs font-bold text-slate-500 hover:text-white"
-                  >
-                    {t("didntGetCode")}
-                  </button>
-                </form>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOtpFlow(false);
-                    setOtpStep("request");
-                  }}
-                  className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="text-xl sm:text-2xl font-black text-white">{t("resetPassword")}</h2>
-              </div>
-
-              {otpStep === "request" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleSendOtp(); }} className="text-center space-y-6 py-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
-                    <Mail size={32} />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-white font-bold">{t("requestPasswordReset")}</p>
-                    <p className="text-sm text-slate-400 px-8">
-                      {t("sendCodeToEmail")} 
-                      <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
-                    </p>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={otpLoading}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
-                  </button>
-                </form>
-              )}
-
-              {otpStep === "verify" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-white font-bold">{t("enterVerificationCode")}</p>
-                    <p className="text-sm text-slate-400">
-                      {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
-                    </p>
-                  </div>
-                  <SettingsInput
-                    label={t("verifyCodeLabel")}
-                    placeholder={t("otpPlaceholder")}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    maxLength={6}
-                  />
-                  <button
-                    type="submit"
-                    disabled={otpLoading || otpCode.length < 6}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyCode")}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={handleSendOtp}
-                    className="w-full text-xs font-bold text-slate-500 hover:text-white"
-                  >
-                    {t("didntGetCode")}
-                  </button>
-                </form>
-              )}
-
-              {otpStep === "new_password" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleOtpPasswordUpdate(); }} className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-white font-bold">{t("setNewPassword")}</p>
-                    <p className="text-sm text-slate-400">
-                      {t("codeVerifiedNewPassword")}
-                    </p>
-                  </div>
-                  <div className="space-y-4">
+                {emailOtpStep === "verify_old" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleVerifyOldEmailOtp(); }} className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <p className="text-white font-bold">{t("enterVerificationCode")}</p>
+                      <p className="text-sm text-slate-400">
+                        {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
+                      </p>
+                    </div>
                     <SettingsInput
-                      label={t("newPasswordLabel")}
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
+                      label={t("verifyCodeLabel")}
+                      placeholder={t("otpPlaceholder")}
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value)}
+                      maxLength={6}
                     />
+                    <button
+                      type="submit"
+                      disabled={emailLoading || emailOtp.length < 6}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyCode")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSendOldEmailOtp}
+                      className="w-full text-xs font-bold text-slate-500 hover:text-white"
+                    >
+                      {t("didntGetCode")}
+                    </button>
+                  </form>
+                )}
+
+                {emailOtpStep === "new_email" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleSendEmailOtp(); }} className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <p className="text-white font-bold">{t("newEmail")}</p>
+                      <p className="text-sm text-slate-400">
+                        {t("enterNewEmailDesc")}
+                      </p>
+                    </div>
                     <SettingsInput
-                      label={t("confirmNewPasswordLabel")}
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
+                      label={t("newEmail")}
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="example@mail.com"
                     />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={otpLoading}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
-                  >
-                    {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("resetPassword")}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-        </motion.div>
-      )}
+                    <button
+                      type="submit"
+                      disabled={emailLoading || !newEmail.includes("@")}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
+                    </button>
+                  </form>
+                )}
 
-      {activeTab === "history" && (
-        <motion.div
-          key="history"
-          initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card max-w-lg relative"
-        >
-          {isMobile && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
-            >
-              <ChevronRight className="rotate-180" size={20} />
-            </button>
-          )}
-          <h2 className="text-base font-bold text-white mb-1">
-            {t("historyDeposit")}
-          </h2>
-          <p className="text-slate-400 text-[11px] mb-4">
-            {t("historyDepositDesc")}
-          </p>
-
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
-            {transactions.filter((t) => t.type === "deposit").length === 0 ? (
-              <div className="text-center py-8">
-                <History
-                  size={32}
-                  className="mx-auto text-slate-600 mb-1.5 opacity-50"
-                />
-                <p className="text-slate-400 text-sm font-bold">
-                  {t("noDepositHistory")}
-                </p>
+                {emailOtpStep === "verify_new" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleVerifyEmailOtp(); }} className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <p className="text-white font-bold">{t("verifyNewEmail")}</p>
+                      <p className="text-sm text-slate-400">
+                        {t("checkInboxNewEmail")} <span className="text-primary font-bold">{maskEmail(newEmail)}</span>
+                      </p>
+                    </div>
+                    <SettingsInput
+                      label={t("verifyCodeLabel")}
+                      placeholder={t("otpPlaceholder")}
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value)}
+                      maxLength={6}
+                    />
+                    <button
+                      type="submit"
+                      disabled={emailLoading || emailOtp.length < 6}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {emailLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyAndUpdateEmail")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSendEmailOtp}
+                      className="w-full text-xs font-bold text-slate-500 hover:text-white"
+                    >
+                      {t("didntGetCode")}
+                    </button>
+                  </form>
+                )}
               </div>
             ) : (
-              transactions
-                .filter((t) => t.type === "deposit")
-                .map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOtpFlow(false);
+                      setOtpStep("request");
+                    }}
+                    className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center font-bold text-xs">
-                        +
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-sm uppercase">
-                          {tx.asset || "Deposit"}
-                        </p>
-                        <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                          {new Date(tx.timestamp).toLocaleString()}
-                        </p>
-                      </div>
+                    <ArrowLeft size={20} />
+                  </button>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">{t("resetPassword")}</h2>
+                </div>
+
+                {otpStep === "request" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleSendOtp(); }} className="text-center space-y-6 py-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
+                      <Mail size={32} />
                     </div>
-                    <div className="text-right">
-                      <p className="text-green-500 font-bold text-[13px]">
-                        +$
-                        {tx.amount.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
-                      </p>
-                      <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 font-bold">
-                        {tx.status}
+                    <div className="space-y-2">
+                      <p className="text-white font-bold">{t("requestPasswordReset")}</p>
+                      <p className="text-sm text-slate-400 px-8">
+                        {t("sendCodeToEmail")}
+                        <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
                       </p>
                     </div>
-                  </div>
-                ))
-            )}
-          </div>
-        </motion.div>
-      )}
+                    <button
+                      type="submit"
+                      disabled={otpLoading}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("sendCode")}
+                    </button>
+                  </form>
+                )}
 
-      {activeTab === "notifications" && (
-        <motion.div
-          key="notifications"
-          initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card max-w-lg relative"
-        >
-          {isMobile && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
-            >
-              <ChevronRight className="rotate-180" size={20} />
-            </button>
-          )}
-          <h2 className="text-base font-bold text-white mb-1">
-            {t("systemNotifications")}
-          </h2>
-          <p className="text-slate-400 text-[11px] mb-5">
-            {t("systemNotificationsDesc")}
-          </p>
+                {otpStep === "verify" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <p className="text-white font-bold">{t("enterVerificationCode")}</p>
+                      <p className="text-sm text-slate-400">
+                        {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
+                      </p>
+                    </div>
+                    <SettingsInput
+                      label={t("verifyCodeLabel")}
+                      placeholder={t("otpPlaceholder")}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      maxLength={6}
+                    />
+                    <button
+                      type="submit"
+                      disabled={otpLoading || otpCode.length < 6}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("verifyCode")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      className="w-full text-xs font-bold text-slate-500 hover:text-white"
+                    >
+                      {t("didntGetCode")}
+                    </button>
+                  </form>
+                )}
 
-          <div className="space-y-5">
-            <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                  notificationPermission === 'granted' ? 'bg-green-500/20 text-green-500' : 
-                  notificationPermission === 'denied' ? 'bg-red-500/20 text-red-500' : 'bg-primary/20 text-primary'
-                }`}>
-                  {notificationPermission === 'granted' ? <Bell size={16} /> : 
-                   notificationPermission === 'denied' ? <BellOff size={16} /> : <Bell size={16} />}
-                </div>
-                <div>
-                  <p className="text-white font-bold text-xs">
-                    {notificationPermission === 'granted' ? t("notificationsEnabled") : 
-                     notificationPermission === 'denied' ? t("notificationsDisabled") : t("enableNotifications")}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">
-                    {notificationPermission === 'unsupported' ? t("notificationsUnsupported") : 
-                     notificationPermission === 'denied' ? t("notificationsDenied") : 'Web Push Notifications'}
-                  </p>
-                </div>
+                {otpStep === "new_password" && (
+                  <form onSubmit={(e) => { e.preventDefault(); handleOtpPasswordUpdate(); }} className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <p className="text-white font-bold">{t("setNewPassword")}</p>
+                      <p className="text-sm text-slate-400">
+                        {t("codeVerifiedNewPassword")}
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <SettingsInput
+                        label={t("newPasswordLabel")}
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                      />
+                      <SettingsInput
+                        label={t("confirmNewPasswordLabel")}
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={otpLoading}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      {otpLoading ? <Loader2 size={18} className="animate-spin" /> : t("resetPassword")}
+                    </button>
+                  </form>
+                )}
               </div>
-              
-              {notificationPermission !== 'unsupported' && (
-                <button
-                  onClick={handleRequestPermission}
-                  disabled={notificationPermission === 'granted'}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all ${
-                    notificationPermission === 'granted' 
-                    ? 'bg-green-500/20 text-green-500 cursor-default' 
-                    : 'bg-primary text-white hover:bg-primary/80 active:scale-95'
-                  }`}
-                >
-                  {notificationPermission === 'granted' ? t('notificationsEnabled') : t('enableNotifications')}
-                </button>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === "history" && (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card max-w-lg relative"
+          >
+            {isMobile && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+              >
+                <ChevronRight className="rotate-180" size={20} />
+              </button>
+            )}
+            <h2 className="text-base font-bold text-white mb-1">
+              {t("historyDeposit")}
+            </h2>
+            <p className="text-slate-400 text-[11px] mb-4">
+              {t("historyDepositDesc")}
+            </p>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+              {transactions.filter((t) => t.type === "deposit").length === 0 ? (
+                <div className="text-center py-8">
+                  <History
+                    size={32}
+                    className="mx-auto text-slate-600 mb-1.5 opacity-50"
+                  />
+                  <p className="text-slate-400 text-sm font-bold">
+                    {t("noDepositHistory")}
+                  </p>
+                </div>
+              ) : (
+                transactions
+                  .filter((t) => t.type === "deposit")
+                  .map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center font-bold text-xs">
+                          +
+                        </div>
+                        <div>
+                          <p className="text-white font-bold text-sm uppercase">
+                            {tx.asset || "Deposit"}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                            {new Date(tx.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-green-500 font-bold text-[13px]">
+                          +$
+                          {tx.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </p>
+                        <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 font-bold">
+                          {tx.status}
+                        </p>
+                      </div>
+                    </div>
+                  ))
               )}
             </div>
+          </motion.div>
+        )}
 
-            {notificationPermission === 'denied' && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] flex gap-2">
-                <AlertCircle size={16} className="shrink-0" />
-                <p>{t("notificationsDenied")}</p>
-              </div>
+        {activeTab === "notifications" && (
+          <motion.div
+            key="notifications"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card max-w-lg relative"
+          >
+            {isMobile && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+              >
+                <ChevronRight className="rotate-180" size={20} />
+              </button>
             )}
+            <h2 className="text-base font-bold text-white mb-1">
+              {t("systemNotifications")}
+            </h2>
+            <p className="text-slate-400 text-[11px] mb-5">
+              {t("systemNotificationsDesc")}
+            </p>
 
-            <div className="space-y-3">
-              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t("notificationTypes")}</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 shadow-sm">
-                  <span className="text-xs font-bold text-white">{t("tradeOutcomes")}</span>
-                  <div className="w-8 h-4 rounded-full bg-green-500 relative cursor-default">
-                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm" />
+            <div className="space-y-5">
+              <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${notificationPermission === 'granted' ? 'bg-green-500/20 text-green-500' :
+                    notificationPermission === 'denied' ? 'bg-red-500/20 text-red-500' : 'bg-primary/20 text-primary'
+                    }`}>
+                    {notificationPermission === 'granted' ? <Bell size={16} /> :
+                      notificationPermission === 'denied' ? <BellOff size={16} /> : <Bell size={16} />}
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-xs">
+                      {notificationPermission === 'granted' ? t("notificationsEnabled") :
+                        notificationPermission === 'denied' ? t("notificationsDisabled") : t("enableNotifications")}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      {notificationPermission === 'unsupported' ? t("notificationsUnsupported") :
+                        notificationPermission === 'denied' ? t("notificationsDenied") : 'Web Push Notifications'}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 opacity-50">
-                  <span className="text-xs font-bold text-white">{t("priceAlerts")}</span>
-                  <div className="w-8 h-4 rounded-full bg-slate-700 relative cursor-not-allowed">
-                    <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-slate-500 rounded-full" />
+
+                {notificationPermission !== 'unsupported' && (
+                  <button
+                    onClick={handleRequestPermission}
+                    disabled={notificationPermission === 'granted'}
+                    className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all ${notificationPermission === 'granted'
+                      ? 'bg-green-500/20 text-green-500 cursor-default'
+                      : 'bg-primary text-white hover:bg-primary/80 active:scale-95'
+                      }`}
+                  >
+                    {notificationPermission === 'granted' ? t('notificationsEnabled') : t('enableNotifications')}
+                  </button>
+                )}
+              </div>
+
+              {notificationPermission === 'denied' && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] flex gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <p>{t("notificationsDenied")}</p>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t("notificationTypes")}</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 shadow-sm">
+                    <span className="text-xs font-bold text-white">{t("tradeOutcomes")}</span>
+                    <div className="w-8 h-4 rounded-full bg-green-500 relative cursor-default">
+                      <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 opacity-50">
+                    <span className="text-xs font-bold text-white">{t("priceAlerts")}</span>
+                    <div className="w-8 h-4 rounded-full bg-slate-700 relative cursor-not-allowed">
+                      <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-slate-500 rounded-full" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
 
-      {activeTab === "language" && (
-        <motion.div
-          key="language"
-          initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
-          className="glass-card max-w-lg relative"
-        >
-          {isMobile && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
-            >
-              <ChevronRight className="rotate-180" size={20} />
-            </button>
-          )}
-          <h2 className="text-base font-bold text-white mb-1">
-            {t("languageSettings")}
-          </h2>
-          <p className="text-slate-400 text-[11px] mb-5">
-            {t("languageSettingsDesc")}
-          </p>
-
-          <div className="space-y-2">
-            {[
-              { id: 'th', label: 'ภาษาไทย (Thai)', icon: '🇹🇭' },
-              { id: 'en', label: 'English (US)', icon: '🇺🇸' },
-            ].map((lang) => {
-              const { language, setLanguage } = useLanguage();
-              const isActive = language === lang.id;
-
-              return (
-                <button
-                  key={lang.id}
-                  onClick={() => setLanguage(lang.id as 'th' | 'en')}
-                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-primary/10 border-primary/50 text-white shadow-lg shadow-primary/10' 
-                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl leading-none">{lang.icon}</span>
-                    <span className={`font-bold ${isActive ? 'text-white' : 'text-slate-200'}`}>
-                      {lang.label}
-                    </span>
-                  </div>
-                  {isActive && (
-                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-background">
-                      <Check size={14} strokeWidth={4} />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-12 p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Globe size={24} />
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {t("translationsApplied")}
+        {activeTab === "language" && (
+          <motion.div
+            key="language"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card max-w-lg relative"
+          >
+            {isMobile && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+              >
+                <ChevronRight className="rotate-180" size={20} />
+              </button>
+            )}
+            <h2 className="text-base font-bold text-white mb-1">
+              {t("languageSettings")}
+            </h2>
+            <p className="text-slate-400 text-[11px] mb-5">
+              {t("languageSettingsDesc")}
             </p>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+
+            <div className="space-y-2">
+              {[
+                { id: 'th', label: 'ภาษาไทย (Thai)', icon: '🇹🇭' },
+                { id: 'en', label: 'English (US)', icon: '🇺🇸' },
+              ].map((lang) => {
+                const { language, setLanguage } = useLanguage();
+                const isActive = language === lang.id;
+
+                return (
+                  <button
+                    key={lang.id}
+                    onClick={() => setLanguage(lang.id as 'th' | 'en')}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${isActive
+                      ? 'bg-primary/10 border-primary/50 text-white shadow-lg shadow-primary/10'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
+                      }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl leading-none">{lang.icon}</span>
+                      <span className={`font-bold ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                        {lang.label}
+                      </span>
+                    </div>
+                    {isActive && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-background">
+                        <Check size={14} strokeWidth={4} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-12 p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <Globe size={24} />
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {t("translationsApplied")}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

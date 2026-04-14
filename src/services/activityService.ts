@@ -15,6 +15,8 @@ export interface ActivityItem {
   ip?: string;
   createdAt: string;
   ticketId?: string;
+  sessionId?: string; // Links login history to an active session
+  isActive?: boolean; // True if this login is still active
 }
 
 export interface ActivityFilters {
@@ -32,6 +34,18 @@ export const activityService = {
     const endISO   = endDate   ? `${endDate}T23:59:59.999Z`   : undefined;
 
     const results: ActivityItem[] = [];
+
+    // ─── 0. Active Sessions (Map for login linkage) ───────────
+    const { data: activeSessions } = await supabase
+      .from('user_sessions')
+      .select('id, user_id, device_name, os_name, browser_name, ip_address');
+    
+    const sessionMap = new Map<string, any>();
+    activeSessions?.forEach(s => {
+      // Key format: userId | device | browser | os | ip
+      const key = `${s.user_id}|${s.device_name}|${s.browser_name}|${s.os_name}|${s.ip_address}`;
+      sessionMap.set(key, s.id);
+    });
 
     // ─── 1. Transactions ───────────────────────────────────────
     const shouldFetchTx = !type || type === 'all' ||
@@ -53,8 +67,6 @@ export const activityService = {
       if (txData) {
         txData.forEach((tx: any) => {
           const profile = Array.isArray(tx.profiles) ? tx.profiles[0] : tx.profiles;
-          
-          // Generate a user-friendly Ticket ID (Match client-side Smart ID logic: Last 4 chars)
           const ticketId = (tx.binary_trade_id || tx.id).slice(-4).toUpperCase();
 
           results.push({
@@ -91,6 +103,11 @@ export const activityService = {
       if (lhData) {
         lhData.forEach((lh: any) => {
           const profile = Array.isArray(lh.profiles) ? lh.profiles[0] : lh.profiles;
+          
+          // Try to link to an active session
+          const sessionKey = `${lh.user_id}|${lh.device_name}|${lh.browser_name}|${lh.os_name}|${lh.ip_address}`;
+          const activeSessionId = sessionMap.get(sessionKey);
+
           results.push({
             id:          `lh-${lh.id}`,
             userId:      lh.user_id,
@@ -101,12 +118,13 @@ export const activityService = {
             device:      [lh.browser_name, lh.os_name, lh.device_name].filter(Boolean).join(' · '),
             ip:          lh.ip_address ?? '—',
             createdAt:   lh.created_at,
+            sessionId:   activeSessionId,
+            isActive:    !!activeSessionId
           });
         });
       }
     }
 
-    // ─── Sort by time descending ───────────────────────────────
     results.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -114,13 +132,111 @@ export const activityService = {
     return results;
   },
 
+  async kickSession(sessionId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('user_sessions')
+      .delete()
+      .eq('id', sessionId);
+    
+    if (error) {
+      console.error("kickSession error:", error);
+      throw error;
+    }
+    return true;
+  },
+
   async fetchUserList(): Promise<{ id: string; username: string; email: string }[]> {
     const { data } = await supabase
       .from('profiles')
       .select('id, username, email')
-      .eq('is_admin', false)
       .order('username');
     return data ?? [];
+  },
+
+  async deleteActivity(activityId: string): Promise<boolean> {
+    const realId = activityId.startsWith('lh-') || activityId.startsWith('tx-')
+      ? activityId.slice(3)
+      : activityId;
+    const table = activityId.startsWith('tx-') ? 'transactions' : 'user_login_history';
+    
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', realId);
+    
+    if (error) {
+       console.error("deleteActivity error:", error);
+       throw error;
+    }
+    return true;
+  },
+
+  async clearLoginHistory(userId: string, currentSessionId?: string): Promise<boolean> {
+    if (currentSessionId) {
+      // Get the current session to identify its properties
+      const { data: currentSession } = await supabase
+        .from('user_sessions')
+        .select('device_name, os_name, browser_name, ip_address')
+        .eq('id', currentSessionId)
+        .single();
+
+      if (currentSession) {
+        // Get all login histories for the user
+        const { data: histories } = await supabase
+          .from('user_login_history')
+          .select('id, device_name, os_name, browser_name, ip_address')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (histories && histories.length > 0) {
+          // Find the most recent history that matches the current session's signature
+          const matchingHistory = histories.find(h => 
+            h.device_name === currentSession.device_name &&
+            h.os_name === currentSession.os_name &&
+            h.browser_name === currentSession.browser_name &&
+            h.ip_address === currentSession.ip_address
+          );
+
+          let query = supabase.from('user_login_history').delete().eq('user_id', userId);
+          if (matchingHistory) {
+            query = query.neq('id', matchingHistory.id);
+          }
+          
+          const { error } = await query;
+          if (error) {
+             console.error("clearLoginHistory error:", error);
+             throw error;
+          }
+          return true;
+        }
+      }
+    }
+
+    // Default behavior if no session ID or session not found
+    const { error } = await supabase
+      .from('user_login_history')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (error) {
+       console.error("clearLoginHistory error:", error);
+       throw error;
+    }
+    return true;
+  },
+
+  async kickAllOtherSessions(userId: string, currentSessionId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('user_sessions')
+      .delete()
+      .eq('user_id', userId)
+      .neq('id', currentSessionId);
+    
+    if (error) {
+       console.error("kickAllOtherSessions error:", error);
+       throw error;
+    }
+    return true;
   },
 };
 

@@ -34,7 +34,6 @@ export interface Profile {
   updated_at: string;
 }
 
-// Mocking Session and User internally so that depending files don't break as much
 export interface LocalUser {
   id: string;
   email?: string;
@@ -44,6 +43,7 @@ export interface LocalUser {
 export interface LocalSession {
   user: LocalUser | null;
   access_token?: string;
+  session_id?: string;
 }
 
 interface AuthContextType {
@@ -70,6 +70,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
+  // --- Session Verification ---
+  const verifySession = async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_sessions")
+        .select("id")
+        .eq("id", sessionId)
+        .single();
+
+      if (error || !data) {
+        console.warn("Session expired or removed. Logging out...");
+        handleLogout(false); // Logout without deleting DB (it's already gone)
+        return false;
+      }
+      
+      // Update last active
+      await supabase
+        .from("user_sessions")
+        .update({ last_active: new Date().toISOString() })
+        .eq("id", sessionId);
+        
+      return true;
+    } catch (err) {
+      return true; // Tentatively keep session on network error
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     setIsProfileLoading(true);
     try {
@@ -83,11 +110,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Error fetching profile:", error.message);
         setProfile(null);
         setIsAdmin(false);
-        // If profile fetch fails, logout
         handleLogout();
       } else {
-        // PREVENT STALE OVERWRITE:
-        // If we have a preference in localStorage, keep it instead of DB default
         const localLang = localStorage.getItem('appLanguage');
         const finalProfile = { ...data };
         if (localLang && (localLang === 'th' || localLang === 'en')) {
@@ -97,7 +121,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setProfile(finalProfile);
         localStorage.setItem("user_profile", JSON.stringify(finalProfile));
         setIsAdmin(finalProfile.is_admin || false);
-        // Sync user email if available
         if (finalProfile.email) {
           setUser(prev => prev ? { ...prev, email: finalProfile.email } : { id: userId, email: finalProfile.email });
         }
@@ -111,12 +134,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const refreshProfile = async () => {
     if (user?.id) {
+      const sessionId = localStorage.getItem("metabridge_session_id");
+      if (sessionId) {
+        const isValid = await verifySession(sessionId);
+        if (!isValid) return;
+      }
       await fetchProfile(user.id);
     }
   };
 
   const handleLogin = (newProfile: Profile) => {
-    // PREVENT STALE OVERWRITE:
     const localLang = localStorage.getItem('appLanguage');
     if (localLang && (localLang === 'th' || localLang === 'en')) {
       newProfile.language = localLang as any;
@@ -124,26 +151,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     const localUser: LocalUser = { id: newProfile.id, email: newProfile.email || undefined };
     
-    // Save to local storage
     localStorage.setItem("metabridge_user_id", newProfile.id);
     localStorage.setItem("user_profile", JSON.stringify(newProfile));
+    
     setProfile(newProfile);
     setIsAdmin(newProfile.is_admin || false);
     setUser(localUser);
+
+    // Initial session state
     setSession({ user: localUser });
 
-    // Record login asynchronously
+    // Handle session registration and history
     (async () => {
       try {
         const { deviceName, osName, browserName } = getDeviceDetails();
-        
         let ip = "Unknown IP";
-        try {
-           ip = await getPublicIP();
-        } catch (e) {
-           console.warn("Could not fetch IP");
-        }
+        try { ip = await getPublicIP(); } catch (e) {}
         
+        // 1. Create Active Session
+        const { data: sessionData, error: sessionError } = await supabase
+          .from("user_sessions")
+          .insert({
+            user_id: newProfile.id,
+            device_name: deviceName,
+            os_name: osName,
+            browser_name: browserName,
+            ip_address: ip
+          })
+          .select("id")
+          .single();
+
+        if (sessionError) throw sessionError;
+
+        if (sessionData) {
+          localStorage.setItem("metabridge_session_id", sessionData.id);
+          setSession({ user: localUser, session_id: sessionData.id });
+        }
+
+        // 2. Record Login History
         await supabase.from("user_login_history").insert({
            user_id: newProfile.id,
            device_name: deviceName,
@@ -152,13 +197,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
            ip_address: ip
         });
       } catch (err) {
-        console.error("Error saving login history", err);
+        console.error("Error creating session", err);
       }
     })();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async (cleanupDb = true) => {
+    const sessionId = localStorage.getItem("metabridge_session_id");
+    
+    if (cleanupDb && sessionId) {
+      await supabase.from("user_sessions").delete().eq("id", sessionId);
+    }
+
     localStorage.removeItem("metabridge_user_id");
+    localStorage.removeItem("metabridge_session_id");
     setUser(null);
     setProfile(null);
     setIsAdmin(false);
@@ -168,12 +220,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const checkUser = async () => {
       const storedUserId = localStorage.getItem("metabridge_user_id");
+      const storedSessionId = localStorage.getItem("metabridge_session_id");
+      
       if (storedUserId) {
-        // Setup initial user state so UI feels responsive
+        // Verification phase
+        if (storedSessionId) {
+          const isValid = await verifySession(storedSessionId);
+          if (!isValid) {
+            setLoading(false);
+            return;
+          }
+        }
+
         const localUser: LocalUser = { id: storedUserId };
         setUser(localUser);
-        setSession({ user: localUser });
-        
+        setSession({ user: localUser, session_id: storedSessionId || undefined });
         await fetchProfile(storedUserId);
       } else {
         setProfile(null);
@@ -185,6 +246,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     checkUser();
+
+    // Set up periodic verification (every 1 minute)
+    const interval = setInterval(() => {
+      const sid = localStorage.getItem("metabridge_session_id");
+      if (sid) verifySession(sid);
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const contextValue = React.useMemo(() => ({

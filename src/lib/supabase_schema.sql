@@ -166,6 +166,18 @@ create table public.admin_audit_logs (
   created_at timestamptz default now()
 );
 
+-- 9. User Sessions: Track currently active sessions for remote logout
+create table public.user_sessions (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  device_name text,
+  os_name text,
+  browser_name text,
+  ip_address text,
+  last_active timestamptz default now(),
+  created_at timestamptz default now()
+);
+
 -- Insert default settings
 insert into public.global_settings (id) 
 values ('main') 
@@ -295,6 +307,7 @@ alter table public.global_settings disable row level security;
 alter table public.user_login_history disable row level security;
 alter table public.push_subscriptions disable row level security;
 alter table public.admin_audit_logs disable row level security;
+alter table public.user_sessions disable row level security;
 
 grant all on all tables in schema public to anon;
 grant all on all tables in schema public to authenticated;
@@ -320,6 +333,8 @@ create index if not exists idx_profiles_code on public.profiles(code);
 create index if not exists idx_push_subs_user_id on public.push_subscriptions(user_id);
 create index if not exists idx_audit_logs_admin_id on public.admin_audit_logs(admin_id);
 create index if not exists idx_audit_logs_created_at on public.admin_audit_logs(created_at desc);
+create index if not exists idx_user_sessions_user_id on public.user_sessions(user_id);
+create index if not exists idx_user_sessions_last_active on public.user_sessions(last_active desc);
 
 -- ============================================================
 -- STEP 7: BACKGROUND SETTLEMENT (Edge Functions & pg_cron)

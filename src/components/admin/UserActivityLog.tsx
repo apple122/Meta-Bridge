@@ -7,7 +7,7 @@ import {
   Search, Filter, RefreshCw, Calendar, ChevronDown,
   ArrowDownCircle, ArrowUpCircle, TrendingUp, TrendingDown,
   Trophy, XCircle, LogIn, User, Monitor, Wifi, DollarSign,
-  Info, X, Hash, Copy, Check,
+  Info, X, Hash, Copy, Check, LogOut,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { activityService } from '../../services/activityService';
@@ -146,6 +146,9 @@ const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean
           <div className="grid grid-cols-1 gap-2.5">
             <CopyableID label="System ID" id={item.id} />
             <CopyableID label="User ID" id={item.userId} />
+            {item.sessionId && (
+              <CopyableID label="Session ID" id={item.sessionId} />
+            )}
           </div>
         </div>
       </motion.div>
@@ -195,7 +198,15 @@ const DesktopRow = memo(({
         </td>
         <td className="px-4 py-2.5 align-middle w-[150px]">
           {item.type === 'login' ? (
-            <span className="text-slate-500 text-[10px] line-clamp-1">{item.device}</span>
+            <div className="flex flex-col gap-1">
+              <span className="text-slate-500 text-[10px] line-clamp-1">{item.device}</span>
+              {item.isActive && (
+                <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-400 uppercase tracking-tighter">
+                  <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                  {isth ? 'กำลังออนไลน์' : 'Active Now'}
+                </span>
+              )}
+            </div>
           ) : item.amount != null ? (
             <span className={`text-xs font-black font-mono ${['win', 'deposit'].includes(item.type) ? 'text-emerald-400' : ['withdraw', 'loss'].includes(item.type) ? 'text-rose-400' : 'text-slate-300'}`}>
               {['win', 'deposit'].includes(item.type) ? '+' : ['withdraw', 'loss'].includes(item.type) ? '-' : ''}
@@ -207,8 +218,29 @@ const DesktopRow = memo(({
           <p className="text-slate-500 text-[10px] font-mono whitespace-nowrap">{date}</p>
           <p className="text-slate-700 text-[10px] tabular-nums">{time}</p>
         </td>
-        <td className="pr-4 py-2.5 align-middle text-center w-10">
-          <ChevronDown size={13} className={`text-slate-600 transition-transform duration-200 mx-auto ${isExpanded ? 'rotate-180 text-primary' : ''}`} />
+        <td className="pr-4 py-2.5 align-middle text-center w-10 relative">
+          <div className="flex items-center gap-2">
+            {item.type === 'login' && item.isActive && item.sessionId && (
+               <button 
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   if (window.confirm(isth ? 'ต้องการเตะผู้ใช้รายนี้ออกจากระบบใช่หรือไม่?' : 'Kick this user out?')) {
+                     activityService.kickSession(item.sessionId!).then(() => {
+                       // Trigger local update or refresh
+                       window.location.reload(); 
+                     }).catch(err => {
+                       alert('Error kicking user: ' + err.message);
+                     });
+                   }
+                 }}
+                 className="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                 title={isth ? 'เตะออก' : 'Kick Out'}
+               >
+                 <LogOut size={13} />
+               </button>
+            )}
+            <ChevronDown size={13} className={`text-slate-600 transition-transform duration-200 mx-auto ${isExpanded ? 'rotate-180 text-primary' : ''}`} />
+          </div>
         </td>
       </motion.tr>
       <AnimatePresence initial={false}>

@@ -4,8 +4,6 @@ import { useWallet } from "../contexts/WalletContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardList,
-  ArrowUpRight,
-  ArrowDownLeft,
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
@@ -16,7 +14,12 @@ import {
   Search,
   CheckCircle2,
   XCircle,
-  LayoutGrid
+  LayoutGrid,
+  LogOut,
+  Monitor,
+  Wifi,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
 import {
   getDaysInMonth,
@@ -24,12 +27,18 @@ import {
   formatDate,
   formatTime,
 } from "../utils/date";
-import { getTransactionTypeLabel } from "../utils/trade";
 import { formatCurrency, formatUnits } from "../utils/format";
+import { useAuth } from "../contexts/AuthContext";
+import { activityService, type ActivityItem } from "../services/activityService";
 
 export const History: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
   const { transactions, hasMoreTransactions, loadMoreTransactions, loadingMore } = useWallet();
+
+  const [view, setView] = useState<'trading' | 'security'>('trading');
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -37,6 +46,27 @@ export const History: React.FC = () => {
   const [selectedAsset, setSelectedAsset] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'win' | 'loss'>('all');
+
+  const isth = language === 'th';
+
+  // Fetch Login History / Security Activities
+  React.useEffect(() => {
+    if (view === 'security' && user?.id) {
+       setLoadingActivities(true);
+       activityService.fetchActivities({ userId: user.id, type: 'login' })
+         .then(setActivities)
+         .finally(() => setLoadingActivities(false));
+    }
+  }, [view, user?.id]);
+
+  const handleKick = async (sid: string) => {
+    if (window.confirm(isth ? 'ต้องการสั่งออกจากระบบบนเครื่องนี้ใช่หรือไม่?' : 'Logout from this device?')) {
+      const ok = await activityService.kickSession(sid);
+      if (ok) {
+        setActivities(prev => prev.map(a => a.sessionId === sid ? { ...a, isActive: false, sessionId: undefined } : a));
+      }
+    }
+  };
 
   const tradeTransactions = transactions.filter(
     (tx) =>
@@ -270,426 +300,302 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Advanced Filter Panel - Compact Version */}
-      <div className="glass-card bg-slate-900/40 border border-white/5 rounded-3xl p-3 sm:p-4 space-y-3 shadow-xl">
-        <div className="flex flex-col lg:flex-row gap-3">
-          {/* Search Row */}
-          <div className="relative group flex-grow">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">
-              <Search size={16} />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("searchHistory") === "searchHistory" ? "ค้นหา Order ID, สินทรัพย์..." : t("searchHistory")}
-              className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-slate-600"
-            />
-          </div>
-
-          {/* Quick Filter Buttons */}
-          <div className="flex items-center gap-1 p-1 bg-slate-950/50 border border-white/5 rounded-2xl flex-shrink-0">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all'
-                ? "bg-white/10 text-white shadow-lg"
-                : "text-slate-500 hover:text-slate-300"
-                }`}
-            >
-              <LayoutGrid size={12} />
-              {t("all") || "All"}
-            </button>
-            <button
-              onClick={() => setStatusFilter('win')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win'
-                ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10"
-                : "text-slate-500 hover:text-slate-400"
-                }`}
-            >
-              <CheckCircle2 size={12} />
-              {t("win") || "Win"}
-            </button>
-            <button
-              onClick={() => setStatusFilter('loss')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss'
-                ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10"
-                : "text-slate-500 hover:text-slate-400"
-                }`}
-            >
-              <XCircle size={12} />
-              {t("loss") || "Loss"}
-            </button>
-          </div>
-
-          {/* Asset Dropdown */}
-          <div className="relative group lg:w-48">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
-              <Filter size={14} />
-            </div>
-            <select
-              value={selectedAsset}
-              onChange={(e) => setSelectedAsset(e.target.value)}
-              className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-[10px] font-black text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
-            >
-              <option value="all"> {t("allAssets") || "All Assets"} </option>
-              {uniqueAssets.map((asset) => (
-                <option key={asset} value={asset}>
-                  {asset}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-              <ChevronRight size={14} className="rotate-90" />
-            </div>
-          </div>
-        </div>
+      {/* View Switcher */}
+      <div className="flex p-1 bg-slate-900/60 border border-white/5 rounded-2xl mb-6">
+        <button
+          onClick={() => setView('trading')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+            view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
+          }`}
+        >
+          <ClipboardList size={16} />
+          {isth ? 'ประวัติเทรด' : 'Trading'}
+        </button>
+        <button
+          onClick={() => setView('security')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+            view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
+          }`}
+        >
+          <ShieldCheck size={16} />
+          {isth ? 'ความปลอดภัย' : 'Security'}
+        </button>
       </div>
 
-      {(() => {
-        const hasTransactionsOnSelectedDate = filteredTransactions.some(
-          (tx) => new Date(tx.timestamp).toLocaleDateString() === selectedDate.toLocaleDateString()
-        );
-        
-        if (!hasTransactionsOnSelectedDate) return null;
-
-        return (
-          <div
-            id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`}
-            className="sticky md:top-[74px] top-[64px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
-          >
-            <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
-              <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
-                {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
-              </h3>
-              <div className="h-px flex-grow bg-white/5" />
-            </div>
-
-            <span className="flex-shrink-0 text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5 mx-4">
-              {(() => {
-                const todayStr = new Date().toLocaleDateString();
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toLocaleDateString();
-                const targetStr = selectedDate.toLocaleDateString();
-
-                const dateNum = selectedDate.getDate();
-                const monthShort = selectedDate.toLocaleDateString('en-US', { month: 'short' });
-
-                if (targetStr === todayStr) return `${t("today") || "Today"} (${dateNum} ${monthShort})`;
-                if (targetStr === yesterdayStr) return `${t("yesterday") || "Yesterday"} (${dateNum} ${monthShort})`;
-                return formatDate(selectedDate, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                });
-              })()}
-            </span>
-
-            <div className="flex-1 basis-0 min-w-0 flex items-center">
-              <div className="h-px flex-grow bg-white/5" />
-            </div>
-          </div>
-        );
-      })()}
-
+      {/* Tab Content */}
       <AnimatePresence mode="wait">
-        {filteredTransactions.length === 0 ? (
+        {view === 'trading' ? (
           <motion.div
-            key="empty"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-slate-900/30"
+            key="trading-view"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="space-y-6"
           >
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-600">
-              <ClipboardList size={32} />
+            {/* Advanced Filter Panel */}
+            <div className="glass-card bg-slate-900/40 border border-white/5 rounded-3xl p-3 sm:p-4 space-y-3 shadow-xl">
+              <div className="flex flex-col lg:flex-row gap-3">
+                <div className="relative group flex-grow">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">
+                    <Search size={16} />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t("searchHistory") === "searchHistory" ? "ค้นหา Order ID, สินทรัพย์..." : t("searchHistory")}
+                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-slate-600"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 p-1 bg-slate-950/50 border border-white/5 rounded-2xl flex-shrink-0">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all' ? "bg-white/10 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"}`}
+                  >
+                    <LayoutGrid size={12} />
+                    {t("all") || "All"}
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('win')}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win' ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10" : "text-slate-500 hover:text-slate-400"}`}
+                  >
+                    <CheckCircle2 size={12} />
+                    {t("win") || "Win"}
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('loss')}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss' ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10" : "text-slate-500 hover:text-slate-400"}`}
+                  >
+                    <XCircle size={12} />
+                    {t("loss") || "Loss"}
+                  </button>
+                </div>
+
+                <div className="relative group lg:w-48">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
+                    <Filter size={14} />
+                  </div>
+                  <select
+                    value={selectedAsset}
+                    onChange={(e) => setSelectedAsset(e.target.value)}
+                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-[10px] font-black text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
+                  >
+                    <option value="all"> {t("allAssets") || "All Assets"} </option>
+                    {uniqueAssets.map((asset) => (
+                      <option key={asset} value={asset}>{asset}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                    <ChevronRight size={14} className="rotate-90" />
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="text-slate-500 font-medium tracking-wide text-sm">
-              No trading activity found.
-            </p>
+
+            {/* Trading List Header */}
+            {(() => {
+              const hasTransactionsOnSelectedDate = filteredTransactions.some(
+                (tx) => new Date(tx.timestamp).toLocaleDateString() === selectedDate.toLocaleDateString()
+              );
+              if (!hasTransactionsOnSelectedDate) return null;
+              return (
+                <div id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`} className="sticky md:top-[74px] top-[64px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden">
+                  <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
+                    <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
+                      {t("transactionsUpTo") || "Transactions up to"}
+                    </h3>
+                    <div className="h-px flex-grow bg-white/5" />
+                  </div>
+                  <span className="flex-shrink-0 text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5 mx-4">
+                    {(() => {
+                      const todayStr = new Date().toLocaleDateString();
+                      const targetStr = selectedDate.toLocaleDateString();
+                      if (targetStr === todayStr) return t("today") || "Today";
+                      return formatDate(selectedDate, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+                    })()}
+                  </span>
+                  <div className="flex-1 basis-0 min-w-0 flex items-center">
+                    <div className="h-px flex-grow bg-white/5" />
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Trading List */}
+            {filteredTransactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-slate-900/30">
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-600">
+                  <ClipboardList size={32} />
+                </div>
+                <p className="text-slate-500 font-medium tracking-wide text-sm">No trading activity found.</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {filteredTransactions.map((tx, index) => {
+                   const isExpanded = expandedId === tx.id;
+                   const isWin = tx.binary_result?.toLowerCase() === "win" || !!tx.is_win;
+                   const isBinaryBet = !!tx.binary_type && !tx.binary_result;
+                   const txDateStr = new Date(tx.timestamp).toLocaleDateString();
+                   const prevTxDateStr = index > 0 ? new Date(filteredTransactions[index - 1].timestamp).toLocaleDateString() : null;
+                   let showDateHeader = txDateStr !== prevTxDateStr;
+                   
+                   // Avoid redundant inline header if it perfectly matches the top sticky header
+                   if (index === 0 && txDateStr === selectedDate.toLocaleDateString()) {
+                       showDateHeader = false;
+                   }
+
+                   return (
+                     <React.Fragment key={tx.id}>
+                       {showDateHeader && (
+                         <div className="flex items-center gap-3 py-3 mt-4 first:mt-0">
+                           <div className="h-px bg-white/5 flex-grow" />
+                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                             {(() => {
+                               const todayStr = new Date().toLocaleDateString();
+                               if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
+                               return formatDate(new Date(tx.timestamp), { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+                             })()}
+                           </span>
+                           <div className="h-px bg-white/5 flex-grow" />
+                         </div>
+                       )}
+                       <motion.div
+                         layout
+                         initial={{ opacity: 0, x: -10 }}
+                         animate={{ opacity: 1, x: 0 }}
+                         onClick={() => setExpandedId(isExpanded ? null : tx.id)}
+                         className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5" : ""}`}
+                       >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 shrink-0 ${isWin ? "bg-green-500/10 text-green-500 border-green-500/20" : isBinaryBet ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}`}>
+                                {isWin ? <Trophy size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="font-bold text-white text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
+                                  {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className={`text-base font-black ${isWin ? "text-green-400" : isBinaryBet ? "text-indigo-400" : "text-red-400"}`}>{isWin ? "+" : "-"}{formatCurrency(tx.total)}</p>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
+                            </div>
+                          </div>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-white/5 grid grid-cols-2 gap-4 overflow-hidden">
+                                 <div>
+                                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("transactionId")}</p>
+                                   <p className="text-[9px] text-white font-mono break-all leading-tight mt-1">#{tx.id}</p>
+                                 </div>
+                                 <div>
+                                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("dateTime")}</p>
+                                   <p className="text-[10px] text-white font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
+                                 </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                       </motion.div>
+                     </React.Fragment>
+                   );
+                })}
+
+                {hasMoreTransactions && (
+                  <div className="pt-6 pb-10 flex justify-center">
+                    <button onClick={loadMoreTransactions} disabled={loadingMore} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95">
+                      {loadingMore ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : <Zap size={18} className="text-primary" />}
+                      {loadingMore ? t("loading") : t("loadMore")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         ) : (
           <motion.div
-            key="list"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="space-y-2.5"
+            key="security-view"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            className="space-y-4"
           >
-            {filteredTransactions.map((tx, idx) => {
-              const isExpanded = expandedId === tx.id;
-              const expandedTx = expandedId
-                ? filteredTransactions.find((t) => t.id === expandedId)
-                : null;
-              const highlightedSmartId = expandedTx?.smart_id;
-              const isRelated =
-                highlightedSmartId &&
-                tx.smart_id === highlightedSmartId &&
-                tx.id !== expandedId;
-              const resLower = tx.binary_result?.toLowerCase();
-              const isWin = resLower === "win" || resLower === "won" || !!tx.is_win;
-              const isBinaryBet = !!tx.binary_type && !tx.binary_result;
+            <div className="flex items-center gap-2">
+              <h3 className="text-white text-sm font-bold uppercase tracking-widest">
+                {isth ? 'ประวัติการเข้าใช้งาน' : 'Login History'}
+              </h3>
+              <div className="h-px flex-1 bg-white/5" />
+            </div>
 
-              const txDateObj = new Date(tx.timestamp);
-              const txDate = txDateObj.toLocaleDateString();
-              const prevTxDate =
-                idx > 0
-                  ? new Date(
-                    filteredTransactions[idx - 1].timestamp,
-                  ).toLocaleDateString()
-                  : null;
-
-              const showDateHeader = txDate !== prevTxDate && txDate !== selectedDate.toLocaleDateString();
-
-              return (
-                <React.Fragment key={tx.id}>
-                  {showDateHeader && (
-                    <div
-                      id={`date-header-${txDateObj.getFullYear()}-${txDateObj.getMonth()}-${txDateObj.getDate()}`}
-                      className="sticky top-[68px] z-20 flex items-center h-10 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
+            {loadingActivities ? (
+              <div className="flex justify-center py-10">
+                <div className="w-8 h-8 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : activities.length === 0 ? (
+              <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-white/5 border-dashed">
+                <p className="text-slate-500 text-sm font-medium">No history found.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {activities.map((act) => {
+                  const isCurrent = act.sessionId === (user as any)?.session_id;
+                  return (
+                    <motion.div
+                      key={act.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center justify-between group relative overflow-hidden ${isCurrent ? 'ring-1 ring-primary/40 shadow-lg shadow-primary/5' : ''}`}
                     >
-                      <div className="flex-1 basis-0 min-w-0 h-px bg-white/10" />
-                      <span className="flex-shrink-0 text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap bg-white/5 py-1 px-3 rounded-full border border-white/10 shadow-lg mx-4">
-                        {(() => {
-                          const todayStr = new Date().toLocaleDateString();
-                          const yesterday = new Date();
-                          yesterday.setDate(yesterday.getDate() - 1);
-                          const yesterdayStr = yesterday.toLocaleDateString();
-
-                          const d = txDateObj.getDate();
-                          const m = txDateObj.toLocaleDateString('en-US', { month: 'short' });
-
-                          if (txDate === todayStr) return `${t("today") || "Today"} (${d} ${m})`;
-                          if (txDate === yesterdayStr) return `${t("yesterday") || "Yesterday"} (${d} ${m})`;
-                          return formatDate(txDateObj, {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          });
-                        })()}
-                      </span>
-                      <div className="flex-1 basis-0 min-w-0 h-px bg-white/10" />
-                    </div>
-                  )}
-
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-                    className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col group p-2.5 sm:p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded
-                      ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5"
-                      : isRelated
-                        ? "border-indigo-500/40 ring-1 ring-indigo-500/20 bg-indigo-500/5"
-                        : ""
-                      }`}
-                  >
-                    {/* Related Match Indicator */}
-                    {isRelated && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/20 text-[8px] font-black text-indigo-400 uppercase"
-                      >
-                        <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
-                        {t("matched") || "Matched"}
-                      </motion.div>
-                    )}
-                    <div className="flex items-center justify-between gap-2 sm:gap-4">
-                      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                        <div className="relative flex-shrink-0">
-                          <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border-2 transition-colors ${tx.type === "sell" ||
-                              tx.type === "deposit" ||
-                              isWin ||
-                              tx.type === "win"
-                              ? "bg-green-500/10 text-green-500 border-green-500/20"
-                              : isBinaryBet
-                                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                                : "bg-red-500/10 text-red-500 border-red-500/20"
-                              }`}
-                          >
-                            {isWin ? (
-                              <Trophy
-                                size={20}
-                                className="stroke-[2.5] sm:w-6 sm:h-6 drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]"
-                              />
-                            ) : isBinaryBet ? (
-                              <Zap size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
-                            ) : tx.type === "sell" || tx.type === "deposit" ? (
-                              <ArrowUpRight size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
-                            ) : tx.binary_result === "loss" ? (
-                              <TrendingDown size={20} className="stroke-[2.5] sm:w-6 sm:h-6" />
-                            ) : (
-                              <ArrowDownLeft
-                                size={20}
-                                className="stroke-[2.5] sm:w-6 sm:h-6"
-                              />
-                            )}
-                          </div>
-                          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] sm:-top-2 sm:-right-2 sm:min-w-[22px] sm:h-[22px] flex items-center justify-center px-1 rounded-full bg-slate-700 border border-slate-600 text-[8px] sm:text-[9px] font-black text-slate-300 tabular-nums shadow-sm uppercase">
-                            #{tx.smart_id || tx.id.slice(-4)}
-                          </span>
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${act.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                          <Monitor size={20} />
                         </div>
-                        <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
-                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-                            <h3
-                              title={
-                              tx.asset || (isBinaryBet ? t("predictionAmount") : t("transaction"))
-                            }
-                            className={`font-bold text-white text-xs sm:text-sm uppercase ${isExpanded ? "whitespace-normal" : "truncate max-w-[100px] sm:max-w-none"}`}
-                          >
-                            {tx.asset || (isBinaryBet ? t("predictionAmount") : t("transaction"))}
-                            </h3>
-                            {tx.binary_type && (
-                              <span
-                                className={`px-1 sm:px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-black border ${tx.binary_type === "up"
-                                  ? "bg-green-500/10 border-green-500/20 text-green-500"
-                                  : "bg-red-500/10 border-red-500/20 text-red-500"
-                                  }`}
-                              >
-                                {tx.binary_type === "up" ? "▲ UP" : "▼ DOWN"}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <span className="text-[9px] sm:text-[10px] text-slate-500 font-bold tabular-nums">
-                              {formatTime(tx.timestamp)}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-white text-[13px] font-bold truncate">
+                              {act.device || 'Unknown Device'}
                             </span>
-                            {tx.binary_result && (
-                              <span
-                                className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${isWin
-                                  ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
-                                  : "bg-red-500 text-white shadow-lg shadow-red-500/30"
-                                  }`}
-                              >
-                                {tx.binary_result}
+                            {isCurrent && (
+                              <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[8px] font-black text-primary uppercase">
+                                {isth ? 'เซสชันปัจจุบัน' : 'Current Session'}
                               </span>
                             )}
-                            {!tx.binary_result && (
-                              <span
-                                className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-black uppercase ${isBinaryBet ? "bg-indigo-500/10 text-indigo-400" : "bg-slate-800 text-slate-400"}`}
-                              >
-                                {isBinaryBet
-                                  ? t("active")
-                                  : getTransactionTypeLabel(tx.type)}
+                            {!isCurrent && act.isActive && (
+                              <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-400 uppercase">
+                                <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                                {isth ? 'กำลังออนไลน์' : 'Active'}
                               </span>
                             )}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+                              <Wifi size={10} /> {act.ip}
+                            </span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+                              <Clock size={10} /> {new Date(act.createdAt).toLocaleString()}
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right flex flex-col justify-center flex-shrink-0">
-                        <p
-                          className={`text-sm sm:text-base font-black ${tx.type === "sell" ||
-                            tx.type === "deposit" ||
-                            isWin ||
-                            tx.type === "win"
-                            ? "text-green-400"
-                            : isBinaryBet
-                              ? "text-indigo-400"
-                              : "text-red-400"
-                            }`}
-                        >
-                          {tx.type === "sell" ||
-                            tx.type === "deposit" ||
-                            isWin ||
-                            tx.type === "win"
-                            ? "+"
-                            : "-"}
-                          {formatCurrency(tx.total)}
-                        </p>
-                        <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 sm:mt-1 group-hover:text-slate-300 transition-colors">
-                          {tx.amount && formatUnits(tx.amount)} {tx.asset}
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Expandable Details Row */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
+                      {!isCurrent && act.isActive && act.sessionId && (
+                        <button
+                          onClick={() => handleKick(act.sessionId!)}
+                          className="p-2.5 rounded-xl text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                          title={isth ? 'เตะออกจากระบบ' : 'Kick Out'}
                         >
-                          <div className="pt-4 mt-4 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-4 pb-1">
-                            <div className="space-y-1 col-span-2 sm:col-span-1">
-                              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                {t("transactionId")}
-                              </p>
-                              <p className="text-[8px] text-white font-mono break-all group-active:select-all">
-                                #{tx.id}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                {t("dateTime") || "Date & Time"}
-                              </p>
-                              <p className="text-[10px] text-white font-bold">
-                                {new Date(tx.timestamp).toLocaleString()}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                {t("type")}
-                              </p>
-                              <p className="text-[10px] text-white font-bold capitalize">
-                                {tx.type} {tx.asset ? "Market" : "Account"}
-                              </p>
-                            </div>
-                            {tx.price && (
-                              <div className="space-y-1">
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                  {t("executionPrice")}
-                                </p>
-                                <p className="text-[10px] text-white font-mono">
-                                  {formatCurrency(tx.price)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
+                          <LogOut size={16} />
+                        </button>
                       )}
-                    </AnimatePresence>
-                  </motion.div>
-                </React.Fragment>
-              );
-            })}
-          </motion.div>
-        )}
-
-        {/* Load More Button */}
-        {hasMoreTransactions && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="pt-6 pb-10 flex justify-center"
-          >
-            <button
-              onClick={loadMoreTransactions}
-              disabled={loadingMore}
-              className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all
-                ${loadingMore
-                  ? "bg-white/5 text-slate-500 cursor-not-allowed"
-                  : "bg-white/10 hover:bg-white/20 text-white active:scale-95 shadow-lg hover:shadow-primary/10"
-                }
-              `}
-            >
-              {loadingMore ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" />
-                  {t("loading") || "Loading..."}
-                </>
-              ) : (
-                <>
-                  <Zap size={18} className="text-primary" />
-                  {t("loadMore") || "Load More"}
-                </>
-              )}
-            </button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
