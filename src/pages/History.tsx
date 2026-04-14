@@ -528,11 +528,11 @@ export const History: React.FC = () => {
                           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
                             <h3
                               title={
-                                isBinaryBet ? t("predictionAmount") : tx.asset
-                              }
-                              className={`font-bold text-white text-xs sm:text-sm uppercase ${isExpanded ? "whitespace-normal" : "truncate max-w-[100px] sm:max-w-none"}`}
-                            >
-                              {isBinaryBet ? t("predictionAmount") : tx.asset}
+                              tx.asset || (isBinaryBet ? t("predictionAmount") : t("transaction"))
+                            }
+                            className={`font-bold text-white text-xs sm:text-sm uppercase ${isExpanded ? "whitespace-normal" : "truncate max-w-[100px] sm:max-w-none"}`}
+                          >
+                            {tx.asset || (isBinaryBet ? t("predictionAmount") : t("transaction"))}
                             </h3>
                             {tx.binary_type && (
                               <span

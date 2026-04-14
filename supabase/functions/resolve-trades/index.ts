@@ -60,36 +60,75 @@ const TRANSLATIONS: Record<string, any> = {
   }
 };
 
-async function fetchPrice(symbol: string): Promise<number | null> {
-  const cryptoSymbols = ["BTC", "ETH", "USDT", "BNB", "SOL", "DOGE"];
-  if (cryptoSymbols.includes(symbol)) {
-    if (symbol === "USDT") return 1.0;
-    try {
-      const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`);
+async function fetchYahooPrice(symbol: string): Promise<number | null> {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+    const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (response.ok) {
       const data = await response.json();
-      return parseFloat(data.price);
-    } catch {
-      return null;
+      const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (price && price > 0) {
+        console.log(`[PriceFetch] Yahoo Finance Match (${symbol}): ${price}`);
+        return price;
+      }
     }
-  } else if (symbol === "GOLD") {
+  } catch (err) {
+    console.warn(`[PriceFetch] Yahoo Finance error for ${symbol}:`, err.message);
+  }
+  return null;
+}
+
+async function fetchPrice(symbol: string): Promise<number | null> {
+  const upperSymbol = symbol.toUpperCase();
+  console.log(`[PriceFetch] Starting dynamic waterfall fetch for: ${upperSymbol}`);
+
+  // 1. Static/Hardcoded logic
+  if (upperSymbol === "USDT" || upperSymbol === "USDC") return 1.0;
+
+  // 2. Try Gold API
+  if (upperSymbol === "GOLD" || upperSymbol === "XAU") {
     try {
       const response = await fetch(`https://api.gold-api.com/price/XAU`);
-      const data = await response.json();
-      return data.price;
-    } catch {
-      return null;
-    }
-  } else {
-    if (!FINNHUB_API_KEY) return null;
-    try {
-      const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
-      if (!response.ok) return null;
-      const data = await response.json();
-      return data.c > 0 ? data.c : null;
-    } catch {
-      return null;
+      if (response.ok) {
+        const data = await response.json();
+        return data.price;
+      }
+    } catch (err) {
+      console.warn(`[PriceFetch] Gold API skip:`, err.message);
     }
   }
+
+  // 3. Try Binance API (Crypto)
+  try {
+    const binanceSymbol = upperSymbol === "BTC" ? "BTCUSDT" : `${upperSymbol}USDT`;
+    const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+    if (response.ok) {
+      const data = await response.json();
+      return parseFloat(data.price);
+    }
+  } catch (err) {
+    console.warn(`[PriceFetch] Binance skip for ${upperSymbol}:`, err.message);
+  }
+
+  // 4. Try Yahoo Finance (Free Stock Fallback)
+  const yahooPrice = await fetchYahooPrice(upperSymbol);
+  if (yahooPrice) return yahooPrice;
+
+  // 5. Try Finnhub API (Requires Key)
+  if (FINNHUB_API_KEY && FINNHUB_API_KEY !== "YOUR_KEY_HERE") {
+    try {
+      const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${upperSymbol}&token=${FINNHUB_API_KEY}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.c && data.c > 0) return data.c;
+      }
+    } catch (err) {
+      console.error(`[PriceFetch] Finnhub error for ${upperSymbol}:`, err.message);
+    }
+  }
+
+  console.error(`[PriceFetch] CRITICAL FAIL: No price sources available for ${upperSymbol}`);
+  return null;
 }
 
 const corsHeaders = {

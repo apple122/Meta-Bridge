@@ -222,9 +222,11 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                 0,
                 Math.floor((trade.expiryTime - now) / 1000),
               );
+              
+              const isSettling = remainingSecs === 0;
               const m = Math.floor(remainingSecs / 60);
               const s = remainingSecs % 60;
-              const timeString = `${m}:${s.toString().padStart(2, "0")}`;
+              const timeString = isSettling ? t("settling") || "Settling..." : `${m}:${s.toString().padStart(2, "0")}`;
 
               return (
                 <div

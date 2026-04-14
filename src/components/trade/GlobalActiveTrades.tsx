@@ -57,7 +57,7 @@ export const GlobalActiveTrades: React.FC = () => {
       >
         <Clock size={16} className="text-primary animate-pulse" />
         <span className="text-xs font-bold text-white tracking-widest">
-          {activeBinaryTrades.length} {t("active")}
+          {activeBinaryTrades.length} {activeBinaryTrades.some(t_tr => Math.max(0, Math.floor((t_tr.expiryTime - Date.now()) / 1000)) === 0) ? (t("settling") || "SETTLING") : t("active")}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 90 : 0 }}
@@ -97,9 +97,10 @@ export const GlobalActiveTrades: React.FC = () => {
                   0,
                   Math.floor((trade.expiryTime - now) / 1000),
                 );
+                const isSettling = remainingSecs === 0;
                 const m = Math.floor(remainingSecs / 60);
                 const s = remainingSecs % 60;
-                const timeString = `${m}:${s.toString().padStart(2, "0")}`;
+                const timeString = isSettling ? (t("settling") || "Settling...") : `${m}:${s.toString().padStart(2, "0")}`;
 
                 return (
                   <div

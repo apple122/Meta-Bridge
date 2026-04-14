@@ -141,11 +141,9 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
 
         // 3. Sequential Pairing (Prioritize Direct ID > then FIFO fallback)
         processed.forEach((tx) => {
-          if (!tx.binary_type) return;
-          
-          const key = `${tx.asset}-${tx.binary_type}`;
-          const isStake = !tx.binary_result;
-          
+          const isStake = (tx.type === 'buy' || tx.type === 'sell') && tx.binary_type && !tx.binary_result;
+          const isResult = tx.type === 'win' || tx.type === 'loss' || (tx.type === 'deposit' && tx.trade_id && tradeIdToSmartId[tx.trade_id]);
+
           if (isStake) {
             const tid = (tx.trade_id || tx.id).slice(-4).toUpperCase();
             tx.smart_id = tid;
@@ -154,33 +152,42 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
             if (tx.trade_id) tradeIdToSmartId[tx.trade_id] = tid;
             
             // Still push to stack for FIFO fallback in case direct ID is missing
+            const key = `${tx.asset}-${tx.binary_type}`;
             if (!openStacks[key]) openStacks[key] = [];
             openStacks[key].push(tid);
-          } else {
+          } else if (isResult || tx.binary_type) {
             // Result found:
             // a. Try Direct Link first
             if (tx.trade_id && tradeIdToSmartId[tx.trade_id]) {
               tx.smart_id = tradeIdToSmartId[tx.trade_id];
             } 
-            // b. Fallback to FIFO stack
-            else if (openStacks[key] && openStacks[key].length > 0) {
-              const matchedId = openStacks[key].shift();
-              if (matchedId) tx.smart_id = matchedId;
+            // b. Fallback to FIFO stack (only if binary_type is present)
+            else if (tx.binary_type) {
+              const key = `${tx.asset}-${tx.binary_type}`;
+              if (openStacks[key] && openStacks[key].length > 0) {
+                const matchedId = openStacks[key].shift();
+                if (matchedId) tx.smart_id = matchedId;
+              }
             }
 
             // --- MERGING LOGIC ---
             // Find the parent stake transaction (by smart_id) and update it
-            const parentStake = processed.find(t => t.smart_id === tx.smart_id && !t.binary_result && (t.type === 'buy' || t.type === 'sell'));
+            const parentStake = processed.find(t => t.smart_id === tx.smart_id && (t.type === 'buy' || t.type === 'sell') && !t.binary_result);
             if (parentStake) {
-              parentStake.binary_result = tx.binary_result;
-              // If it's a win, the 'total' on the ledger should show the Payout
-              const isWin = tx.binary_result?.toLowerCase() === 'win' || tx.binary_result?.toLowerCase() === 'won';
-              if (isWin) {
-                parentStake.total = tx.total;
-                // Force a positive representation for the UI merging
-                parentStake.is_win = true; 
+              // If it's a deposit linked to a trade, it's a refund
+              if (tx.type === 'deposit') {
+                parentStake.binary_result = 'Refunded';
+                parentStake.total = tx.total; // Show the refunded amount
+                tx.type = 'refund-marker'; // Mark for filtering
               } else {
-                parentStake.is_loss = true;
+                parentStake.binary_result = tx.binary_result;
+                const isWin = tx.binary_result?.toLowerCase() === 'win' || tx.binary_result?.toLowerCase() === 'won';
+                if (isWin) {
+                  parentStake.total = tx.total;
+                  parentStake.is_win = true; 
+                } else {
+                  parentStake.is_loss = true;
+                }
               }
             }
           }
@@ -189,7 +196,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         // 4. Sort back to newest first for the UI (with ID tie-breaker)
         setTransactions(
           processed
-            .filter(t => t.type !== 'win' && t.type !== 'loss')
+            .filter(t => t.type !== 'win' && t.type !== 'loss' && t.type !== 'refund-marker')
             .sort((a, b) => {
               const timeA = new Date(a.timestamp).getTime();
               const timeB = new Date(b.timestamp).getTime();
