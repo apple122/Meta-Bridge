@@ -330,7 +330,7 @@ create index if not exists idx_audit_logs_created_at on public.admin_audit_logs(
 --    npx supabase functions deploy resolve-trades --no-verify-jwt
 -- 
 -- 2. Configure Environment Variables in Supabase Dashboard (Settings > Edge Functions):
---    EMAILJS_SERVICE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY, EMAILJS_TEMPLATE_WIN_ID
+--    BREVO_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 -- 
 -- 3. Run the following SQL to enable the cron job:
 /*

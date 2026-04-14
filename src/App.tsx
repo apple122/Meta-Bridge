@@ -22,9 +22,6 @@ function AppContent() {
     const requiredEnv = [
       'VITE_SUPABASE_URL',
       'VITE_SUPABASE_PUBLISHABLE_KEY',
-      'VITE_EMAILJS_SERVICE_ID',
-      'VITE_EMAILJS_TEMPLATE_ID',
-      'VITE_EMAILJS_PUBLIC_KEY',
       'VITE_FINNHUB_API_KEY'
     ];
     

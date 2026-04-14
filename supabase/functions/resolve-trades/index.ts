@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
         }
         
         if (targetProfile?.email) {
-          console.log(`Found email address: ${targetProfile.email}. Sending to EmailJS...`);
+          console.log(`Found email address: ${targetProfile.email}. Sending win notification email...`);
           await sendWinEmail(trade, targetProfile);
         } else {
           console.error(`Cannot send email for ${trade.id}: No email address found for user ${trade.user_id}`);
