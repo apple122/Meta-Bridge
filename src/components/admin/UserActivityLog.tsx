@@ -6,7 +6,7 @@ import {
   Search, Filter, RefreshCw, Calendar, ChevronDown,
   ArrowDownCircle, ArrowUpCircle, TrendingUp, TrendingDown,
   Trophy, XCircle, LogIn, User, Monitor, Wifi, DollarSign,
-  Info, X, Hash,
+  Info, X, Hash, Copy, Check,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { activityService } from '../../services/activityService';
@@ -54,23 +54,85 @@ function fmtDate(iso: string, lang: string) {
 }
 
 /* ─── Memoized Row Components ─────────────────────────── */
-const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean }) => {
-  const rows: { label: string; value: React.ReactNode }[] = [];
-  if (item.asset) rows.push({ label: isth ? 'สินทรัพย์' : 'Asset', value: <span className="font-mono text-sky-400">{item.asset}</span> });
-  if (item.amount != null) rows.push({ label: isth ? 'มูลค่า' : 'Value', value: <span className="font-black font-mono text-emerald-400">${Number(item.amount).toLocaleString()}</span> });
-  if (item.device) rows.push({ label: isth ? 'อุปกรณ์' : 'Device', value: <span className="flex items-center gap-1.5"><Monitor size={11} className="text-slate-500 shrink-0" />{item.device}</span> });
-  if (item.ip) rows.push({ label: 'IP', value: <span className="flex items-center gap-1.5 font-mono"><Wifi size={11} className="text-slate-500 shrink-0" />{item.ip}</span> });
-  if (item.ticketId) rows.push({ label: isth ? 'รหัสรายการ (Order ID)' : 'Order ID', value: <span className="font-mono text-primary font-bold">{item.ticketId}</span> });
-  rows.push({ label: 'System ID', value: <span className="font-mono text-slate-500 text-[10px] break-all">{item.id}</span> });
-  rows.push({ label: 'User ID', value: <span className="font-mono text-slate-500 text-[10px] break-all">{item.userId}</span> });
+const CopyableID = ({ label, id, isth }: { label: string; id: string; isth: boolean }) => {
+  const [copied, setCopied] = useState(false);
+  const onCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {rows.map(({ label, value }) => (
-        <div key={label} className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
-          <span className="text-[9px] text-slate-500 uppercase font-black tracking-wider block mb-1">{label}</span>
-          <span className="text-xs text-slate-300">{value}</span>
+    <div className="group/copy flex items-center justify-between bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2 transition-all hover:bg-white/[0.05]">
+      <div className="min-w-0">
+        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">{label}</span>
+        <span className="text-[11px] font-mono text-slate-400 truncate block max-w-[200px]">{id}</span>
+      </div>
+      <button onClick={onCopy} className="p-1.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/10 transition-all shrink-0">
+        {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+      </button>
+    </div>
+  );
+};
+
+const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean }) => {
+  const mainDetails: { label: string; value: React.ReactNode; icon?: React.ReactNode; color?: string }[] = [];
+  if (item.asset) mainDetails.push({ label: isth ? 'สินทรัพย์' : 'Asset', value: item.asset, icon: <Hash size={12} />, color: 'text-sky-400' });
+  if (item.amount != null) mainDetails.push({ label: isth ? 'มูลค่า' : 'Value', value: `$${Number(item.amount).toLocaleString()}`, icon: <DollarSign size={12} />, color: 'text-emerald-400' });
+  if (item.ticketId) mainDetails.push({ label: isth ? 'Order ID' : 'Order ID', value: item.ticketId, icon: <Info size={12} />, color: 'text-primary' });
+
+  return (
+    <div className="space-y-4">
+      {/* ── Main Highlight Info ── */}
+      {mainDetails.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {mainDetails.map((det, i) => (
+            <div key={i} className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-2xl p-3.5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">{det.icon}</div>
+              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">{det.label}</span>
+              <span className={`text-base font-black font-mono tracking-tight ${det.color}`}>{det.value}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* ── Metadata & technical details ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+        {/* Connection & Device */}
+        <div className="space-y-2">
+          <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1">{isth ? 'ข้อมูลการเชื่อมต่อ' : 'Connectivity'}</span>
+          <div className="grid grid-cols-1 gap-2">
+            {item.device && (
+              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2.5">
+                <Monitor size={13} className="text-slate-500 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[9px] text-slate-600 uppercase font-bold block">{isth ? 'อุปกรณ์' : 'Device'}</span>
+                  <span className="text-[11px] text-slate-300 truncate block">{item.device}</span>
+                </div>
+              </div>
+            )}
+            {item.ip && (
+              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2.5">
+                <Wifi size={13} className="text-slate-500 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[9px] text-slate-600 uppercase font-bold block">IP Address</span>
+                  <span className="text-[11px] text-slate-400 font-mono block">{item.ip}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* System IDs with Copy feature */}
+        <div className="space-y-2">
+          <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1">{isth ? 'รหัสระบบ' : 'System Identifiers'}</span>
+          <div className="grid grid-cols-1 gap-2">
+            <CopyableID label="System ID" id={item.id} isth={isth} />
+            <CopyableID label="User ID" id={item.userId} isth={isth} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 });

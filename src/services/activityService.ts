@@ -54,10 +54,8 @@ export const activityService = {
         txData.forEach((tx: any) => {
           const profile = Array.isArray(tx.profiles) ? tx.profiles[0] : tx.profiles;
           
-          // Generate a user-friendly Ticket ID (Shortened UUID)
-          const ticketId = tx.binary_trade_id 
-            ? `${tx.binary_trade_id.split('-')[0].toUpperCase()}`
-            : tx.id.split('-')[0].toUpperCase();
+          // Generate a user-friendly Ticket ID (Match client-side Smart ID logic: Last 4 chars)
+          const ticketId = (tx.binary_trade_id || tx.id).slice(-4).toUpperCase();
 
           results.push({
             id:          `tx-${tx.id}`,
