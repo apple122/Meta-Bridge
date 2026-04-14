@@ -311,26 +311,26 @@ export const UserActivityLog: React.FC = () => {
 
         {/* Date range */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
               <Calendar size={10} /> {isth ? 'วันเริ่มต้น' : 'Start Date'}
             </label>
             <input type="date" value={startDate} max={endDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full bg-slate-800/60 border border-white/8 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 [color-scheme:dark]" />
+              className="w-full bg-slate-800/60 border border-white/8 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 [color-scheme:dark] overflow-hidden" />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
               <Calendar size={10} /> {isth ? 'วันสิ้นสุด' : 'End Date'}
             </label>
             <input type="date" value={endDate} min={startDate} max={today}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full bg-slate-800/60 border border-white/8 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 [color-scheme:dark]" />
+              className="w-full bg-slate-800/60 border border-white/8 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 [color-scheme:dark] overflow-hidden" />
           </div>
         </div>
 
         {/* Code search — input + paste button */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 min-w-0">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
             <Hash size={10} /> {isth ? 'ค้นหาด้วยรหัสลูกค้า' : 'Search by Code'}
           </label>
@@ -394,7 +394,7 @@ export const UserActivityLog: React.FC = () => {
         </div>
 
         {/* Search / Clear */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button onClick={fetchData} disabled={loading}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors active:scale-95 shadow-lg shadow-primary/20">
             {loading ? <RefreshCw size={14} className="animate-spin" /> : <Search size={14} />}
