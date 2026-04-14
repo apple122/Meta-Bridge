@@ -29,3 +29,18 @@ export const formatUnits = (units: number, decimals: number = 6): string => {
     maximumFractionDigits: decimals,
   });
 };
+
+/**
+ * Masks an email address for privacy (e.g., peun****@gmail.com)
+ */
+export const maskEmail = (email: string): string => {
+  if (!email) return '';
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return email;
+  
+  // Mask the local part
+  if (local.length <= 2) {
+    return `${local[0]}***@${domain}`;
+  }
+  return `${local.substring(0, 2)}******@${domain}`;
+};

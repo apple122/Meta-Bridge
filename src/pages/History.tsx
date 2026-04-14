@@ -345,44 +345,53 @@ export const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified List Header: Robust Centered Master Marker */}
-      <div
-        id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`}
-        className="sticky md:top-[74px] top-[64px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
-      >
-        <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
-          <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
-            {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
-          </h3>
-          <div className="h-px flex-grow bg-white/5" />
-        </div>
+      {(() => {
+        const hasTransactionsOnSelectedDate = filteredTransactions.some(
+          (tx) => new Date(tx.timestamp).toLocaleDateString() === selectedDate.toLocaleDateString()
+        );
+        
+        if (!hasTransactionsOnSelectedDate) return null;
 
-        <span className="flex-shrink-0 text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5 mx-4">
-          {(() => {
-            const todayStr = new Date().toLocaleDateString();
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toLocaleDateString();
-            const targetStr = selectedDate.toLocaleDateString();
+        return (
+          <div
+            id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`}
+            className="sticky md:top-[74px] top-[64px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden"
+          >
+            <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
+              <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
+                {t("transactionsUpTo") === "transactionsUpTo" ? "รายการย้อนหลังจนถึง" : t("transactionsUpTo")}
+              </h3>
+              <div className="h-px flex-grow bg-white/5" />
+            </div>
 
-            const dateNum = selectedDate.getDate();
-            const monthShort = selectedDate.toLocaleDateString('en-US', { month: 'short' });
+            <span className="flex-shrink-0 text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5 mx-4">
+              {(() => {
+                const todayStr = new Date().toLocaleDateString();
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toLocaleDateString();
+                const targetStr = selectedDate.toLocaleDateString();
 
-            if (targetStr === todayStr) return `${t("today") || "Today"} (${dateNum} ${monthShort})`;
-            if (targetStr === yesterdayStr) return `${t("yesterday") || "Yesterday"} (${dateNum} ${monthShort})`;
-            return formatDate(selectedDate, {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
-          })()}
-        </span>
+                const dateNum = selectedDate.getDate();
+                const monthShort = selectedDate.toLocaleDateString('en-US', { month: 'short' });
 
-        <div className="flex-1 basis-0 min-w-0 flex items-center">
-          <div className="h-px flex-grow bg-white/5" />
-        </div>
-      </div>
+                if (targetStr === todayStr) return `${t("today") || "Today"} (${dateNum} ${monthShort})`;
+                if (targetStr === yesterdayStr) return `${t("yesterday") || "Yesterday"} (${dateNum} ${monthShort})`;
+                return formatDate(selectedDate, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+              })()}
+            </span>
+
+            <div className="flex-1 basis-0 min-w-0 flex items-center">
+              <div className="h-px flex-grow bg-white/5" />
+            </div>
+          </div>
+        );
+      })()}
 
       <AnimatePresence mode="wait">
         {filteredTransactions.length === 0 ? (

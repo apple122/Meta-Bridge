@@ -6,10 +6,6 @@ declare const Deno: any;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const FINNHUB_API_KEY = Deno.env.get("FINNHUB_API_KEY") ?? "";
-const EMAILJS_SERVICE_ID = Deno.env.get("EMAILJS_SERVICE_ID") ?? "";
-const EMAILJS_PUBLIC_KEY = Deno.env.get("EMAILJS_PUBLIC_KEY") ?? "";
-const EMAILJS_PRIVATE_KEY = Deno.env.get("EMAILJS_PRIVATE_KEY") ?? "";
-const EMAILJS_TEMPLATE_WIN_ID = Deno.env.get("EMAILJS_TEMPLATE_WIN_ID") ?? "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -143,89 +139,36 @@ Deno.serve(async (req) => {
 
   async function sendWinEmail(trade: any, profile: any) {
     const email = profile?.email;
-    if (!email) {
-      console.error(`Cannot send email: No email provided`);
-      return;
-    }
-  
-    const userName = profile?.first_name 
-      ? `${profile.first_name} ${profile.last_name || ''}`.trim() 
-      : 'Trader';
-    
-    // Support multi-language if available
-    const lang = profile?.language || 'en';
-    const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+    if (!email) return;
 
-    const amount = Number(trade.amount);
-    const payoutPercent = Number(trade.payout_percent);
-    const payout = amount + (amount * payoutPercent) / 100;
-    const orderId = trade.id.slice(-4).toUpperCase();
-    
-    const formattedPayout = `$${payout.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-    const formattedStake = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-    const formattedProfit = `$${(payout - amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-    const directionLabel = trade.type === 'up' ? t.up : t.down;
-    
-    const detailLine = `${t.trade_details}\n` +
-      `• ${t.order_id}: #${orderId}\n` + 
-      `• ${t.asset}: ${trade.asset_symbol}\n` + 
-      `• ${t.direction}: ${directionLabel}\n` + 
-      `• ${t.duration}: ${t.min || "-"} นาที\n` + 
-      `• ${t.payout_rate}: ${payoutPercent}%\n` + 
-      `• ${t.stake}: ${formattedStake}\n` + 
-      `• ${t.net_profit}: ${formattedProfit}`;
-  
-    const bodyPrefix = `📌 ${t.order_id}: #${orderId}\n`;
-  
-    const subject = `${t.win_subject} (ID: #${orderId})`;
-    const fullBody = `${bodyPrefix}${t.win_body}\n\n${detailLine}`;
-  
-    const payload = {
-      service_id: EMAILJS_SERVICE_ID,
-      template_id: EMAILJS_TEMPLATE_WIN_ID,
-      user_id: EMAILJS_PUBLIC_KEY,
-      accessToken: EMAILJS_PRIVATE_KEY, // REQUIRED for backend HTTP requests
-      template_params: {
-        to_email: email,
-        to_name: userName,
-        passcode: formattedPayout,
-        ticket_id: `#${orderId}`,
-        time: `${new Date().toLocaleString(lang === 'th' ? 'th-TH' : 'en-US')}`,
-        // Lowercase
-        email_subject: subject,
-        email_greeting: t.greeting,
-        email_body: fullBody,
-        email_otp_label: t.win_label,
-        email_expiry: t.win_warning,
-        email_warning: '— Meta Bridge Team',
-        email_title: t.win_title,
-        email_credited: t.credited_note,
-        email_footer_brand: t.footer_brand,
-        email_footer_auto: t.footer_auto,
-        // Uppercase
-        EMAIL_SUBJECT: subject,
-        EMAIL_GREETING: t.greeting,
-        EMAIL_BODY: fullBody,
-        EMAIL_OTP_LABEL: t.win_label,
-        EMAIL_TITLE: t.win_title
-      }
-    };
-  
     try {
-      console.log(`Sending payload to EmailJS for ${email}...`);
-      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payload)
+      console.log(`Invoking send-email function for ${email}...`);
+      const { error } = await supabase.functions.invoke("send-email", {
+        body: {
+          to: email,
+          type: "win",
+          lang: profile?.language || "en",
+          data: {
+            userName: profile?.first_name 
+              ? `${profile.first_name} ${profile.last_name || ''}`.trim() 
+              : 'Trader',
+            amount: trade.amount,
+            payout: trade.amount + (trade.amount * trade.payout_percent) / 100,
+            assetSymbol: trade.asset_symbol,
+            orderId: trade.id,
+            direction: trade.type,
+            payoutPercent: trade.payout_percent
+          }
+        }
       });
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error(`EmailJS failed for ${orderId}:`, errText);
+
+      if (error) {
+        console.error(`Failed to invoke send-email for ${trade.id}:`, error);
       } else {
-        console.log(`✅ Win email successfully sent for trade ${orderId} (to ${email})`);
+        console.log(`✅ Win email successfully requested for ${trade.id}`);
       }
     } catch (err) {
-      console.error(`🚨 Error sending win email for ${trade?.id}:`, err);
+      console.error(`🚨 Error requesting win email for ${trade.id}:`, err);
     }
   }
 

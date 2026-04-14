@@ -23,6 +23,7 @@ import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
 import { generateUserCode } from "../../utils/userUtils";
+import { maskEmail } from "../../utils/format";
 import logoImg from "../../assets/Logo-url.png";
 import btcLogo from "../../assets/icon/Bitcoin.png";
 import ethLogo from "../../assets/icon/Ethereum.png";
@@ -99,7 +100,7 @@ export const AuthForms: React.FC = () => {
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("username", username)
+          .or(`username.eq.${username},email.eq.${username}`)
           .single();
 
         if (error || !data) throw new Error("Invalid username or password.");
@@ -329,7 +330,7 @@ export const AuthForms: React.FC = () => {
                   {mode === "login" && "Enter your credentials to access the terminal"}
                   {mode === "register" && "Join the next generation of professional trading"}
                   {mode === "forgot" && (t("checkEmailForCode") || "Enter your email to receive a reset code")}
-                  {mode === "verify" && `${t("enterCodeSentTo") || "Enter the 6-digit code sent to"} ${email}`}
+                  {mode === "verify" && `${t("enterCodeSentTo") || "Enter the 6-digit code sent to"} ${maskEmail(email)}`}
                   {mode === "reset" && "Set your new secure access password"}
                 </p>
               </div>
@@ -370,7 +371,7 @@ export const AuthForms: React.FC = () => {
                   {(mode === "login" || mode === "register") && (
                     <AuthInput
                       icon={<User size={18} />}
-                      placeholder={t("username") || "Username"}
+                      placeholder={t("usernameOrEmail") || "Username or Email"}
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}

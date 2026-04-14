@@ -105,8 +105,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         .from("transactions")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .order("created_at", { ascending: false });
 
       if (txError) {
         console.error(
@@ -255,8 +254,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         .select("*")
         .eq("user_id", user.id)
         .lt("created_at", oldestTx.timestamp)
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .order("created_at", { ascending: false });
 
       if (txError) throw txError;
       if (!txData || txData.length === 0) {

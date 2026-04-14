@@ -16,6 +16,10 @@ export const getDeviceDetails = (): DeviceInfo => {
   let browserName = "Unknown Browser";
   let deviceType: 'mobile' | 'tablet' | 'desktop' = 'desktop';
 
+  const w = window.screen.width;
+  const h = window.screen.height;
+  const pr = window.devicePixelRatio;
+
   // 1. Detect Browser
   if (ua.includes("Firefox/")) browserName = "Firefox";
   else if (ua.includes("Edg/")) browserName = "Edge";
@@ -27,21 +31,54 @@ export const getDeviceDetails = (): DeviceInfo => {
   if (/Android/i.test(ua)) {
     deviceType = 'mobile';
     osName = "Android";
-    const match = ua.match(/Android\s([0-9\.]+)/);
-    if (match) osName = `Android ${match[1]}`;
+    const osMatch = ua.match(/Android\s([0-9\.]+)/);
+    if (osMatch) osName = `Android ${osMatch[1]}`;
     
-    // Try to find model
+    // Improved Android Model Detection
+    // Typical UA: Mozilla/5.0 (Linux; Android 13; SM-S901B) ...
     const modelMatch = ua.match(/\(([^;]+);\sAndroid[^;]+;\s([^)]+)\)/);
-    if (modelMatch) deviceName = modelMatch[2].split(' Build/')[0];
-    else if (ua.includes("Samsung")) deviceName = "Samsung Galaxy";
-    else deviceName = "Android Device";
+    if (modelMatch) {
+      const parts = modelMatch[2].split(';');
+      deviceName = parts[parts.length - 1].split(' Build/')[0].trim();
+    } else {
+      // Fallback for different UA structures
+      const genericMatch = ua.match(/Android\s[^;]+;\s([^;)]+)/);
+      if (genericMatch) deviceName = genericMatch[1].trim();
+      else deviceName = "Android Device";
+    }
 
   } else if (/iPhone|iPad|iPod/i.test(ua)) {
     deviceType = ua.includes("iPad") ? 'tablet' : 'mobile';
-    deviceName = ua.includes("iPad") ? "iPad" : "iPhone";
     
-    const osMatch = ua.match(/OS\s([0-9_]+)/);
-    if (osMatch) osName = `iOS ${osMatch[1].replace(/_/g, '.')}`;
+    if (ua.includes("iPad")) {
+      deviceName = "iPad";
+    } else {
+      // iPhone Model Detection via Resolution Mapping
+      const width = Math.min(w, h);
+      const height = Math.max(w, h);
+      
+      if (pr === 3) {
+        if (width === 430 && height === 932) deviceName = "iPhone 14-16 Pro Max";
+        else if (width === 393 && height === 852) deviceName = "iPhone 14-16 Pro / 15-16";
+        else if (width === 428 && height === 926) deviceName = "iPhone 12-14 Pro Max";
+        else if (width === 390 && height === 844) deviceName = "iPhone 12-14 / Pro";
+        else if (width === 375 && height === 812) deviceName = "iPhone X / XS / 11 Pro";
+        else if (width === 414 && height === 896) deviceName = "iPhone XS Max / 11 Pro Max";
+        else if (width === 414 && height === 736) deviceName = "iPhone 6-8 Plus";
+        else if (width === 360 && height === 780) deviceName = "iPhone 12-13 mini";
+        else deviceName = "iPhone (Retina)";
+      } else if (pr === 2) {
+        if (width === 414 && height === 896) deviceName = "iPhone XR / 11";
+        else if (width === 375 && height === 667) deviceName = "iPhone 6-8 / SE2-3";
+        else if (width === 320 && height === 568) deviceName = "iPhone 5 / SE1";
+        else deviceName = "iPhone";
+      } else {
+        deviceName = "iPhone";
+      }
+    }
+    
+    const osVersionMatch = ua.match(/OS\s([0-9_]+)/);
+    if (osVersionMatch) osName = `iOS ${osVersionMatch[1].replace(/_/g, '.')}`;
     else osName = "iOS";
 
   } else if (/Windows/i.test(ua)) {
@@ -55,10 +92,17 @@ export const getDeviceDetails = (): DeviceInfo => {
 
   } else if (/Macintosh|Mac OS X/i.test(ua)) {
     deviceType = 'desktop';
-    deviceName = "MacBook / iMac";
-    const macMatch = ua.match(/Mac OS X\s([0-9_.]+)/);
-    if (macMatch) osName = `macOS ${macMatch[1].replace(/_/g, '.')}`;
-    else osName = "macOS";
+    // Check if it's touch-enabled Mac (could be iPad in desktop mode)
+    if (navigator.maxTouchPoints > 0) {
+      deviceType = 'tablet';
+      deviceName = "iPad";
+      osName = "iPadOS";
+    } else {
+      deviceName = "MacBook / iMac";
+      const macMatch = ua.match(/Mac OS X\s([0-9_.]+)/);
+      if (macMatch) osName = `macOS ${macMatch[1].replace(/_/g, '.')}`;
+      else osName = "macOS";
+    }
 
   } else if (/Linux/i.test(ua)) {
     deviceType = 'desktop';

@@ -426,11 +426,6 @@ export const UserActivityLog: React.FC = () => {
             <span className="text-white text-sm font-bold">
               {isth ? 'พบ' : 'Found'} <span className="text-primary">{activities.length.toLocaleString()}</span> {isth ? 'รายการ' : 'records'}
             </span>
-            {activities.length >= 100 && (
-              <span className="text-amber-500 text-[10px] font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                {isth ? 'แสดงล่าสุด 100' : 'Latest 100 only'}
-              </span>
-            )}
             {isPending && <RefreshCw size={12} className="text-slate-600 animate-spin" />}
           </div>
 

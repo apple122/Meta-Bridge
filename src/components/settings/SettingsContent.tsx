@@ -27,6 +27,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { SettingsInput } from "./SettingsInput";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { formatCurrency, maskEmail } from "../../utils/format";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
@@ -210,8 +211,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
            .from("user_login_history")
            .select("*")
            .eq("user_id", userId)
-           .order("created_at", { ascending: false })
-           .limit(10);
+           .order("created_at", { ascending: false });
          if (data) setLoginHistoryList(data);
          setIsLoginHistoryLoading(false);
       };
@@ -944,7 +944,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     </div>
                     <div className="overflow-hidden">
                       <p className="text-white font-bold text-sm truncate">{t("emailLogin")}</p>
-                      <p className="text-xs text-slate-400 truncate">{profileData.email}</p>
+                      <p className="text-xs text-slate-400 truncate">{maskEmail(profileData.email)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -1153,7 +1153,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     <p className="text-white font-bold">{t("verifyCurrentEmail")}</p>
                     <p className="text-sm text-slate-400 px-8">
                       {t("verifyCurrentEmailDesc")}
-                      <span className="text-primary block mt-1">{profileData.email}</span>
+                      <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
                     </p>
                   </div>
                   <button
@@ -1171,7 +1171,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("enterVerificationCode")}</p>
                     <p className="text-sm text-slate-400">
-                      {t("checkInboxCode")}
+                      {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
                     </p>
                   </div>
                   <SettingsInput
@@ -1228,7 +1228,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("verifyNewEmail")}</p>
                     <p className="text-sm text-slate-400">
-                      {t("checkInboxNewEmail")} <span className="text-primary">{newEmail}</span>.
+                      {t("checkInboxNewEmail")} <span className="text-primary font-bold">{maskEmail(newEmail)}</span>
                     </p>
                   </div>
                   <SettingsInput
@@ -1280,7 +1280,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     <p className="text-white font-bold">{t("requestPasswordReset")}</p>
                     <p className="text-sm text-slate-400 px-8">
                       {t("sendCodeToEmail")} 
-                      <span className="text-primary block mt-1">{profileData.email}</span>
+                      <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
                     </p>
                   </div>
                   <button
@@ -1298,7 +1298,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold">{t("enterVerificationCode")}</p>
                     <p className="text-sm text-slate-400">
-                      {t("checkInboxCode")}
+                      {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
                     </p>
                   </div>
                   <SettingsInput

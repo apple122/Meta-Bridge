@@ -40,8 +40,7 @@ export const activityService = {
       let txQuery = supabase
         .from('transactions')
         .select('id, user_id, type, asset_symbol, amount, total, status, created_at, profiles(username, email)')
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .order('created_at', { ascending: false });
 
       if (type && type !== 'all') txQuery = txQuery.eq('type', type);
       if (userId)   txQuery = txQuery.eq('user_id', userId);
@@ -75,8 +74,7 @@ export const activityService = {
       let lhQuery = supabase
         .from('user_login_history')
         .select('id, user_id, device_name, browser_name, os_name, ip_address, created_at, profiles(username, email)')
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .order('created_at', { ascending: false });
 
       if (userId)   lhQuery = lhQuery.eq('user_id', userId);
       if (startISO) lhQuery = lhQuery.gte('created_at', startISO);
