@@ -2,6 +2,7 @@ import React, {
   useState, useMemo, useCallback, useTransition, memo,
   useEffect,
 } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Filter, RefreshCw, Calendar, ChevronDown,
   ArrowDownCircle, ArrowUpCircle, TrendingUp, TrendingDown,
@@ -83,41 +84,56 @@ const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean
   if (item.ticketId) mainDetails.push({ label: isth ? 'Order ID' : 'Order ID', value: item.ticketId, icon: <Info size={12} />, color: 'text-primary' });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ── Main Highlight Info ── */}
       {mainDetails.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {mainDetails.map((det, i) => (
-            <div key={i} className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-2xl p-3.5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">{det.icon}</div>
-              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">{det.label}</span>
-              <span className={`text-base font-black font-mono tracking-tight ${det.color}`}>{det.value}</span>
-            </div>
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-2xl p-4 relative overflow-hidden group shadow-lg"
+            >
+              <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-20 transition-all duration-500 scale-150">{det.icon}</div>
+              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1.5 opacity-60">{det.label}</span>
+              <span className={`text-lg font-black font-mono tracking-tight ${det.color}`}>{det.value}</span>
+            </motion.div>
           ))}
         </div>
       )}
 
       {/* ── Metadata & technical details ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5"
+      >
         {/* Connection & Device */}
-        <div className="space-y-2">
-          <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1">{isth ? 'ข้อมูลการเชื่อมต่อ' : 'Connectivity'}</span>
-          <div className="grid grid-cols-1 gap-2">
+        <div className="space-y-3">
+          <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1 opacity-80">{isth ? 'ข้อมูลการเชื่อมต่อ' : 'Connectivity'}</span>
+          <div className="grid grid-cols-1 gap-2.5">
             {item.device && (
-              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2.5">
-                <Monitor size={13} className="text-slate-500 shrink-0" />
+              <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-xl px-4 py-3 group/item hover:bg-white/[0.04] transition-all">
+                <div className="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-500 group-hover/item:text-primary transition-colors">
+                  <Monitor size={15} />
+                </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] text-slate-600 uppercase font-bold block">{isth ? 'อุปกรณ์' : 'Device'}</span>
-                  <span className="text-[11px] text-slate-300 truncate block">{item.device}</span>
+                  <span className="text-[9px] text-slate-600 uppercase font-bold block mb-0.5">{isth ? 'อุปกรณ์' : 'Device'}</span>
+                  <span className="text-xs text-slate-300 font-semibold truncate block">{item.device}</span>
                 </div>
               </div>
             )}
             {item.ip && (
-              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2.5">
-                <Wifi size={13} className="text-slate-500 shrink-0" />
+              <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-xl px-4 py-3 group/item hover:bg-white/[0.04] transition-all">
+                <div className="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-500 group-hover/item:text-emerald-400 transition-colors">
+                  <Wifi size={15} />
+                </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] text-slate-600 uppercase font-bold block">IP Address</span>
-                  <span className="text-[11px] text-slate-400 font-mono block">{item.ip}</span>
+                  <span className="text-[9px] text-slate-600 uppercase font-bold block mb-0.5">IP Address</span>
+                  <span className="text-xs text-slate-400 font-mono block">{item.ip}</span>
                 </div>
               </div>
             )}
@@ -125,14 +141,14 @@ const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean
         </div>
 
         {/* System IDs with Copy feature */}
-        <div className="space-y-2">
-          <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1">{isth ? 'รหัสระบบ' : 'System Identifiers'}</span>
-          <div className="grid grid-cols-1 gap-2">
+        <div className="space-y-3">
+          <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1 opacity-80">{isth ? 'รหัสระบบ' : 'System Identifiers'}</span>
+          <div className="grid grid-cols-1 gap-2.5">
             <CopyableID label="System ID" id={item.id} />
             <CopyableID label="User ID" id={item.userId} />
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 });
@@ -150,9 +166,10 @@ const DesktopRow = memo(({
   const isth = language === 'th';
   return (
     <React.Fragment>
-      <tr
+      <motion.tr
+        layout="position"
         onClick={() => onToggle(item.id)}
-        className={`cursor-pointer transition-colors duration-100 group ${isExpanded ? 'bg-slate-800/70' : 'bg-slate-900/20 hover:bg-slate-800/30'}`}
+        className={`cursor-pointer transition-colors duration-300 group ${isExpanded ? 'bg-white/[0.04]' : 'bg-slate-900/20 hover:bg-white/[0.02]'}`}
       >
         <td className="px-5 py-2.5 align-middle w-[150px]">
           <span className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded-full border whitespace-nowrap ${info.color}`}>
@@ -193,14 +210,37 @@ const DesktopRow = memo(({
         <td className="pr-4 py-2.5 align-middle text-center w-10">
           <ChevronDown size={13} className={`text-slate-600 transition-transform duration-200 mx-auto ${isExpanded ? 'rotate-180 text-primary' : ''}`} />
         </td>
-      </tr>
-      {isExpanded && (
-        <tr className="bg-slate-900/70 border-b border-primary/10">
-          <td colSpan={6} className="px-6 py-4">
-            <ExpandedDetail item={item} isth={isth} />
-          </td>
-        </tr>
-      )}
+      </motion.tr>
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.tr
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ 
+              opacity: 1, 
+              height: 'auto',
+              transition: {
+                height: { duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] },
+                opacity: { duration: 0.25, delay: 0.1 }
+              }
+            }}
+            exit={{ 
+              opacity: 0, 
+              height: 0,
+              transition: {
+                height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+                opacity: { duration: 0.15 }
+              }
+            }}
+            className="bg-slate-900/70 border-b border-primary/10 overflow-hidden"
+          >
+            <td colSpan={6} className="px-0">
+              <div className="px-6 py-7">
+                <ExpandedDetail item={item} isth={isth} />
+              </div>
+            </td>
+          </motion.tr>
+        )}
+      </AnimatePresence>
     </React.Fragment>
   );
 });
@@ -217,9 +257,10 @@ const MobileCard = memo(({
   const { compact } = fmtDate(item.createdAt, language);
   const isth = language === 'th';
   return (
-    <div
+    <motion.div
+      layout="position"
       onClick={() => onToggle(item.id)}
-      className={`border-l-[3px] ${info.accent} rounded-r-xl cursor-pointer transition-colors duration-100 ${isExpanded ? 'bg-slate-800/80' : 'bg-slate-900/60 hover:bg-slate-800/50'}`}
+      className={`border-l-[3px] ${info.accent} rounded-r-xl cursor-pointer transition-all duration-300 ${isExpanded ? 'bg-white/[0.05] shadow-xl' : 'bg-slate-900/60 hover:bg-white/[0.02]'}`}
     >
       <div className="px-3.5 py-3">
         <div className="flex items-center gap-2 mb-2 min-w-0">
@@ -252,13 +293,34 @@ const MobileCard = memo(({
           <span className="text-slate-700">·</span>
           <span className="text-[10px] text-slate-600 font-mono truncate">{item.email}</span>
         </div>
-        {isExpanded && (
-          <div className="mt-3 pt-3 border-t border-white/5">
-            <ExpandedDetail item={item} isth={isth} />
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ 
+                height: "auto", 
+                opacity: 1,
+                transition: {
+                  height: { duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] },
+                  opacity: { duration: 0.25, delay: 0.1 }
+                }
+              }}
+              exit={{ 
+                height: 0, 
+                opacity: 0,
+                transition: {
+                  height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+                  opacity: { duration: 0.15 }
+                }
+              }}
+              className="overflow-hidden mt-3 pt-4 border-t border-white/5"
+            >
+              <ExpandedDetail item={item} isth={isth} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 });
 
