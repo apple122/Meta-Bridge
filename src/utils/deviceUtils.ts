@@ -27,34 +27,20 @@ export const getDeviceDetails = (): DeviceInfo => {
   // 2. Detect OS & Device Name
   if (/Android/i.test(ua)) {
     deviceType = 'mobile';
-    osName = "Android";
+    deviceName = "มือถือ (Android)";
     const osMatch = ua.match(/Android\s([0-9\.]+)/);
     if (osMatch) osName = `Android ${osMatch[1]}`;
-    
-    // Improved Android Model Detection
-    // Typical UA: Mozilla/5.0 (Linux; Android 13; SM-S901B) ...
-    const modelMatch = ua.match(/\(([^;]+);\sAndroid[^;]+;\s([^)]+)\)/);
-    if (modelMatch) {
-      const parts = modelMatch[2].split(';');
-      deviceName = parts[parts.length - 1].split(' Build/')[0].trim();
-    } else {
-      // Fallback for different UA structures
-      const genericMatch = ua.match(/Android\s[^;]+;\s([^;)]+)/);
-      if (genericMatch) deviceName = genericMatch[1].trim();
-      else deviceName = "Android Device";
-    }
 
   } else if (/iPhone|iPad|iPod/i.test(ua)) {
     deviceType = ua.includes("iPad") ? 'tablet' : 'mobile';
     deviceName = ua.includes("iPad") ? "iPad" : "iPhone";
-    
     const osVersionMatch = ua.match(/OS\s([0-9_]+)/);
     if (osVersionMatch) osName = `iOS ${osVersionMatch[1].replace(/_/g, '.')}`;
     else osName = "iOS";
 
   } else if (/Windows/i.test(ua)) {
     deviceType = 'desktop';
-    deviceName = "Windows PC";
+    deviceName = "คอมพิวเตอร์ (Windows)";
     if (ua.includes("Windows NT 10.0")) osName = "Windows 10/11";
     else if (ua.includes("Windows NT 6.3")) osName = "Windows 8.1";
     else if (ua.includes("Windows NT 6.2")) osName = "Windows 8";
@@ -69,7 +55,7 @@ export const getDeviceDetails = (): DeviceInfo => {
       deviceName = "iPad";
       osName = "iPadOS";
     } else {
-      deviceName = "MacBook / iMac";
+      deviceName = "คอมพิวเตอร์ (Mac)";
       const macMatch = ua.match(/Mac OS X\s([0-9_.]+)/);
       if (macMatch) osName = `macOS ${macMatch[1].replace(/_/g, '.')}`;
       else osName = "macOS";
@@ -77,7 +63,7 @@ export const getDeviceDetails = (): DeviceInfo => {
 
   } else if (/Linux/i.test(ua)) {
     deviceType = 'desktop';
-    deviceName = "Linux PC";
+    deviceName = "คอมพิวเตอร์ (Linux)";
     osName = "Linux";
   }
 
