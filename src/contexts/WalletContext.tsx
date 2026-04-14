@@ -13,7 +13,7 @@ import { useLanguage } from "./LanguageContext";
 
 export interface Transaction {
   id: string;
-  type: "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss";
+  type: "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss" | "refund-marker";
   asset: string;
   amount: number;
   price: number;
@@ -21,7 +21,7 @@ export interface Transaction {
   timestamp: string;
   status: "success" | "pending" | "failed";
   binary_type?: "up" | "down";
-  binary_result?: "win" | "loss";
+  binary_result?: "win" | "loss" | "Refunded";
   trade_id?: string;
   smart_id?: string;
   is_win?: boolean;

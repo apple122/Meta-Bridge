@@ -27,7 +27,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { SettingsInput } from "./SettingsInput";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { formatCurrency, maskEmail } from "../../utils/format";
+import { maskEmail } from "../../utils/format";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
