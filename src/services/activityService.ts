@@ -14,6 +14,7 @@ export interface ActivityItem {
   device?: string;
   ip?: string;
   createdAt: string;
+  ticketId?: string;
 }
 
 export interface ActivityFilters {
@@ -39,7 +40,7 @@ export const activityService = {
     if (shouldFetchTx) {
       let txQuery = supabase
         .from('transactions')
-        .select('id, user_id, type, asset_symbol, amount, total, status, created_at, profiles(username, email)')
+        .select('id, user_id, type, asset_symbol, amount, total, status, binary_trade_id, created_at, profiles(username, email)')
         .order('created_at', { ascending: false });
 
       if (type && type !== 'all') txQuery = txQuery.eq('type', type);
@@ -52,6 +53,12 @@ export const activityService = {
       if (txData) {
         txData.forEach((tx: any) => {
           const profile = Array.isArray(tx.profiles) ? tx.profiles[0] : tx.profiles;
+          
+          // Generate a user-friendly Ticket ID (Shortened UUID)
+          const ticketId = tx.binary_trade_id 
+            ? `${tx.binary_trade_id.split('-')[0].toUpperCase()}`
+            : tx.id.split('-')[0].toUpperCase();
+
           results.push({
             id:          `tx-${tx.id}`,
             userId:      tx.user_id,
@@ -62,6 +69,7 @@ export const activityService = {
             amount:      tx.total,
             asset:       tx.asset_symbol,
             createdAt:   tx.created_at,
+            ticketId:    ticketId
           });
         });
       }

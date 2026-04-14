@@ -32,7 +32,7 @@ function getTypeInfo(type: ActivityType) {
     case 'withdraw': return { color: 'text-rose-400 bg-rose-500/10 border-rose-500/20', accent: 'border-l-rose-500', icon: <ArrowUpCircle size={13} /> };
     case 'buy': return { color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', accent: 'border-l-blue-500', icon: <TrendingUp size={13} /> };
     case 'sell': return { color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', accent: 'border-l-orange-500', icon: <TrendingDown size={13} /> };
-    case 'win': return { color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', accent: 'border-l-yellow-500', icon: <Trophy size={13} /> };
+    case 'win': return { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: 'border-l-emerald-500', icon: <Trophy size={13} /> };
     case 'loss': return { color: 'text-slate-400 bg-slate-500/10 border-slate-500/20', accent: 'border-l-slate-500', icon: <XCircle size={13} /> };
     case 'login': return { color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', accent: 'border-l-purple-500', icon: <LogIn size={13} /> };
   }
@@ -60,6 +60,8 @@ const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean
   if (item.amount != null) rows.push({ label: isth ? 'มูลค่า' : 'Value', value: <span className="font-black font-mono text-emerald-400">${Number(item.amount).toLocaleString()}</span> });
   if (item.device) rows.push({ label: isth ? 'อุปกรณ์' : 'Device', value: <span className="flex items-center gap-1.5"><Monitor size={11} className="text-slate-500 shrink-0" />{item.device}</span> });
   if (item.ip) rows.push({ label: 'IP', value: <span className="flex items-center gap-1.5 font-mono"><Wifi size={11} className="text-slate-500 shrink-0" />{item.ip}</span> });
+  if (item.ticketId) rows.push({ label: isth ? 'รหัสรายการ (Order ID)' : 'Order ID', value: <span className="font-mono text-primary font-bold">{item.ticketId}</span> });
+  rows.push({ label: 'System ID', value: <span className="font-mono text-slate-500 text-[10px] break-all">{item.id}</span> });
   rows.push({ label: 'User ID', value: <span className="font-mono text-slate-500 text-[10px] break-all">{item.userId}</span> });
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -97,9 +99,16 @@ const DesktopRow = memo(({
           </span>
         </td>
         <td className="px-4 py-2.5 align-middle">
-          <span className="text-white text-xs font-semibold group-hover:text-primary transition-colors line-clamp-1">
-            {item.description}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-white text-xs font-semibold group-hover:text-primary transition-colors line-clamp-1">
+              {item.description}
+            </span>
+            {item.ticketId && (
+              <span className="text-[9px] font-mono text-slate-500 flex items-center gap-1 mt-0.5">
+                <Hash size={9} /> {item.ticketId}
+              </span>
+            )}
+          </div>
         </td>
         <td className="px-4 py-2.5 align-middle w-[170px]">
           <p className="text-slate-300 text-[11px] font-bold truncate">{item.username}</p>
@@ -161,7 +170,14 @@ const MobileCard = memo(({
           <ChevronDown size={12} className={`text-slate-600 transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-180 text-primary' : ''}`} />
         </div>
         <div className="flex items-start justify-between gap-2 mb-1.5">
-          <p className="text-white text-[13px] font-semibold leading-snug">{item.description}</p>
+          <div className="flex flex-col min-w-0">
+            <p className="text-white text-[13px] font-semibold leading-snug">{item.description}</p>
+            {item.ticketId && (
+              <p className="text-[10px] font-mono text-slate-500 flex items-center gap-1 mt-0.5">
+                <Hash size={10} /> {item.ticketId}
+              </p>
+            )}
+          </div>
           {item.amount != null && (
             <span className={`text-xs font-black font-mono shrink-0 ${['win', 'deposit'].includes(item.type) ? 'text-emerald-400' : ['withdraw', 'loss'].includes(item.type) ? 'text-rose-400' : 'text-slate-300'}`}>
               {['win', 'deposit'].includes(item.type) ? '+' : ['withdraw', 'loss'].includes(item.type) ? '-' : ''}${Number(item.amount).toLocaleString()}
