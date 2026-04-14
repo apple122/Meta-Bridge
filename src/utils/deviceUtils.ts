@@ -16,9 +16,6 @@ export const getDeviceDetails = (): DeviceInfo => {
   let browserName = "Unknown Browser";
   let deviceType: 'mobile' | 'tablet' | 'desktop' = 'desktop';
 
-  const w = window.screen.width;
-  const h = window.screen.height;
-  const pr = window.devicePixelRatio;
 
   // 1. Detect Browser
   if (ua.includes("Firefox/")) browserName = "Firefox";

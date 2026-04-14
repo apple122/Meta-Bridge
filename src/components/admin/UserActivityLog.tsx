@@ -54,7 +54,7 @@ function fmtDate(iso: string, lang: string) {
 }
 
 /* ─── Memoized Row Components ─────────────────────────── */
-const CopyableID = ({ label, id, isth }: { label: string; id: string; isth: boolean }) => {
+const CopyableID = ({ label, id }: { label: string; id: string }) => {
   const [copied, setCopied] = useState(false);
   const onCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -128,8 +128,8 @@ const ExpandedDetail = memo(({ item, isth }: { item: ActivityItem; isth: boolean
         <div className="space-y-2">
           <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest px-1">{isth ? 'รหัสระบบ' : 'System Identifiers'}</span>
           <div className="grid grid-cols-1 gap-2">
-            <CopyableID label="System ID" id={item.id} isth={isth} />
-            <CopyableID label="User ID" id={item.userId} isth={isth} />
+            <CopyableID label="System ID" id={item.id} />
+            <CopyableID label="User ID" id={item.userId} />
           </div>
         </div>
       </div>
