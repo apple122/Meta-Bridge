@@ -1,7 +1,7 @@
 // MetaStock Push Notification Service
 import { supabase } from '../lib/supabase';
 
-const VAPID_PUBLIC_KEY = 'BD-PNFuLrwk-TomSuT-HVkqfhWbhj0HtHv6_iz2CDAyK5ayUTEIAP09ZdNBV3EROLgx7zJhYF6rZf8t5b_UIkYc';
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BD-PNFuLrwk-TomSuT-HVkqfhWbhj0HtHv6_iz2CDAyK5ayUTEIAP09ZdNBV3EROLgx7zJhYF6rZf8t5b_UIkYc';
 
 // Helper to convert base64 to Uint8Array for VAPID key
 function urlBase64ToUint8Array(base64String: string) {
@@ -48,16 +48,41 @@ export const pushNotificationService = {
       // Check if already subscribed
       let subscription = await registration.pushManager.getSubscription();
       
+      // If we have an old subscription, we might want to check if it matches our VAPID key.
+      // Usually, it's safer to just unsubscribe if we changed keys, but we'll try to use it.
+      if (subscription) {
+        // We'll trust it unless it fails, but if we updated the KEY recently, we should force resubscribe.
+        // It's cleaner to unsubscribe and resubscribe if we know we migrated VAPID keys.
+        // Because we just changed VAPID key:
+        const currentOptions = subscription.options;
+        if (!currentOptions?.applicationServerKey) {
+             await subscription.unsubscribe();
+             subscription = null;
+        }
+      }
+
       if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        });
-        console.log('[Push] New subscription created.');
+        try {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+          });
+          console.log('[Push] New subscription created.');
+        } catch (subErr: any) {
+          // If it fails due to key mismatch existing in background, force unsubscribe and retry
+          console.warn('[Push] Subscribe failed, likely due to old key. Forcing cleanup.', subErr);
+          const oldSub = await registration.pushManager.getSubscription();
+          if (oldSub) await oldSub.unsubscribe();
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+          });
+          console.log('[Push] Recovered and new subscription created.');
+        }
       }
 
       // Send subscription to backend (Supabase)
-      await this.saveSubscriptionToDb(userId, subscription);
+      await this.saveSubscriptionToDb(userId, subscription!);
       
     } catch (err) {
       console.error('[Push] Subscription failed:', err);

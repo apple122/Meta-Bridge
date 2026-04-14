@@ -172,6 +172,37 @@ Deno.serve(async (req) => {
     }
   }
 
+  async function sendWinPush(trade: any, profile: any) {
+    try {
+      const lang = profile?.language || "en";
+      const t = TRANSLATIONS[lang] || TRANSLATIONS["en"];
+      
+      const payout = trade.amount + (trade.amount * trade.payout_percent) / 100;
+      const formattedPayout = `+$${payout.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+      
+      const title = t.win_title || "Congratulations!";
+      const body = `${t.asset || 'Asset'} ${trade.asset_symbol} ${t.win_label || 'Payout received'}: ${formattedPayout}`;
+
+      console.log(`Invoking send-web-push function for user ${trade.user_id}...`);
+      const { error } = await supabase.functions.invoke("send-web-push", {
+        body: {
+          userId: trade.user_id,
+          title,
+          body,
+          url: "/history"
+        }
+      });
+
+      if (error) {
+        console.error(`Failed to invoke send-web-push for ${trade.id}:`, error);
+      } else {
+        console.log(`✅ Web Push successfully requested for ${trade.id}`);
+      }
+    } catch (err) {
+      console.error(`🚨 Error requesting web push for ${trade.id}:`, err);
+    }
+  }
+
   try {
     const now = Date.now();
     console.log(`[${new Date().toISOString()}] Starting trade resolution...`);
@@ -264,6 +295,9 @@ Deno.serve(async (req) => {
         } else {
           console.error(`Cannot send email for ${trade.id}: No email address found for user ${trade.user_id}`);
         }
+        
+        // Also send Web Push Notification
+        await sendWinPush(trade, targetProfile);
       } else {
         console.log(`Trade ${trade.id} LOST. Skipping email.`);
       }
