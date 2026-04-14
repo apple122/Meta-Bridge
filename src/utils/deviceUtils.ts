@@ -28,24 +28,17 @@ export const getDeviceDetails = (): DeviceInfo => {
   if (/Android/i.test(ua)) {
     deviceType = 'mobile';
     deviceName = "มือถือ (Android)";
-    const osMatch = ua.match(/Android\s([0-9\.]+)/);
-    if (osMatch) osName = `Android ${osMatch[1]}`;
+    osName = "Android";
 
   } else if (/iPhone|iPad|iPod/i.test(ua)) {
     deviceType = ua.includes("iPad") ? 'tablet' : 'mobile';
     deviceName = ua.includes("iPad") ? "iPad" : "iPhone";
-    const osVersionMatch = ua.match(/OS\s([0-9_]+)/);
-    if (osVersionMatch) osName = `iOS ${osVersionMatch[1].replace(/_/g, '.')}`;
-    else osName = "iOS";
+    osName = "iOS";
 
   } else if (/Windows/i.test(ua)) {
     deviceType = 'desktop';
     deviceName = "คอมพิวเตอร์ (Windows)";
-    if (ua.includes("Windows NT 10.0")) osName = "Windows 10/11";
-    else if (ua.includes("Windows NT 6.3")) osName = "Windows 8.1";
-    else if (ua.includes("Windows NT 6.2")) osName = "Windows 8";
-    else if (ua.includes("Windows NT 6.1")) osName = "Windows 7";
-    else osName = "Windows";
+    osName = "Windows";
 
   } else if (/Macintosh|Mac OS X/i.test(ua)) {
     deviceType = 'desktop';
@@ -56,9 +49,7 @@ export const getDeviceDetails = (): DeviceInfo => {
       osName = "iPadOS";
     } else {
       deviceName = "คอมพิวเตอร์ (Mac)";
-      const macMatch = ua.match(/Mac OS X\s([0-9_.]+)/);
-      if (macMatch) osName = `macOS ${macMatch[1].replace(/_/g, '.')}`;
-      else osName = "macOS";
+      osName = "macOS";
     }
 
   } else if (/Linux/i.test(ua)) {
