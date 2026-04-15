@@ -33,12 +33,23 @@ export const getDeviceDetails = (): DeviceInfo => {
     osName = "Windows";
 
   } else if (/Macintosh|Mac OS X/i.test(ua)) {
-    deviceType = 'desktop';
-    // Check if it's touch-enabled Mac (could be iPad in desktop mode)
+    // iOS 13+ iPhones and iPads can both show "Macintosh" in UA.
+    // Differentiate using touch support + screen width.
     if (navigator.maxTouchPoints > 1) {
-      deviceType = 'tablet';
-      deviceName = "iPad";
-      osName = "iPadOS";
+      // Touch screen + "Macintosh" UA = iOS device in desktop mode
+      // Use screen width to separate iPhone (narrow) from iPad (wide)
+      const screenWidth = Math.min(screen.width, screen.height); // portrait width
+      if (screenWidth <= 430) {
+        // Narrow screen → iPhone
+        deviceType = 'mobile';
+        deviceName = "iPhone";
+        osName = "iOS";
+      } else {
+        // Wide screen → iPad
+        deviceType = 'tablet';
+        deviceName = "iPad";
+        osName = "iPadOS";
+      }
     } else {
       deviceName = "คอมพิวเตอร์ (Mac)";
       osName = "macOS";
