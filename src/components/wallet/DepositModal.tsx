@@ -17,6 +17,7 @@ import qrImage from "../../assets/qr_placeholder.png";
 import { SupportContactList } from "./SupportContactList";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
+import type { GlobalSettings } from "../../types";
 import { UserX } from "lucide-react";
 
 type DepositStep = "select" | "qr" | "submitted" | "kyc_required";
@@ -40,11 +41,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
   const [amount, setAmount] = useState("");
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [settings, setSettings] = useState({
-    phone: "",
-    line: "",
-    telegram: "",
-  });
+  const [settings, setSettings] = useState<Partial<GlobalSettings>>({});
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -54,11 +51,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
         .eq("id", "main")
         .single();
       if (data) {
-        setSettings({
-          phone: data.contact_phone || "",
-          line: data.contact_line || "",
-          telegram: data.contact_telegram || "",
-        });
+        setSettings(data);
       }
     };
     fetchSettings();

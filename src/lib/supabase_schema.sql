@@ -127,6 +127,17 @@ create table public.global_settings (
   contact_phone text default '',
   contact_line text default '',
   contact_telegram text default '',
+  contact_whatsapp text default '',
+  contact_facebook text default '',
+  contact_email text default '',
+  contact_discord text default '',
+  phone_enabled boolean default true,
+  line_enabled boolean default true,
+  telegram_enabled boolean default true,
+  whatsapp_enabled boolean default true,
+  facebook_enabled boolean default true,
+  email_enabled boolean default true,
+  discord_enabled boolean default true,
   updated_at timestamp with time zone default now()
 );
 

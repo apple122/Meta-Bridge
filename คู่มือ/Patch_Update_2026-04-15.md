@@ -19,3 +19,10 @@
   - Ensured the **Logout All Devices** header structure reflows properly into a vertical stack on mobile instead of crushing against the description text.
   - Revamped device item cards to move the metadata (`OS`, `IP`, `Time`) into a structured grid/row beneath the device title, ensuring titles get full width and prevent early truncation.
   - Adjusted the **Logout** button on individual cards to span full width on small screens while retaining standard right-alignment on desktop.
+
+### 4. Support Contact Channels Expansion (Database Schema)
+- **Feature**: Expanded the platform's support contact system to allow administrators to manage and toggle visibility for multiple new social media channels.
+- **Schema Update**: Added new columns to the `global_settings` table:
+  - **New Contact Values**: `contact_whatsapp`, `contact_facebook`, `contact_email`, `contact_discord`
+  - **Visibility Toggles**: `phone_enabled`, `line_enabled`, `telegram_enabled`, `whatsapp_enabled`, `facebook_enabled`, `email_enabled`, `discord_enabled` (all default to `true`).
+- **File Updated**: The `src/lib/supabase_schema.sql` file was updated to reflect these schema changes for all new installations. Administrators should run this SQL patch in the Supabase SQL Editor to update existing databases.

@@ -16,6 +16,10 @@ import {
   UserPlus,
   Activity,
   History,
+  Mail,
+  MessageSquare,
+  Globe,
+  Hash,
 } from "lucide-react";
 import type { Profile, GlobalSettings } from "../types";
 import { UserTable } from "../components/admin/UserTable";
@@ -34,9 +38,9 @@ type AdminTab = "users" | "activity" | "logs" | "settings";
 
 /* ─── Tab definition ───────────────────────────────────── */
 const TABS: { id: AdminTab; labelKey: string; icon?: React.ReactNode }[] = [
-  { id: "users",    labelKey: "users" },
+  { id: "users", labelKey: "users" },
   { id: "activity", labelKey: "activity", icon: <Activity size={13} /> },
-  { id: "logs",     labelKey: "auditLogs", icon: <History size={13} /> },
+  { id: "logs", labelKey: "auditLogs", icon: <History size={13} /> },
   { id: "settings", labelKey: "settings" },
 ];
 
@@ -49,23 +53,34 @@ export const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
 
   // Users
-  const [profiles,       setProfiles]       = useState<Profile[]>([]);
-  const [loading,        setLoading]        = useState(true);
-  const [searchQuery,    setSearchQuery]    = useState("");
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
-  const [isSaving,       setIsSaving]       = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showTopUpModal,  setShowTopUpModal]  = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
 
   // Audit logs
-  const [auditLogs,    setAuditLogs]    = useState<any[]>([]);
-  const [logsLoading,  setLogsLoading]  = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   // Settings
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({
-    contact_phone:    "",
-    contact_line:     "",
+    contact_phone: "",
+    contact_line: "",
     contact_telegram: "",
+    contact_whatsapp: "",
+    contact_facebook: "",
+    contact_email: "",
+    contact_discord: "",
+    phone_enabled: true,
+    line_enabled: true,
+    telegram_enabled: true,
+    whatsapp_enabled: false,
+    facebook_enabled: false,
+    email_enabled: false,
+    discord_enabled: false,
   });
 
   /* ── Effects ───────────────────────────────────────── */
@@ -82,7 +97,7 @@ export const Admin: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (showCreateModal)    setShowCreateModal(false);
+      if (showCreateModal) setShowCreateModal(false);
       else if (showTopUpModal) setShowTopUpModal(false);
       else if (editingProfile) setEditingProfile(null);
     };
@@ -109,9 +124,20 @@ export const Admin: React.FC = () => {
       .single();
     if (!error && data) {
       setGlobalSettings({
-        contact_phone:    data.contact_phone    || "",
-        contact_line:     data.contact_line     || "",
+        contact_phone: data.contact_phone || "",
+        contact_line: data.contact_line || "",
         contact_telegram: data.contact_telegram || "",
+        contact_whatsapp: data.contact_whatsapp || "",
+        contact_facebook: data.contact_facebook || "",
+        contact_email: data.contact_email || "",
+        contact_discord: data.contact_discord || "",
+        phone_enabled: data.phone_enabled ?? true,
+        line_enabled: data.line_enabled ?? true,
+        telegram_enabled: data.telegram_enabled ?? true,
+        whatsapp_enabled: data.whatsapp_enabled ?? false,
+        facebook_enabled: data.facebook_enabled ?? false,
+        email_enabled: data.email_enabled ?? false,
+        discord_enabled: data.discord_enabled ?? false,
       });
     }
   };
@@ -132,9 +158,9 @@ export const Admin: React.FC = () => {
   ) => {
     if (!currentAdmin?.id) return;
     await auditService.logAction({
-      adminId:         currentAdmin.id,
-      adminEmail:      currentAdmin.email || "unknown",
-      targetUserId:    targetProfile?.id,
+      adminId: currentAdmin.id,
+      adminEmail: currentAdmin.email || "unknown",
+      targetUserId: targetProfile?.id,
       targetUserEmail: targetProfile?.email,
       actionType,
       description,
@@ -146,11 +172,11 @@ export const Admin: React.FC = () => {
   const handleUpdateProfile = async (profile: Profile) => {
     setIsSaving(true);
     const updateData: any = {
-      first_name:   profile.first_name,
-      last_name:    profile.last_name,
-      email:        profile.email,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      email: profile.email,
       phone_number: profile.phone_number,
-      balance:      profile.balance,
+      balance: profile.balance,
     };
     if (profile.password && !isHashed(profile.password)) {
       updateData.password = await hashPassword(profile.password);
@@ -238,7 +264,7 @@ export const Admin: React.FC = () => {
   const fadeProps = {
     initial: { opacity: 0, y: 10 },
     animate: { opacity: 1, y: 0 },
-    exit:    { opacity: 0, y: -10 },
+    exit: { opacity: 0, y: -10 },
   };
 
   /* ══════════════════════════════════════════════════════
@@ -265,11 +291,10 @@ export const Admin: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 lg:flex-none lg:px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
-                activeTab === tab.id
+              className={`flex-1 lg:flex-none lg:px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${activeTab === tab.id
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "text-slate-500 hover:text-slate-300"
-              }`}
+                }`}
             >
               {tab.icon}
               {tabLabel(tab)}
@@ -379,7 +404,8 @@ export const Admin: React.FC = () => {
         {/* SETTINGS */}
         {activeTab === "settings" && (
           <motion.div key="settings" {...fadeProps} className="max-w-2xl">
-            <div className="glass-card space-y-8">
+            <div className="glass-card space-y-6">
+              {/* Header */}
               <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                 <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                   <SettingsIcon size={24} />
@@ -390,29 +416,177 @@ export const Admin: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <AdminInput
-                  label={t("phoneContact")}
-                  icon={<Phone size={18} />}
-                  value={globalSettings.contact_phone}
-                  onChange={(val) => setGlobalSettings((prev) => ({ ...prev, contact_phone: val }))}
-                  placeholder="+66 8x xxx xxxx"
-                />
-                <AdminInput
-                  label="Line ID"
-                  icon={<MessageCircle size={18} />}
-                  value={globalSettings.contact_line}
-                  onChange={(val) => setGlobalSettings((prev) => ({ ...prev, contact_line: val }))}
-                  placeholder="@yourlineid"
-                />
-                <AdminInput
-                  label="Telegram ID"
-                  icon={<Send size={18} />}
-                  value={globalSettings.contact_telegram}
-                  onChange={(val) => setGlobalSettings((prev) => ({ ...prev, contact_telegram: val }))}
-                  placeholder="@yourtelegramid"
-                />
-              </div>
+                {/* Settings Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {([
+                    {
+                      key: "phone",
+                      label: language === "th" ? "โทรศัพท์" : "Phone",
+                      icon: <Phone size={18} />,
+                      color: "text-sky-400",
+                      bg: "bg-sky-400/10",
+                      activeBg: "bg-sky-400",
+                      placeholder: "8x xxx xxxx",
+                      valueKey: "contact_phone" as const,
+                      enabledKey: "phone_enabled" as const,
+                      urlPrefix: "tel:",
+                    },
+                    {
+                      key: "line",
+                      label: "Line Official",
+                      icon: <MessageCircle size={18} />,
+                      color: "text-green-400",
+                      bg: "bg-green-400/10",
+                      activeBg: "bg-green-400",
+                      placeholder: "@yourlineid",
+                      valueKey: "contact_line" as const,
+                      enabledKey: "line_enabled" as const,
+                      urlPrefix: "https://line.me/ti/p/",
+                    },
+                    {
+                      key: "telegram",
+                      label: "Telegram",
+                      icon: <Send size={18} />,
+                      color: "text-blue-400",
+                      bg: "bg-blue-400/10",
+                      activeBg: "bg-blue-400",
+                      placeholder: "@yourtelegramid",
+                      valueKey: "contact_telegram" as const,
+                      enabledKey: "telegram_enabled" as const,
+                      urlPrefix: "https://t.me/",
+                    },
+                    {
+                      key: "whatsapp",
+                      label: "WhatsApp",
+                      icon: <MessageSquare size={18} />,
+                      color: "text-emerald-400",
+                      bg: "bg-emerald-400/10",
+                      activeBg: "bg-emerald-400",
+                      placeholder: "812345678",
+                      valueKey: "contact_whatsapp" as const,
+                      enabledKey: "whatsapp_enabled" as const,
+                      urlPrefix: "https://wa.me/",
+                    },
+                    {
+                      key: "facebook",
+                      label: "Facebook Page",
+                      icon: <Globe size={18} />,
+                      color: "text-blue-500",
+                      bg: "bg-blue-500/10",
+                      activeBg: "bg-blue-500",
+                      placeholder: "yourpagename",
+                      valueKey: "contact_facebook" as const,
+                      enabledKey: "facebook_enabled" as const,
+                      urlPrefix: "https://m.me/",
+                    },
+                    {
+                      key: "email",
+                      label: "Email Support",
+                      icon: <Mail size={18} />,
+                      color: "text-amber-400",
+                      bg: "bg-amber-400/10",
+                      activeBg: "bg-amber-400",
+                      placeholder: "support@example.com",
+                      valueKey: "contact_email" as const,
+                      enabledKey: "email_enabled" as const,
+                      urlPrefix: "mailto:",
+                    },
+                    {
+                      key: "discord",
+                      label: "Discord",
+                      icon: <Hash size={18} />,
+                      color: "text-violet-400",
+                      bg: "bg-violet-400/10",
+                      activeBg: "bg-violet-400",
+                      placeholder: "discord.gg/yourserver",
+                      valueKey: "contact_discord" as const,
+                      enabledKey: "discord_enabled" as const,
+                      urlPrefix: "https://",
+                    },
+                  ] as const).map((ch) => {
+                    const value = globalSettings[ch.valueKey] as string;
+                    const enabled = globalSettings[ch.enabledKey] as boolean;
+                    return (
+                      <div
+                        key={ch.key}
+                        className={`relative rounded-3xl border transition-all duration-500 overflow-hidden ${enabled
+                            ? "bg-slate-800/40 border-white/10 shadow-xl shadow-black/20"
+                            : "bg-slate-900/30 border-white/5 opacity-70 hover:opacity-100"
+                          }`}
+                      >
+                        {/* Status Indicator Line */}
+                        <div 
+                          className={`absolute top-0 left-0 w-full h-1 transition-colors duration-500 ${enabled ? ch.activeBg : "bg-transparent"}`}
+                        />
+                        
+                        <div className="p-4 sm:p-5 flex flex-col gap-4">
+                          {/* Header */}
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div
+                                className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${enabled ? ch.bg + " " + ch.color : "bg-white/5 text-slate-500"
+                                  }`}
+                              >
+                                {ch.icon}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p
+                                  className={`font-black text-sm tracking-tight transition-colors ${enabled ? "text-white" : "text-slate-500"
+                                    }`}
+                                >
+                                  {ch.label}
+                                </p>
+                                {value && enabled && (
+                                  <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                                    {ch.urlPrefix}{value.replace("@", "")}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Toggle */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setGlobalSettings((prev) => ({
+                                  ...prev,
+                                  [ch.enabledKey]: !enabled,
+                                }))
+                              }
+                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40 ${enabled
+                                  ? "bg-primary shadow-[0_0_15px_rgba(var(--color-primary),0.4)]"
+                                  : "bg-white/10"
+                                }`}
+                              aria-label={`Toggle ${ch.label}`}
+                            >
+                              <span
+                                className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300 ${enabled ? "translate-x-6" : "translate-x-1"
+                                  }`}
+                              />
+                            </button>
+                          </div>
+
+                          {/* Input */}
+                          <div className={`transition-all duration-500 ${enabled ? "opacity-100" : "opacity-50 pointer-events-none grayscale"}`}>
+                            <AdminInput
+                              label=""
+                              icon={ch.icon}
+                              value={value}
+                              onChange={(val) =>
+                                setGlobalSettings((prev) => ({
+                                  ...prev,
+                                  [ch.valueKey]: val,
+                                }))
+                              }
+                              placeholder={ch.placeholder}
+                              isPhone={ch.key === "phone" || ch.key === "whatsapp"}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
               <button
                 onClick={handleUpdateSettings}
@@ -487,8 +661,9 @@ export const Admin: React.FC = () => {
                 <div className="md:col-span-2">
                   <AdminInput
                     label={t("phone")}
-                    value={editingProfile.phone_number}
+                    value={editingProfile.phone_number || ""}
                     onChange={(val) => setEditingProfile({ ...editingProfile, phone_number: val })}
+                    isPhone={true}
                   />
                 </div>
 

@@ -469,8 +469,13 @@ export const History: React.FC = () => {
                        >
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4 min-w-0">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 shrink-0 ${isWin ? "bg-green-500/10 text-green-500 border-green-500/20" : isBinaryBet ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}`}>
-                                {isWin ? <Trophy size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
+                              <div className="relative flex-shrink-0">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 ${isWin ? "bg-green-500/10 text-green-500 border-green-500/20" : isBinaryBet ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}`}>
+                                  {isWin ? <Trophy size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
+                                </div>
+                                <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-slate-700/90 backdrop-blur-sm border border-slate-500/50 text-[8px] font-black text-slate-200 tabular-nums uppercase shadow-lg shadow-black/20 z-10">
+                                  #{tx.smart_id || tx.id.slice(-4)}
+                                </span>
                               </div>
                               <div className="min-w-0">
                                 <h3 className="font-bold text-white text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>

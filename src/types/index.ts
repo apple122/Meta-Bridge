@@ -22,9 +22,22 @@ export interface Profile {
 
 export interface GlobalSettings {
   id?: string;
+  // Channel values
   contact_phone: string;
   contact_line: string;
   contact_telegram: string;
+  contact_whatsapp: string;
+  contact_facebook: string;
+  contact_email: string;
+  contact_discord: string;
+  // Visibility toggles
+  phone_enabled: boolean;
+  line_enabled: boolean;
+  telegram_enabled: boolean;
+  whatsapp_enabled: boolean;
+  facebook_enabled: boolean;
+  email_enabled: boolean;
+  discord_enabled: boolean;
 }
 
 export type TransactionType = "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss";

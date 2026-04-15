@@ -240,7 +240,6 @@ export const Trade: React.FC = () => {
                               size={14}
                             />
                             <input
-                              autoFocus
                               type="text"
                               placeholder={t('searchAssets') + "..."}
                               className="w-full bg-slate-800 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/40"

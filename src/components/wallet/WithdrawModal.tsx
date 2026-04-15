@@ -14,6 +14,7 @@ import { depositMethods } from "../../data/depositMethods";
 import { SupportContactList } from "./SupportContactList";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
+import type { GlobalSettings } from "../../types";
 import { UserX } from "lucide-react";
 
 type WithdrawStep = "select" | "form" | "result" | "kyc_required";
@@ -37,16 +38,10 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   const [selected, setSelected] = useState<(typeof depositMethods)[0] | null>(
     null,
   );
-  const [bankName] = useState("");
-  const [accountNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [amountError, setAmountError] = useState("");
-  const [settings, setSettings] = useState({
-    phone: "",
-    line: "",
-    telegram: "",
-  });
+  const [settings, setSettings] = useState<Partial<GlobalSettings>>({});
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -56,11 +51,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         .eq("id", "main")
         .single();
       if (data) {
-        setSettings({
-          phone: data.contact_phone || "",
-          line: data.contact_line || "",
-          telegram: data.contact_telegram || "",
-        });
+        setSettings(data);
       }
     };
     fetchSettings();
@@ -83,7 +74,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
       setAmountError(language === 'th' ? "กรุณาระบุจำนวนเงินที่ถูกต้อง" : "Please enter a valid amount");
       return;
     }
-    // Remove balance check to always proceed to the 'problem' screen as requested
+    if (num > balance) {
+      setAmountError(language === 'th' ? "จํานวนเงินเกินยอดคงเหลือ" : "Amount exceeds balance");
+      return;
+    }
+    
     setAmountError("");
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 15000));
@@ -288,8 +283,20 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                     inputMode="decimal"
                     value={amount}
                     onChange={(e) => {
-                      setAmount(e.target.value);
-                      setAmountError("");
+                      const val = e.target.value;
+                      if (!val) {
+                        setAmount("");
+                        setAmountError("");
+                        return;
+                      }
+                      const num = parseFloat(val);
+                      if (num > balance) {
+                        setAmount(balance.toFixed(2));
+                        setAmountError(language === 'th' ? "จํานวนเงินเกินยอดคงเหลือ" : "Amount exceeds balance");
+                      } else {
+                        setAmount(val);
+                        setAmountError("");
+                      }
                     }}
                     placeholder="0.00"
                     className="w-full bg-slate-900 border border-white/10 rounded-xl py-4 pl-8 pr-20 text-xl font-black text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-slate-700"
@@ -305,7 +312,15 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   {[100, 500, 1000, 5000].map((v) => (
                     <button
                       key={v}
-                      onClick={() => setAmount(v.toString())}
+                      onClick={() => {
+                        if (v > balance) {
+                          setAmount(balance.toFixed(2));
+                          setAmountError(language === 'th' ? "จํานวนเงินเกินยอดคงเหลือ" : "Amount exceeds balance");
+                        } else {
+                          setAmount(v.toString());
+                          setAmountError("");
+                        }
+                      }}
                       className="flex-1 py-2 rounded-lg bg-white/5 text-slate-400 text-[10px] font-black hover:bg-white/10 hover:text-white transition-colors border border-white/5"
                     >
                       ${v.toLocaleString()}
@@ -380,16 +395,26 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 <span className="text-slate-500">{t('currency')}</span>
                 <span className="text-white">{selected?.label}</span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
-                <span className="text-slate-500">
-                  {selected?.id === "usdt" ? "Wallet" : t('bankName')}
+              <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider gap-4">
+                <span className="text-slate-500 shrink-0">
+                  {selected?.id === "usdt" ? "Network" : t('bankName')}
                 </span>
-                <span className="text-white">{bankName}</span>
+                <span className="text-white text-right break-words">
+                  {selected?.id === "usdt" ? profile?.bank_network : profile?.bank_name || '-'}
+                </span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
-                <span className="text-slate-500">{t('accountNumberLabel')}</span>
-                <span className="text-white font-mono">
-                  {accountNumber}
+              <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider gap-4">
+                <span className="text-slate-500 shrink-0">
+                  {selected?.id === "usdt" ? "Name" : "Account Name"}
+                </span>
+                <span className="text-white text-right break-words">
+                  {profile?.first_name} {profile?.last_name}
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider gap-4">
+                <span className="text-slate-500 shrink-0">{selected?.id === "usdt" ? "Wallet" : t('accountNumberLabel')}</span>
+                <span className="text-white font-mono text-right break-all">
+                  {profile?.bank_account || '-'}
                 </span>
               </div>
               <div className="flex justify-between text-[13px] border-t border-white/5 pt-3 mt-1">
