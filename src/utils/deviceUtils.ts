@@ -25,17 +25,9 @@ export const getDeviceDetails = (): DeviceInfo => {
   else if (ua.includes("MSIE") || ua.includes("Trident/")) browserName = "Internet Explorer";
 
   // 2. Detect OS & Device Name
-  if (/Android/i.test(ua)) {
-    deviceType = 'mobile';
-    deviceName = "มือถือ (Android)";
-    osName = "Android";
-
-  } else if (/iPhone|iPad|iPod/i.test(ua)) {
-    deviceType = ua.includes("iPad") ? 'tablet' : 'mobile';
-    deviceName = ua.includes("iPad") ? "iPad" : "iPhone";
-    osName = "iOS";
-
-  } else if (/Windows/i.test(ua)) {
+  // IMPORTANT: Check desktop OS first before mobile, because some user agents
+  // can contain partial mobile strings (e.g. during DevTools emulation)
+  if (/Windows NT/i.test(ua)) {
     deviceType = 'desktop';
     deviceName = "คอมพิวเตอร์ (Windows)";
     osName = "Windows";
@@ -43,7 +35,7 @@ export const getDeviceDetails = (): DeviceInfo => {
   } else if (/Macintosh|Mac OS X/i.test(ua)) {
     deviceType = 'desktop';
     // Check if it's touch-enabled Mac (could be iPad in desktop mode)
-    if (navigator.maxTouchPoints > 0) {
+    if (navigator.maxTouchPoints > 1) {
       deviceType = 'tablet';
       deviceName = "iPad";
       osName = "iPadOS";
@@ -52,10 +44,25 @@ export const getDeviceDetails = (): DeviceInfo => {
       osName = "macOS";
     }
 
-  } else if (/Linux/i.test(ua)) {
+  } else if (/Linux/i.test(ua) && !/Android/i.test(ua)) {
     deviceType = 'desktop';
     deviceName = "คอมพิวเตอร์ (Linux)";
     osName = "Linux";
+
+  } else if (/Android/i.test(ua)) {
+    deviceType = 'mobile';
+    deviceName = "มือถือ (Android)";
+    osName = "Android";
+
+  } else if (/iPhone|iPod/i.test(ua)) {
+    deviceType = 'mobile';
+    deviceName = "iPhone";
+    osName = "iOS";
+
+  } else if (/iPad/i.test(ua)) {
+    deviceType = 'tablet';
+    deviceName = "iPad";
+    osName = "iOS";
   }
 
   return { deviceName, osName, browserName, deviceType };
