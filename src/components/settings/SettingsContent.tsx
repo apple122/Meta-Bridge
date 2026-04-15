@@ -589,28 +589,28 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   return (
     <>
-      <div className="fixed top-20 right-6 z-[200] space-y-3 pointer-events-none">
+      <div className="fixed top-20 right-3 z-[200] space-y-1 pointer-events-none max-w-[calc(100vw-24px)] w-auto">
         <AnimatePresence>
           {notifications.map((n) => (
             <motion.div
               key={n.id}
-              initial={{ opacity: 0, x: 50, scale: 0.9 }}
+              initial={{ opacity: 0, x: 12, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 20, scale: 0.9 }}
-              className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto backdrop-blur-xl border ${n.type === "success"
-                ? "bg-green-500/10 border-green-500/20 text-green-500"
-                : "bg-red-500/10 border-red-500/20 text-red-500"
+              exit={{ opacity: 0, x: 8, scale: 0.95 }}
+              className={`px-2 py-1.5 rounded-lg shadow-xl flex items-start gap-1.5 pointer-events-auto backdrop-blur-xl border text-[9px] font-bold leading-tight ${n.type === "success"
+                ? "bg-green-500/10 border-green-500/20 text-green-400"
+                : "bg-red-500/10 border-red-500/20 text-red-400"
                 }`}
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${n.type === "success" ? "bg-green-500/20" : "bg-red-500/20"}`}>
-                {n.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+              <div className={`shrink-0 mt-px ${n.type === "success" ? "text-green-400" : "text-red-400"}`}>
+                {n.type === "success" ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
               </div>
-              <span className="font-bold text-sm">{n.message}</span>
+              <span className="whitespace-nowrap flex-1">{n.message}</span>
               <button
                 onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
-                className="ml-2 hover:opacity-70 transition-opacity"
+                className="shrink-0 mt-px hover:opacity-70 transition-opacity"
               >
-                <X size={14} />
+                <X size={9} />
               </button>
             </motion.div>
           ))}
