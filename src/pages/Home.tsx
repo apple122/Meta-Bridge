@@ -43,25 +43,42 @@ export const Home: React.FC = () => {
   return (
     <div className="pt-24 pb-32 px-6 max-w-7xl mx-auto space-y-12">
       {/* Market Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: t('marketsActive'), value: stocks.length, icon: <Globe size={18} />, color: "text-blue-500" },
-          { label: t('topGainer'), value: topGainer?.symbol, subValue: `+${topGainer?.change}%`, icon: <TrendingUp size={18} />, color: "text-green-500" },
-          { label: t('globalVol'), value: "$4.2B", icon: <BarChart2 size={18} />, color: "text-purple-500" },
-          { label: t('marketStatus'), value: t(marketSentiment.toLowerCase()), icon: <Zap size={18} />, color: marketSentiment === "Bullish" ? "text-green-400" : "text-red-400" },
+          { label: t('marketsActive'), value: stocks.length, icon: <Globe size={18} />, color: "blue", glow: "rgba(59, 130, 246, 0.4)" },
+          { label: t('topGainer'), value: topGainer?.symbol, subValue: `+${topGainer?.change}%`, icon: <TrendingUp size={18} />, color: "green", glow: "rgba(34, 197, 94, 0.4)" },
+          { label: t('globalVol'), value: "$4.2B", icon: <BarChart2 size={18} />, color: "purple", glow: "rgba(168, 85, 247, 0.4)" },
+          { label: t('marketStatus'), value: t(marketSentiment.toLowerCase()), icon: <Zap size={18} />, color: marketSentiment === "Bullish" ? "green" : "red", glow: marketSentiment === "Bullish" ? "rgba(74, 222, 128, 0.4)" : "rgba(248, 113, 113, 0.4)" },
         ].map((stat, idx) => (
-          <div key={idx} className="glass-card flex items-center gap-4 py-4 px-5">
-            <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center ${stat.color} border border-white/5`}>
-              {stat.icon}
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{stat.label}</p>
-              <div className="flex items-center gap-2">
-                <p className="text-base font-bold text-white mb-0">{stat.value}</p>
-                {stat.subValue && <span className="text-[10px] font-bold text-green-500">{stat.subValue}</span>}
+          <motion.div 
+            key={idx} 
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
+            className="glass-card group relative flex flex-col gap-3 p-4 overflow-hidden border-white/5 hover:border-white/10 transition-colors"
+          >
+            {/* Background Glow Decor */}
+            <div 
+              className="absolute -right-4 -bottom-4 w-20 h-20 blur-[35px] opacity-0 group-hover:opacity-15 transition-opacity pointer-events-none"
+              style={{ backgroundColor: stat.glow }}
+            />
+            
+            <div className="flex items-center justify-between">
+              <div 
+                className={`w-9 h-9 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center text-${stat.color}-500 border border-${stat.color}-500/20 shadow-[0_0_12px_-3px_${stat.glow}] group-hover:scale-105 transition-transform`}
+              >
+                {stat.icon}
               </div>
+              {stat.subValue && (
+                <div className="px-1.5 py-0.5 rounded-md bg-green-500/10 border border-green-500/20 text-[8px] font-black text-green-500">
+                  {stat.subValue}
+                </div>
+              )}
             </div>
-          </div>
+            
+            <div className="space-y-0.5 relative z-10">
+              <p className="text-[9px] font-black uppercase text-slate-500 tracking-[0.15em]">{stat.label}</p>
+              <h3 className="text-lg font-black text-white tracking-tight">{stat.value}</h3>
+            </div>
+          </motion.div>
         ))}
       </div>
 
