@@ -47,6 +47,20 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
   const [showTopUpModal, setShowTopUpModal] = useState(false);
 
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setEditingProfile(null);
+        setEditingWalletProfile(null);
+        setEditingControlProfile(null);
+        setWalletAmount("");
+        setWalletReason("");
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  useEffect(() => {
     fetchProfiles();
   }, []);
 
@@ -315,8 +329,16 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
       {/* Modals for Editing (User specific) */}
       {/* EDIT PROFILE MODAL */}
       {editingProfile && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-xl glass-card p-0 overflow-hidden shadow-2xl">
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md cursor-pointer"
+          onClick={() => setEditingProfile(null)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="w-full max-w-xl glass-card p-0 overflow-hidden shadow-2xl cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Edit2 size={20} /></div>
@@ -353,8 +375,16 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
 
       {/* WALLET ADJUST MODAL */}
       {editingWalletProfile && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md glass-card p-0 overflow-hidden shadow-2xl">
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md cursor-pointer"
+          onClick={() => { setEditingWalletProfile(null); setWalletAmount(""); setWalletReason(""); }}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="w-full max-w-md glass-card p-0 overflow-hidden shadow-2xl cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent"><ArrowUp size={20} /></div>
@@ -390,8 +420,16 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
 
       {/* TRADE CONTROL MODAL */}
       {editingControlProfile && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md glass-card p-0 overflow-hidden shadow-2xl">
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md cursor-pointer"
+          onClick={() => setEditingControlProfile(null)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="w-full max-w-md glass-card p-0 overflow-hidden shadow-2xl cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Activity size={20} /></div>
@@ -401,15 +439,30 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             </div>
             <div className="p-8 space-y-8">
               <div className="grid grid-cols-1 gap-4">
-                {(['normal', 'always_win', 'always_loss'] as const).map((mode) => (
-                  <button key={mode} onClick={() => setEditingControlProfile({ ...editingControlProfile, trade_control: mode })} className={`p-5 rounded-2xl border transition-all text-left group ${editingControlProfile.trade_control === mode ? "bg-primary border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 hover:border-white/10"}`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm font-black uppercase tracking-widest ${editingControlProfile.trade_control === mode ? "text-white" : "text-slate-300"}`}>{mode.replace('_', ' ')}</span>
-                      {editingControlProfile.trade_control === mode && <Save size={16} className="text-white animate-pulse" />}
-                    </div>
-                    <p className={`text-[10px] mt-1 font-bold ${editingControlProfile.trade_control === mode ? "text-white/70" : "text-slate-500"}`}>{mode === 'normal' ? 'Random market behavior' : mode === 'always_win' ? 'User will win every trade' : 'User will lose every trade'}</p>
-                  </button>
-                ))}
+                {(['normal', 'always_win', 'always_loss'] as const).map((mode) => {
+                  const isActive = editingControlProfile.trade_control === mode;
+                  const bgClass = isActive 
+                    ? (mode === 'always_win' ? "bg-green-500 border-green-500 shadow-green-500/20" : mode === 'always_loss' ? "bg-red-500 border-red-500 shadow-red-500/20" : "bg-primary border-primary shadow-primary/20")
+                    : "bg-white/5 border-white/5 hover:border-white/10";
+
+                  return (
+                    <button 
+                      key={mode} 
+                      onClick={() => setEditingControlProfile({ ...editingControlProfile, trade_control: mode })} 
+                      className={`p-5 rounded-2xl border transition-all text-left group shadow-lg ${bgClass}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm font-black uppercase tracking-widest ${isActive ? "text-white" : "text-slate-300"}`}>
+                          {mode.replace('_', ' ')}
+                        </span>
+                        {isActive && <Save size={16} className="text-white animate-pulse" />}
+                      </div>
+                      <p className={`text-[10px] mt-1 font-bold ${isActive ? "text-white/70" : "text-slate-500"}`}>
+                        {mode === 'normal' ? 'Random market behavior' : mode === 'always_win' ? 'User will win every trade' : 'User will lose every trade'}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
               <button onClick={handleUpdateControl} disabled={isSaving} className="w-full py-4 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {t("saveChanges")}
