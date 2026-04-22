@@ -38,6 +38,7 @@ export interface GlobalSettings {
   facebook_enabled: boolean;
   email_enabled: boolean;
   discord_enabled: boolean;
+  registration_otp_enabled: boolean;
 }
 
 export type TransactionType = "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss";

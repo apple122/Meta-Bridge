@@ -81,6 +81,7 @@ export const Admin: React.FC = () => {
     facebook_enabled: false,
     email_enabled: false,
     discord_enabled: false,
+    registration_otp_enabled: true,
   });
 
   /* ── Effects ───────────────────────────────────────── */
@@ -138,6 +139,7 @@ export const Admin: React.FC = () => {
         facebook_enabled: data.facebook_enabled ?? false,
         email_enabled: data.email_enabled ?? false,
         discord_enabled: data.discord_enabled ?? false,
+        registration_otp_enabled: data.registration_otp_enabled ?? true,
       });
     }
   };
@@ -587,6 +589,51 @@ export const Admin: React.FC = () => {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Security & Registration Settings */}
+              <div className="glass-card bg-slate-900/50 border border-white/5 p-6 rounded-3xl space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                    <Shield size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">{language === "th" ? "การตั้งค่าความปลอดภัยและการสมัครสมาชิก" : "Security & Registration"}</h3>
+                    <p className="text-[11px] text-slate-500">{language === "th" ? "ปรับแต่งวิธีการสมัครสมาชิกและระบบความปลอดภัย" : "Customize registration methods and security systems"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="flex gap-4 items-center">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                      <Mail size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{language === "th" ? "สมัครสมาชิกด้วย Email OTP" : "Email OTP Registration"}</p>
+                      <p className="text-xs text-slate-500">{language === "th" ? "ผู้ใช้ต้องยืนยันตัวตนผ่านอีเมลก่อนเริ่มใช้งาน" : "Users must verify identity via email before using"}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGlobalSettings((prev) => ({
+                        ...prev,
+                        registration_otp_enabled: !prev.registration_otp_enabled,
+                      }))
+                    }
+                    className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40 ${globalSettings.registration_otp_enabled
+                        ? "bg-primary shadow-[0_0_15px_rgba(var(--color-primary),0.4)]"
+                        : "bg-white/10"
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300 ${globalSettings.registration_otp_enabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                    />
+                  </button>
+                </div>
+              </div>
 
               <button
                 onClick={handleUpdateSettings}
@@ -596,7 +643,6 @@ export const Admin: React.FC = () => {
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 {t("saveAllSettings")}
               </button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -636,18 +682,18 @@ export const Admin: React.FC = () => {
                 <AdminInput
                   label={t("firstName")}
                   value={editingProfile.first_name}
-                  onChange={(val) => setEditingProfile({ ...editingProfile, first_name: val })}
+                  onChange={(val) => setEditingProfile({ ...editingProfile!, first_name: val })}
                 />
                 <AdminInput
                   label={t("lastName")}
                   value={editingProfile.last_name}
-                  onChange={(val) => setEditingProfile({ ...editingProfile, last_name: val })}
+                  onChange={(val) => setEditingProfile({ ...editingProfile!, last_name: val })}
                 />
                 <div className="md:col-span-2">
                   <AdminInput
                     label={t("email")}
                     value={editingProfile.email}
-                    onChange={(val) => setEditingProfile({ ...editingProfile, email: val })}
+                    onChange={(val) => setEditingProfile({ ...editingProfile!, email: val })}
                   />
                 </div>
                 <div className="md:col-span-1">
@@ -655,14 +701,14 @@ export const Admin: React.FC = () => {
                     label={t("password")}
                     type="password"
                     value={editingProfile.password || ""}
-                    onChange={(val) => setEditingProfile({ ...editingProfile, password: val })}
+                    onChange={(val) => setEditingProfile({ ...editingProfile!, password: val })}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AdminInput
                     label={t("phone")}
                     value={editingProfile.phone_number || ""}
-                    onChange={(val) => setEditingProfile({ ...editingProfile, phone_number: val })}
+                    onChange={(val) => setEditingProfile({ ...editingProfile!, phone_number: val })}
                     isPhone={true}
                   />
                 </div>
@@ -680,7 +726,7 @@ export const Admin: React.FC = () => {
                       value={editingProfile.balance}
                       readOnly
                       onChange={(e) =>
-                        setEditingProfile({ ...editingProfile, balance: parseFloat(e.target.value) || 0 })
+                        setEditingProfile({ ...editingProfile!, balance: parseFloat(e.target.value) || 0 })
                       }
                       className="bg-transparent border-none text-xl md:text-2xl font-black text-white focus:outline-none w-full"
                     />
@@ -697,7 +743,7 @@ export const Admin: React.FC = () => {
                   {t("cancelChanges")}
                 </button>
                 <button
-                  onClick={() => handleUpdateProfile(editingProfile)}
+                  onClick={() => handleUpdateProfile(editingProfile!)}
                   disabled={isSaving}
                   className="flex-[2] btn-primary flex items-center justify-center gap-2 text-sm font-bold py-3"
                 >

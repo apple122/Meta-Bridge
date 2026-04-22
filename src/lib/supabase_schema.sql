@@ -138,6 +138,7 @@ create table public.global_settings (
   facebook_enabled boolean default true,
   email_enabled boolean default true,
   discord_enabled boolean default true,
+  registration_otp_enabled boolean default true,
   updated_at timestamp with time zone default now()
 );
 

@@ -152,8 +152,17 @@ export const AuthForms: React.FC = () => {
           throw new Error(existing.some(u => u.username === username) ? "Username taken" : "Email already registered");
         }
 
-        const newOtp = generateOTP();
-        const { data: _registeredUser, error } = await supabase
+        // Get registration settings
+        const { data: settings } = await supabase
+          .from("global_settings")
+          .select("registration_otp_enabled")
+          .eq("id", "main")
+          .single();
+
+        const otpEnabled = settings?.registration_otp_enabled ?? true;
+        const newOtp = otpEnabled ? generateOTP() : null;
+
+        const { data: registeredUser, error } = await supabase
           .from("profiles")
           .insert([{
             id: crypto.randomUUID(),
@@ -163,8 +172,8 @@ export const AuthForms: React.FC = () => {
             email,
             password: encryptPassword(password),
             otp_code: newOtp,
-            otp_expires_at: new Date(Date.now() + 10 * 60000).toISOString(),
-            is_verified: false,
+            otp_expires_at: otpEnabled ? new Date(Date.now() + 10 * 60000).toISOString() : null,
+            is_verified: !otpEnabled,
             balance: 0,
             is_admin: false,
             code: generateUserCode(),
@@ -172,10 +181,19 @@ export const AuthForms: React.FC = () => {
           .select().single();
 
         if (error) throw error;
-        await emailService.sendOTP({ email, code: newOtp, userName: firstName, lang: language, type: 'verification' });
-        setVerificationType("register");
-        setMode("verify");
-        setSuccessMsg(t("checkEmailForCode"));
+
+        if (otpEnabled) {
+          await emailService.sendOTP({ email, code: newOtp!, userName: firstName, lang: language, type: 'verification' });
+          setVerificationType("register");
+          setMode("verify");
+          setSuccessMsg(t("checkEmailForCode"));
+        } else {
+          // Auto-login for direct registration
+          sessionStorage.removeItem("auth_mode");
+          sessionStorage.removeItem("auth_email");
+          sessionStorage.removeItem("auth_verification_type");
+          login(registeredUser as Profile);
+        }
       } else if (mode === "forgot") {
         const { data, error } = await supabase
           .from("profiles")
