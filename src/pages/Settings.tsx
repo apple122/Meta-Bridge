@@ -10,6 +10,7 @@ import {
   CreditCard,
   History,
   Loader2,
+  MessageSquare,
   LogOut,
   Copy,
   Check,
@@ -25,13 +26,13 @@ import { LayoutGrid } from "lucide-react";
 
 export const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { balance, transactions } = useWallet();
   const { user, profile, refreshProfile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "bank" | "security" | "history" | "notifications" | "language"
+    "profile" | "bank" | "security" | "history" | "notifications" | "language" | "reports"
   >(() => {
-    return sessionStorage.getItem("settings_active_tab") as any || "profile";
+    return (sessionStorage.getItem("settings_active_tab") as any) || "profile";
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -119,7 +120,8 @@ export const Settings: React.FC = () => {
       | "security"
       | "history"
       | "notifications"
-      | "language",
+      | "language"
+      | "reports",
   ) => {
     setActiveTab(tab);
     sessionStorage.setItem("settings_active_tab", tab);
@@ -258,6 +260,12 @@ export const Settings: React.FC = () => {
               onClick={() => handleTabChange("language")}
               icon={<div className="w-5 h-5 flex flex-col items-center justify-center leading-[0.7] text-[7px] font-black bg-white/10 rounded border border-white/10"><span>EN</span><div className="w-3 h-[1px] bg-white/20 my-0.5" /><span>TH</span></div>}
               label={t("languageSettings")}
+            />
+            <TabButton
+              active={activeTab === "reports"}
+              onClick={() => handleTabChange("reports")}
+              icon={<MessageSquare size={18} />}
+              label={t("reportIssue") || (language === 'th' ? "รายงานปัญหา" : "Report Issue")}
             />
           </div>
         </div>

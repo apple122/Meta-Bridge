@@ -12,6 +12,8 @@ interface UserTableProps {
   onVerify?: (profile: Profile) => void;
   onEditWallet?: (profile: Profile) => void;
   onEditControl?: (profile: Profile) => void;
+  onDelete?: (profile: Profile) => void;
+  onResetStats?: (profile: Profile) => void;
   emptyMessage: string;
 }
 

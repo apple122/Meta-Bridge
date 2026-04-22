@@ -19,6 +19,8 @@ import {
   Smartphone,
   Tablet,
   Monitor,
+  Send,
+  MessageSquare,
 } from "lucide-react";
 import {
   getNotificationPermissionStatus,
@@ -71,7 +73,7 @@ const CRYPTO_NETWORKS = [
 ];
 
 interface SettingsContentProps {
-  activeTab: "profile" | "bank" | "security" | "history" | "notifications" | "language";
+  activeTab: "profile" | "bank" | "security" | "history" | "notifications" | "language" | "reports";
   balance: number;
   t: (key: string) => string;
   onClose: () => void;
@@ -265,6 +267,65 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   // Notification States
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(getNotificationPermissionStatus());
+  
+  // Issue Reports States
+  const [reports, setReports] = useState<any[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportForm, setReportForm] = useState({ category: "#Other", subject: "", message: "" });
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+
+  const fetchReports = async () => {
+    if (!userId) return;
+    setReportsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("issue_reports")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setReports(data || []);
+    } catch (err) {
+      console.error("[Settings] fetchReports Error:", err);
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === "reports") {
+      fetchReports();
+    }
+  }, [activeTab, userId]);
+
+  const handleSubmitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    if (!reportForm.subject.trim() || !reportForm.message.trim()) {
+      showToast(language === 'th' ? "กรุณากรอกข้อมูลให้ครบถ้วน" : "Please fill in all fields", "error");
+      return;
+    }
+    setReportSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("issue_reports")
+        .insert({
+          user_id: userId,
+          category: reportForm.category,
+          subject: reportForm.subject.trim(),
+          message: reportForm.message.trim(),
+          status: 'pending'
+        });
+      if (error) throw error;
+      showToast(language === 'th' ? "ส่งรายงานเรียบร้อยแล้ว" : "Report submitted successfully", "success");
+      setReportForm({ category: "#Other", subject: "", message: "" });
+      fetchReports();
+    } catch (err: any) {
+      showToast(err.message || "Failed to submit report", "error");
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!userId) return;
@@ -1666,6 +1727,155 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <p className="text-xs text-slate-400 leading-relaxed">
                 {t("translationsApplied")}
               </p>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === "reports" && (
+          <motion.div
+            key="reports"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="flex flex-col gap-6"
+          >
+            {/* Report Form */}
+            <div className="glass-card relative">
+              {isMobile && (
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+                >
+                  <ChevronRight className="rotate-180" size={20} />
+                </button>
+              )}
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                  <MessageSquare size={18} />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white leading-tight">{language === 'th' ? "แจ้งรายงานปัญหา" : "Report an Issue"}</h2>
+                  <p className="text-slate-400 text-[11px]">{language === 'th' ? "แจ้งปัญหาที่คุณพบเพื่อรับการช่วยเหลือ" : "Let us know about any issues you encounter"}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmitReport} className="mt-6 space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{language === 'th' ? "หัวข้อปัญหา" : "Issue Topic"}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["#Deposit", "#Withdraw", "#Trade", "#Security", "#Other"].map(cat => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setReportForm(prev => ({ ...prev, category: cat }))}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                          reportForm.category === cat 
+                            ? "bg-primary/20 border-primary/40 text-primary" 
+                            : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <SettingsInput
+                    label={language === 'th' ? "ชื่อเรื่อง" : "Subject"}
+                    placeholder={language === 'th' ? "ระบุหัวข้อสั้นๆ" : "Enter a brief subject"}
+                    value={reportForm.subject}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, subject: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{language === 'th' ? "รายละเอียดปัญหา" : "Problem Details"}</label>
+                  <textarea
+                    value={reportForm.message}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder={language === 'th' ? "อธิบายรายละเอียดปัญหาที่คุณพบ..." : "Describe the problem in detail..."}
+                    className="w-full bg-slate-900/50 border border-white/5 rounded-2xl p-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all min-h-[120px] resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={reportSubmitting}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                  >
+                    {reportSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                    {language === 'th' ? "ส่งรายงาน" : "Submit Report"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Reports History */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 px-1">
+                <History size={14} className="text-slate-500" />
+                {language === 'th' ? "ประวัติการรายงาน" : "Report History"}
+              </h3>
+
+              <div className="space-y-3">
+                {reportsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 size={24} className="animate-spin text-primary" />
+                  </div>
+                ) : reports.length === 0 ? (
+                  <div className="glass-card py-10 flex flex-col items-center justify-center text-slate-500">
+                    <MessageSquare size={32} className="opacity-20 mb-3" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest">{language === 'th' ? "ไม่มีประวัติการแจ้งปัญหา" : "No reports found"}</p>
+                  </div>
+                ) : (
+                  reports.map(report => (
+                    <div key={report.id} className="glass-card bg-slate-900/60 border-white/5 p-4 space-y-3 group hover:border-white/10 transition-all">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${
+                            report.status === 'resolved' ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
+                          }`}>
+                            #{report.smart_id}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-black text-primary uppercase tracking-tighter bg-primary/10 px-1.5 py-0.5 rounded-md">
+                                {report.category}
+                              </span>
+                              <h4 className="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-none">{report.subject}</h4>
+                            </div>
+                            <p className="text-[9px] text-slate-500 font-bold mt-0.5 uppercase tracking-widest">
+                              {new Date(report.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                          report.status === 'resolved' ? "bg-green-500 text-white" : "bg-orange-500 text-white"
+                        }`}>
+                          {report.status}
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                        <p className="text-[11px] text-slate-300 leading-relaxed italic">"{report.message}"</p>
+                      </div>
+
+                      {report.admin_response && (
+                        <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <ShieldCheck size={12} className="text-primary" />
+                            <span className="text-[9px] font-black text-primary uppercase tracking-widest">{language === 'th' ? "แอดมินตอบกลับ" : "Admin Response"}</span>
+                          </div>
+                          <p className="text-[11px] text-white font-medium leading-relaxed">{report.admin_response}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </motion.div>
         )}

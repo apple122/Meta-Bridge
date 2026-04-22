@@ -39,6 +39,20 @@
     *   **Active Monitoring**: เพิ่มระบบตรวจสอบสถานะ Online/Offline ของทุกเครื่องที่เข้าใช้งานบัญชี เพื่อความปลอดภัยสูงสุด
     *   **Highlight Current Device**: แสดงข้อมูลเครื่องที่กำลังใช้งานอยู่ให้โดดเด่นทันที เพื่อให้ตรวจสอบได้ง่าย
 
+## 6. ระบบรายงานปัญหาและเมนูอัจฉริยะ (Support & Smart Navigation)
+*   **ระบบรายงานปัญหา (Issue Reporting System)**:
+    *   **User Side**: เพิ่มเมนู "รายงานปัญหา" ในหน้าตั้งค่า ให้ผู้ใช้ส่งเรื่องและติดตามสถานะได้ทันที
+    *   **Admin Side**: ระบบจัดการรายงานปัญหา (Issues Management) พร้อม Badge ตัวเลขแจ้งเตือนสีแดงเมื่อมีเรื่องค้าง
+    *   **Interaction**: เพิ่มระบบตอบสนองที่รวดเร็ว (High Performance) และรองรับการปิด Modal ด้วยปุ่ม `Esc` หรือคลิกพื้นที่ว่าง
+*   **Admin Mobile Navigation & Persistence**:
+    *   **Bottom Nav**: เปลี่ยนเมนูแอดมินบนมือถือให้เป็นแถบด้านล่าง (MobileNav) เพื่อความสะดวกในการใช้งาน
+    *   **Tab Persistence**: ระบบจดจำหน้าล่าสุดที่เปิดทิ้งไว้ แม้จะ Refresh เว็บก็จะกลับมาที่เดิมอัตโนมัติ
+    *   **Exit Admin**: เพิ่มปุ่ม "กลับหน้าหลัก" (Exit Admin) ที่เห็นชัดเจนทั้งบนคอมและมือถือ
+*   **อัปเกรดความลื่นไหล (User Experience)**:
+    *   **Smooth User Nav**: อัปเกรด MobileNav ของฝั่งผู้ใช้ให้มี Animation เลื่อนแถบสี (Shared Layout) และ Micro-interactions เหมือนหน้า Admin
+*   **การจัดระเบียบโค้ด (Refactoring)**:
+    *   แยกหน้า Admin ที่ใหญ่เกินไปออกเป็นส่วนย่อยๆ (Modular Components) เพื่อความเร็วในการโหลดและการดูแลรักษาที่ง่ายขึ้น
+
 ---
 **Meta-Bridge Team**
 *Development status: 100% Ready for Production*

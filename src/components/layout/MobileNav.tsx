@@ -31,38 +31,43 @@ export const MobileNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[1000] glass border-t border-white/5 px-4 pb-safe pt-3 pb-3 backdrop-blur-xl pointer-events-auto isolate select-none">
+    <nav className="fixed bottom-0 left-0 right-0 z-[1000] glass border-t border-white/5 px-2 pb-safe pt-2 backdrop-blur-xl pointer-events-auto isolate select-none">
       <div className="flex items-center justify-around">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            onClick={() => handleNavClick(item.path)}
-            className={({ isActive }) =>
-              `flex flex-col items-center gap-1.5 py-1 transition-all duration-300 ${
-                isActive
-                  ? "text-primary"
-                  : "text-slate-400 hover:text-slate-200"
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => handleNavClick(item.path)}
+              className="flex flex-col items-center gap-1 py-2 flex-1 transition-all duration-300 relative"
+            >
+              <motion.div
+                whileTap={{ scale: 0.8 }}
+                className={`transition-all duration-300 ${
+                  isActive ? "text-primary scale-110" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                {item.icon}
+              </motion.div>
+              <span
+                className={`text-[10px] font-bold transition-all duration-300 ${
+                  isActive ? "text-primary" : "text-slate-600"
+                }`}
+              >
+                {item.label}
+              </span>
+              
+              {isActive && (
                 <motion.div
-                  whileTap={{ scale: 0.8 }}
-                  className={isActive ? "scale-110" : ""}
-                >
-                  {item.icon}
-                </motion.div>
-                <span
-                  className={`text-xs font-semibold ${isActive ? "text-primary" : "text-slate-500"}`}
-                >
-                  {item.label}
-                </span>
-              </>
-            )}
-          </NavLink>
-        ))}
+                  layoutId="userActiveTab"
+                  className="absolute bottom-0 w-8 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </NavLink>
+          );
+        })}
       </div>
     </nav>
   );

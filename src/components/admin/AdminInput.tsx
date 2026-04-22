@@ -11,6 +11,8 @@ interface AdminInputProps {
   step?: string;
   disabled?: boolean;
   isPhone?: boolean;
+  enabled?: boolean;
+  onToggle?: () => void;
 }
 
 const COUNTRY_CODES = [
@@ -61,6 +63,8 @@ export const AdminInput: React.FC<AdminInputProps> = ({
   step,
   disabled = false,
   isPhone = false,
+  enabled,
+  onToggle,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
@@ -160,6 +164,21 @@ export const AdminInput: React.FC<AdminInputProps> = ({
           )}
         </div>
       </div>
+
+      {onToggle !== undefined && (
+        <button
+          onClick={onToggle}
+          className={`shrink-0 w-12 h-6 rounded-full transition-all relative mt-6 ${
+            enabled ? "bg-primary shadow-lg shadow-primary/20" : "bg-slate-700"
+          }`}
+        >
+          <div
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${
+              enabled ? "left-7" : "left-1"
+            }`}
+          />
+        </button>
+      )}
     </div>
   );
 };
