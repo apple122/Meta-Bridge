@@ -418,17 +418,19 @@ export const History: React.FC = () => {
                       {showDateHeader && (
                         <div
                           id={`date-header-${new Date(tx.timestamp).getFullYear()}-${new Date(tx.timestamp).getMonth()}-${new Date(tx.timestamp).getDate()}`}
-                          className="sticky md:top-[74px] top-[64px] z-10 flex items-center gap-3 py-1 -mx-6 px-6 bg-background/95 backdrop-blur-md"
+                          className={`sticky md:top-[74px] top-[64px] z-10 ${index === 0 ? "mt-0" : "mt-4"} bg-background/95 backdrop-blur-md -mx-6`}
                         >
-                          <div className="h-px bg-white/5 flex-grow" />
-                          <span className="text-[7.5px] text-primary font-black uppercase tracking-[0.2em] px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
-                            {(() => {
-                              const todayStr = new Date().toLocaleDateString();
-                              if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
-                              return formatDate(new Date(tx.timestamp), { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-                            })()}
-                          </span>
-                          <div className="h-px bg-white/5 flex-grow" />
+                          <div className="flex items-center gap-3 py-2 px-6">
+                            <div className="h-px bg-white/5 flex-grow" />
+                            <span className="text-[7px] text-primary font-black uppercase tracking-[0.2em] px-2.5 py-1 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5 leading-none">
+                              {(() => {
+                                const todayStr = new Date().toLocaleDateString();
+                                if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
+                                return formatDate(new Date(tx.timestamp), { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+                              })()}
+                            </span>
+                            <div className="h-px bg-white/5 flex-grow" />
+                          </div>
                         </div>
                       )}
                       <motion.div

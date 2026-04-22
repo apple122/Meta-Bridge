@@ -97,14 +97,31 @@ export const AdminInput: React.FC<AdminInputProps> = ({
   const inputId = React.useId();
 
   return (
-    <div className="space-y-1.5 w-full">
-      {label && (
-        <label htmlFor={inputId} className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-          {label}
-        </label>
-      )}
+    <div className={`space-y-3 w-full p-5 rounded-2xl bg-slate-900/40 border border-white/5 transition-all hover:border-white/10 ${!enabled && onToggle !== undefined ? "opacity-60" : "opacity-100"}`}>
+      <div className="flex items-center justify-between px-1">
+        {label && (
+          <label htmlFor={inputId} className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+            {label}
+          </label>
+        )}
+        {onToggle !== undefined && (
+          <button
+            onClick={onToggle}
+            className={`shrink-0 w-10 h-5 rounded-full transition-all relative ${
+              enabled ? "bg-primary shadow-lg shadow-primary/20" : "bg-slate-700"
+            }`}
+          >
+            <div
+              className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all shadow-sm ${
+                enabled ? "left-6" : "left-1"
+              }`}
+            />
+          </button>
+        )}
+      </div>
+
       <div
-        className={`relative group/input flex items-stretch overflow-hidden transition-all duration-300 bg-slate-900/40 border border-white/5 rounded-2xl focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 focus-within:bg-slate-900/80 shadow-inner ${disabled ? "opacity-50 cursor-not-allowed bg-slate-800/80" : "hover:border-white/10"}`}
+        className={`relative group/input flex items-stretch overflow-hidden transition-all duration-300 bg-slate-950/50 border border-white/5 rounded-xl focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 shadow-inner ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-white/10"}`}
       >
         {isPhone && (
           <div className="relative flex items-center bg-white/[0.03] border-r border-white/5 hover:bg-white/[0.08] transition-colors shrink-0">
@@ -112,12 +129,12 @@ export const AdminInput: React.FC<AdminInputProps> = ({
               value={phonePrefix}
               onChange={(e) => handlePhonePrefixChange(e.target.value)}
               disabled={disabled}
-              className="w-full h-full bg-transparent border-none text-white text-sm pl-4 pr-8 py-3 focus:outline-none appearance-none cursor-pointer z-10 font-bold"
+              className="w-full h-full bg-transparent border-none text-white text-xs pl-3 pr-7 py-2.5 focus:outline-none appearance-none cursor-pointer z-10 font-bold"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255, 255, 255, 0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.5rem center",
-                backgroundSize: "0.9em",
+                backgroundPosition: "right 0.4rem center",
+                backgroundSize: "0.8em",
               }}
             >
               {COUNTRY_CODES.map(c => (
@@ -151,34 +168,19 @@ export const AdminInput: React.FC<AdminInputProps> = ({
             placeholder={placeholder}
             disabled={disabled}
             autoComplete="new-password"
-            className={`w-full h-full text-white text-sm focus:outline-none placeholder:text-slate-600 transition-all bg-transparent border-none py-3 ${icon && !isPhone ? "pl-11" : "pl-4"} ${isPassword ? "pr-11" : "pr-4"}`}
+            className={`w-full h-full text-white text-xs focus:outline-none placeholder:text-slate-700 transition-all bg-transparent border-none py-3 ${icon && !isPhone ? "pl-10" : "pl-4"} ${isPassword ? "pr-10" : "pr-4"}`}
           />
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 p-2 text-slate-500 hover:text-white transition-colors hover:bg-white/5 rounded-xl focus:outline-none"
+              className="absolute right-2 p-1.5 text-slate-500 hover:text-white transition-colors hover:bg-white/5 rounded-lg focus:outline-none"
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           )}
         </div>
       </div>
-
-      {onToggle !== undefined && (
-        <button
-          onClick={onToggle}
-          className={`shrink-0 w-12 h-6 rounded-full transition-all relative mt-6 ${
-            enabled ? "bg-primary shadow-lg shadow-primary/20" : "bg-slate-700"
-          }`}
-        >
-          <div
-            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${
-              enabled ? "left-7" : "left-1"
-            }`}
-          />
-        </button>
-      )}
     </div>
   );
 };

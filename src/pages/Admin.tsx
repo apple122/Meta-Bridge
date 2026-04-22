@@ -59,6 +59,8 @@ export const Admin: React.FC = () => {
     registration_otp_enabled: true,
   });
 
+  const initialSettings = React.useRef<GlobalSettings>(globalSettings);
+
   /* ── Effects ───────────────────────────────────────── */
   useEffect(() => {
     fetchSettings();
@@ -77,7 +79,7 @@ export const Admin: React.FC = () => {
       .eq("id", "main")
       .single();
     if (!error && data) {
-      setGlobalSettings({
+      const fetched = {
         contact_phone: data.contact_phone || "",
         contact_line: data.contact_line || "",
         contact_telegram: data.contact_telegram || "",
@@ -93,7 +95,9 @@ export const Admin: React.FC = () => {
         email_enabled: data.email_enabled ?? false,
         discord_enabled: data.discord_enabled ?? false,
         registration_otp_enabled: data.registration_otp_enabled ?? true,
-      });
+      };
+      setGlobalSettings(fetched);
+      initialSettings.current = fetched;
     }
   };
 
@@ -147,6 +151,22 @@ export const Admin: React.FC = () => {
     transition: { duration: 0.2 }
   };
 
+  /* ── Tab handling with unsaved changes guard ──────────────── */
+  const handleTabChange = (newTab: AdminTab) => {
+    // Check for unsaved settings changes
+    const isDirty = JSON.stringify(initialSettings.current) !== JSON.stringify(globalSettings);
+    
+    if (activeTab === "settings" && isDirty && newTab !== "settings") {
+      const confirmLeave = window.confirm(
+        language === "th" 
+          ? "คุณยังไม่ได้บันทึกการเปลี่ยนแปลงในการตั้งค่า ต้องการออกจากหน้านี้โดยไม่บันทึกใช่หรือไม่?" 
+          : "You have unsaved settings. Do you want to leave without saving?"
+      );
+      if (!confirmLeave) return;
+    }
+    setActiveTab(newTab);
+  };
+
   return (
     <div className="pt-24 pb-32 px-4 md:px-6 max-w-7xl mx-auto">
       <AdminHeader language={language} />
@@ -154,7 +174,7 @@ export const Admin: React.FC = () => {
       <AdminTabs 
         tabs={TABS} 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={handleTabChange} 
         pendingIssuesCount={pendingIssuesCount} 
       />
 
@@ -170,7 +190,7 @@ export const Admin: React.FC = () => {
             <motion.div key="activity" {...fadeProps} className="space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Activity size={20} className="text-primary" />
-                {language === "th" ? "ความเคลื่อนไหวของผู้ใช้" : "User Activity"}
+                {t("userActivity")}
               </h2>
               <UserActivityLog />
             </motion.div>
@@ -192,7 +212,7 @@ export const Admin: React.FC = () => {
             <motion.div key="issues" {...fadeProps} className="space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <MessageSquare size={20} className="text-primary" />
-                {language === "th" ? "รายงานปัญหาจากผู้ใช้" : "User Issue Reports"}
+                {t("userReports")}
               </h2>
               <IssueManagement />
             </motion.div>
@@ -205,6 +225,9 @@ export const Admin: React.FC = () => {
               globalSettings={globalSettings} 
               setGlobalSettings={setGlobalSettings} 
               logAdminAction={logAdminAction} 
+              onSaveSuccess={(newSettings) => {
+                initialSettings.current = newSettings;
+              }}
             />
           )}
         </AnimatePresence>
@@ -212,7 +235,7 @@ export const Admin: React.FC = () => {
 
       <AdminMobileNav 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={handleTabChange} 
         pendingIssuesCount={pendingIssuesCount}
       />
     </div>

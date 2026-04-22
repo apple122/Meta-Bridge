@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 import { motion } from "framer-motion";
 import { 
@@ -26,19 +26,37 @@ interface SettingsTabProps {
   globalSettings: GlobalSettings;
   setGlobalSettings: React.Dispatch<React.SetStateAction<GlobalSettings>>;
   logAdminAction: (actionType: string, description: string, extra: object) => Promise<void>;
+  onSaveSuccess?: (newSettings: GlobalSettings) => void;
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({ 
   fadeProps, 
   globalSettings, 
   setGlobalSettings,
-  logAdminAction 
+  logAdminAction,
+  onSaveSuccess
 }) => {
   const { t, language } = useLanguage();
   const { profile: currentAdmin } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; msg: string } | null>(null);
+
+  // Track original settings to detect changes
+  const [initialSettings, setInitialSettings] = useState<GlobalSettings>(globalSettings);
+  const isDirty = JSON.stringify(initialSettings) !== JSON.stringify(globalSettings);
+
+  // Alert before refresh/leave
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const handleUpdateSettings = async () => {
     setIsSaving(true);
@@ -48,12 +66,16 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       .eq("id", "main");
 
     if (!error) {
-      alert("Settings updated successfully!");
+      alert(t("settingsUpdated"));
       await logAdminAction(
         "UPDATE_SETTINGS",
         "Updated global system settings (contacts)",
         { settings: globalSettings }
       );
+      // Update local state so it's no longer "dirty"
+      setInitialSettings(globalSettings);
+      // Update parent ref for navigation guard
+      if (onSaveSuccess) onSaveSuccess(globalSettings);
     }
     setIsSaving(false);
   };
@@ -93,28 +115,46 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   };
 
   return (
-    <motion.div key="settings" {...fadeProps} className="max-w-2xl">
-      <div className="glass-card space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-            <Settings2 size={24} />
+    <motion.div {...fadeProps} className="space-y-6">
+      <div className="glass-card bg-slate-900/60 border border-white/5 rounded-3xl p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="shrink-0 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+              <Settings2 size={24} />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight truncate">
+                {t("systemSettings")}
+              </h2>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1 line-clamp-1">
+                {t("manageContactPolicy")}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-white uppercase tracking-tight">{t("systemSettings")}</h3>
-            <p className="text-slate-500 text-xs font-bold">{t("manageContactAndPolicy")}</p>
-          </div>
+          
+          <button
+            onClick={handleUpdateSettings}
+            disabled={isSaving || !isDirty}
+            className={`shrink-0 flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all ${
+              isSaving || !isDirty
+                ? "bg-slate-800 text-slate-600 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-400 text-white shadow-[0_8px_20px_-4px_rgba(34,197,94,0.3)] active:scale-95"
+            }`}
+          >
+            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSaving ? t("loading") : t("save")}
+          </button>
         </div>
 
         {/* Contact Links */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AdminInput icon={<Phone size={18} />} label={t("phoneNumber")} value={globalSettings.contact_phone} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_phone: val }))} enabled={globalSettings.phone_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, phone_enabled: !prev.phone_enabled }))} />
+            <AdminInput icon={<Phone size={18} />} label={t("phoneNumber")} value={globalSettings.contact_phone} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_phone: val }))} enabled={globalSettings.phone_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, phone_enabled: !prev.phone_enabled }))} isPhone={true} />
             <AdminInput icon={<MessageCircle size={18} />} label="LINE ID" value={globalSettings.contact_line} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_line: val }))} enabled={globalSettings.line_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, line_enabled: !prev.line_enabled }))} />
             <AdminInput icon={<Send size={18} />} label="Telegram" value={globalSettings.contact_telegram} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_telegram: val }))} enabled={globalSettings.telegram_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, telegram_enabled: !prev.telegram_enabled }))} />
-            <AdminInput icon={<MessageSquare size={18} />} label="WhatsApp" value={globalSettings.contact_whatsapp} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_whatsapp: val }))} enabled={globalSettings.whatsapp_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, whatsapp_enabled: !prev.whatsapp_enabled }))} />
+            <AdminInput icon={<MessageSquare size={18} />} label="WhatsApp" value={globalSettings.contact_whatsapp} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_whatsapp: val }))} enabled={globalSettings.whatsapp_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, whatsapp_enabled: !prev.whatsapp_enabled }))} isPhone={true} />
             <AdminInput icon={<Globe size={18} />} label="Facebook" value={globalSettings.contact_facebook} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_facebook: val }))} enabled={globalSettings.facebook_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, facebook_enabled: !prev.facebook_enabled }))} />
-            <AdminInput icon={<Mail size={18} />} label="Support Email" value={globalSettings.contact_email} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_email: val }))} enabled={globalSettings.email_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, email_enabled: !prev.email_enabled }))} />
+            <AdminInput icon={<Mail size={18} />} label={t("supportEmail")} value={globalSettings.contact_email} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_email: val }))} enabled={globalSettings.email_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, email_enabled: !prev.email_enabled }))} />
             <AdminInput icon={<Hash size={18} />} label="Discord" value={globalSettings.contact_discord} onChange={(val) => setGlobalSettings(prev => ({ ...prev, contact_discord: val }))} enabled={globalSettings.discord_enabled} onToggle={() => setGlobalSettings(prev => ({ ...prev, discord_enabled: !prev.discord_enabled }))} />
           </div>
 
@@ -158,10 +198,6 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               )}
             </div>
           </div>
-
-          <button onClick={handleUpdateSettings} disabled={isSaving} className="w-full py-4 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2 mt-4">
-            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {t("saveSettings")}
-          </button>
         </div>
       </div>
     </motion.div>

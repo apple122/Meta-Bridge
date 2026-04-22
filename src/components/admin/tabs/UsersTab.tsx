@@ -88,7 +88,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
         price: 1,
         total: amount,
         status: 'success',
-        description: walletReason || (type === 'deposit' ? (language === 'th' ? 'รายการฝากเงิน' : 'Deposit') : (language === 'th' ? 'รายการถอนเงิน' : 'Withdrawal'))
+        description: walletReason || (type === 'deposit' ? t("depositAction") : t("withdrawAction"))
       });
 
       if (type === 'deposit') {
@@ -114,7 +114,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
         editingWalletProfile
       );
 
-      alert(type === 'deposit' ? t("topUpSuccess") : (language === 'th' ? 'ทำรายการถอนสำเร็จ' : 'Withdrawal successful'));
+      alert(type === 'deposit' ? t("topUpSuccess") : t("withdrawSuccess"));
       if (editingWalletProfile.id === user?.id) {
         await refreshProfile();
         await refreshWallet();
@@ -168,7 +168,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
   };
 
   const handleToggleRole = async (profile: Profile) => {
-    const newRole = !profile.is_admin ? (language === "th" ? "แอดมิน" : "Admin") : (language === "th" ? "ผู้ใช้งาน" : "User");
+    const newRole = !profile.is_admin ? t("adminLabel") : t("userLabel");
     if (!window.confirm(language === "th" ? `ยืนยันเปลี่ยนบทบาทของ ${profile.username} เป็น ${newRole}?` : `Confirm role change for ${profile.username} to ${newRole}?`)) return;
 
     const { error } = await supabase.from("profiles").update({ is_admin: !profile.is_admin }).eq("id", profile.id);
@@ -184,7 +184,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
     if (!error) {
       setProfiles((prev) => prev.map((p) => (p.id === profile.id ? { ...p, is_verified: true } : p)));
       await logAdminAction("MANUAL_VERIFY", `Manually verified user ${profile.username}`, {}, profile);
-      alert("User verified successfully!");
+      alert(t("success"));
     }
   };
 
@@ -195,7 +195,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
     if (!error) {
       setProfiles((prev) => prev.filter((p) => p.id !== profile.id));
       await logAdminAction("DELETE_USER", `Deleted user account ${profile.username}`, { deleted_profile: profile }, profile);
-      alert("User deleted successfully.");
+      alert(t("success"));
     } else {
       alert("Error deleting user: " + error.message);
     }
@@ -206,7 +206,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
     const { error } = await supabase.from("trades").delete().eq("user_id", profile.id);
     if (!error) {
       await logAdminAction("RESET_USER_STATS", `Reset trading stats/history for ${profile.username}`, {}, profile);
-      alert("Trading history reset successfully.");
+      alert(t("success"));
     }
   };
 
@@ -291,7 +291,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-1">
               <Activity size={18} className="text-orange-500" />
-              <h2 className="text-lg font-bold text-white tracking-tight">{language === 'th' ? "รอยืนยันตัวตน" : "Pending Verification"}</h2>
+              <h2 className="text-lg font-bold text-white tracking-tight">{t("pendingVerification")}</h2>
               <span className="ml-2 px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase">
                 {profiles.filter((p) => !p.is_verified && !p.is_admin).length}
               </span>
@@ -327,20 +327,20 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">First Name</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("firstNameLabel")}</label>
                   <input type="text" value={editingProfile.first_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, first_name: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Last Name</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("lastNameLabel")}</label>
                   <input type="text" value={editingProfile.last_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, last_name: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Email Address</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("emailAddressLabel")}</label>
                 <input type="email" value={editingProfile.email} onChange={(e) => setEditingProfile({ ...editingProfile, email: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">New Password (optional)</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("newPasswordOptional")}</label>
                 <input type="password" placeholder="Leave blank to keep current" onChange={(e) => setEditingProfile({ ...editingProfile, password: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
               </div>
               <button onClick={() => handleUpdateProfile(editingProfile)} disabled={isSaving} className="w-full py-4 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50">
@@ -358,7 +358,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent"><ArrowUp size={20} /></div>
-                <h3 className="text-lg font-bold text-white">{language === 'th' ? 'ปรับปรุงกระเป๋าเงิน' : 'Adjust Wallet'}: {editingWalletProfile.username}</h3>
+                <h3 className="text-lg font-bold text-white">{t("adjustWallet")}: {editingWalletProfile.username}</h3>
               </div>
               <button onClick={() => setEditingWalletProfile(null)} className="p-2 hover:bg-white/5 rounded-xl text-slate-400 transition-all"><X size={24} /></button>
             </div>
@@ -377,10 +377,10 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
               </div>
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <button onClick={() => handleUpdateWallet('withdraw')} disabled={isSaving || !walletAmount} className="py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-30 flex items-center justify-center gap-2">
-                  <ArrowDown size={14} /> {language === 'th' ? 'ถอนออก' : 'Withdraw'}
+                  <ArrowDown size={14} /> {t("withdrawOut")}
                 </button>
                 <button onClick={() => handleUpdateWallet('deposit')} disabled={isSaving || !walletAmount} className="py-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 font-black text-[10px] uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all disabled:opacity-30 flex items-center justify-center gap-2">
-                  <ArrowUp size={14} /> {language === 'th' ? 'ฝากเข้า' : 'Deposit'}
+                  <ArrowUp size={14} /> {t("depositIn")}
                 </button>
               </div>
             </div>
@@ -395,7 +395,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Activity size={20} /></div>
-                <h3 className="text-lg font-bold text-white">{language === 'th' ? 'ควบคุมผลการเทรด' : 'Trade Control'}: {editingControlProfile.username}</h3>
+                <h3 className="text-lg font-bold text-white">{t("tradeControlTitle")}: {editingControlProfile.username}</h3>
               </div>
               <button onClick={() => setEditingControlProfile(null)} className="p-2 hover:bg-white/5 rounded-xl text-slate-400 transition-all"><X size={24} /></button>
             </div>
