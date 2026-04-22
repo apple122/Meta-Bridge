@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Loader2, Copy, Edit2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Copy, Edit2, Eye, EyeOff, ShieldCheck, Wallet, Settings2 } from "lucide-react";
 import type { Profile } from "../../types";
 import { decryptPassword } from "../../utils/security";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -9,6 +9,9 @@ interface UserTableProps {
   loading: boolean;
   onEdit: (profile: Profile) => void;
   onToggleRole: (profile: Profile) => void;
+  onVerify?: (profile: Profile) => void;
+  onEditWallet?: (profile: Profile) => void;
+  onEditControl?: (profile: Profile) => void;
   emptyMessage: string;
 }
 
@@ -36,6 +39,9 @@ export const UserTable: React.FC<UserTableProps> = ({
   loading,
   onEdit,
   onToggleRole,
+  onVerify,
+  onEditWallet,
+  onEditControl,
   emptyMessage,
 }) => {
   const { t } = useLanguage();
@@ -45,7 +51,7 @@ export const UserTable: React.FC<UserTableProps> = ({
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-white/5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            <th className="px-4 py-3">{t("users")}</th>
+            <th className="sticky left-0 z-20 px-3 py-3 bg-[#0f172a] border-r border-white/5 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)] max-w-[100px]">{t("users")}</th>
             <th className="px-4 py-3">{t("codeLabel") || t("code")}</th>
             <th className="px-4 py-3">{t("email") + " & " + t("password")}</th>
             <th className="px-4 py-3 text-right">{t("balance")}</th>
@@ -79,17 +85,17 @@ export const UserTable: React.FC<UserTableProps> = ({
                 key={profile.id}
                 className="group hover:bg-white/5 transition-colors"
               >
-                <td className="px-4 py-2.5 whitespace-nowrap">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-bold text-white text-[10px] shrink-0">
+                <td className="sticky left-0 z-10 px-3 py-2 whitespace-nowrap bg-[#0f172a] group-hover:bg-slate-800 transition-colors border-r border-white/5 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)] max-w-[130px]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-bold text-white text-[9px] shrink-0">
                       {profile.first_name?.[0]}
                       {profile.last_name?.[0]}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-white truncate">
+                      <div className="text-[11px] font-bold text-white truncate">
                         {profile.first_name} {profile.last_name}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-[9px] text-slate-500 truncate">
                         @{profile.username}
                       </div>
                     </div>
@@ -133,20 +139,61 @@ export const UserTable: React.FC<UserTableProps> = ({
                   })}
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
-                  <button
-                    onClick={() => onToggleRole(profile)}
-                    className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all active:scale-95 ${profile.is_admin ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
-                  >
-                    {profile.is_admin ? t("adminLabel") : t("userLabel")}
-                  </button>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => onToggleRole(profile)}
+                      className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all active:scale-95 ${profile.is_admin ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-white/5 text-slate-500 hover:bg-white/10"}`}
+                    >
+                      {profile.is_admin ? t("adminLabel") : t("userLabel")}
+                    </button>
+                    {profile.trade_control && profile.trade_control !== 'normal' && (
+                      <span className={`text-[7px] font-black uppercase px-1 rounded-sm w-fit border ${
+                        profile.trade_control === 'always_win' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                        profile.trade_control === 'always_loss' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                        'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                      }`}>
+                        {profile.trade_control.replace('_', ' ')}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                  <button
-                    onClick={() => onEdit(profile)}
-                    className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                  >
-                    <Edit2 size={14} />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    {!profile.is_verified && onVerify && (
+                      <button
+                        onClick={() => onVerify(profile)}
+                        className="p-1.5 text-orange-500 hover:text-orange-400 hover:bg-orange-500/10 rounded-lg transition-all"
+                        title={t("verifyUser")}
+                      >
+                        <ShieldCheck size={14} />
+                      </button>
+                    )}
+                    {onEditControl && (
+                      <button
+                        onClick={() => onEditControl(profile)}
+                        className="p-1.5 text-indigo-400 hover:text-white hover:bg-indigo-500/10 rounded-lg transition-all"
+                        title={t("tradeControl") || "Trade Control"}
+                      >
+                        <Settings2 size={14} />
+                      </button>
+                    )}
+                    {onEditWallet && (
+                      <button
+                        onClick={() => onEditWallet(profile)}
+                        className="p-1.5 text-emerald-400 hover:text-white hover:bg-emerald-500/10 rounded-lg transition-all"
+                        title={t("walletBalanceEdit") || "Wallet"}
+                      >
+                        <Wallet size={14} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onEdit(profile)}
+                      className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                      title={t("editUserTitle") || "Edit"}
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

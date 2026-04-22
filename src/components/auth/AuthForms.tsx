@@ -183,7 +183,14 @@ export const AuthForms: React.FC = () => {
         if (error) throw error;
 
         if (otpEnabled) {
-          await emailService.sendOTP({ email, code: newOtp!, userName: firstName, lang: language, type: 'verification' });
+          const emailResult = await emailService.sendOTP({ email, code: newOtp!, userName: firstName, lang: language, type: 'verification' });
+          
+          if (!emailResult.success) {
+            console.error("[Auth] Detailed email failure:", emailResult.error);
+            // Non-technical error for the user
+            throw new Error(language === "th" ? "พบปัญหาในการส่งรหัสยืนยัน กรุณาติดต่อฝ่ายสนับสนุน" : "There was a problem sending the verification code. Please contact support.");
+          }
+
           setVerificationType("register");
           setMode("verify");
           setSuccessMsg(t("checkEmailForCode"));
@@ -212,7 +219,13 @@ export const AuthForms: React.FC = () => {
           })
           .eq("id", data.id);
 
-        await emailService.sendOTP({ email, code: newOtp, userName: data.first_name, lang: language, type: 'reset' });
+        const emailResult = await emailService.sendOTP({ email, code: newOtp, userName: data.first_name, lang: language, type: 'reset' });
+        
+        if (!emailResult.success) {
+          console.error("[Auth] Detailed email failure (reset):", emailResult.error);
+          throw new Error(language === "th" ? "พบปัญหาในการส่งรหัสยืนยัน กรุณาติดต่อฝ่ายสนับสนุน" : "There was a problem sending the verification code. Please contact support.");
+        }
+
         setVerificationType("forgot");
         setMode("verify");
         setSuccessMsg(t("checkEmailForCode"));

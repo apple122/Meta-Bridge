@@ -18,6 +18,7 @@ export interface Profile {
   otp_code?: string;
   otp_expires_at?: string;
   is_verified?: boolean;
+  trade_control?: 'normal' | 'always_win' | 'always_loss' | 'low_win_rate';
 }
 
 export interface GlobalSettings {
@@ -56,6 +57,7 @@ export interface Transaction {
   binary_result?: "win" | "loss";
   trade_id?: string;
   smart_id?: string;
+  description?: string;
 }
 
 export interface BinaryTrade {

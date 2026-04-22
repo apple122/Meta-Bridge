@@ -26,6 +26,7 @@ export interface Transaction {
   smart_id?: string;
   is_win?: boolean;
   is_loss?: boolean;
+  description?: string;
 }
 export interface BinaryTrade {
   id: string;
@@ -132,6 +133,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           binary_result: tx.binary_result,
           trade_id: tx.binary_trade_id || tx.reference_id || tx.id,
           smart_id: (tx.binary_trade_id || tx.id).slice(-4).toUpperCase(), 
+          description: tx.description,
         }) as Transaction).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         // 2. Direct Linking & Map of "open" trade Ticket IDs

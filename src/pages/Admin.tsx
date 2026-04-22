@@ -20,7 +20,13 @@ import {
   MessageSquare,
   Globe,
   Hash,
+  ShieldAlert,
+  ArrowUp,
+  ArrowDown,
+  Wallet,
+  Settings2,
 } from "lucide-react";
+import { emailService } from "../services/emailService";
 import type { Profile, GlobalSettings } from "../types";
 import { UserTable } from "../components/admin/UserTable";
 import { AdminInput } from "../components/admin/AdminInput";
@@ -31,6 +37,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { AuditLogTable } from "../components/admin/AuditLogTable";
 import { auditService } from "../services/auditService";
 import { useAuth } from "../contexts/AuthContext";
+import { useWallet } from "../contexts/WalletContext";
 import { UserActivityLog } from "../components/admin/UserActivityLog";
 
 /* ─── Types ────────────────────────────────────────────── */
@@ -47,7 +54,8 @@ const TABS: { id: AdminTab; labelKey: string; icon?: React.ReactNode }[] = [
 /* ═══════════════════════════════════════════════════════ */
 export const Admin: React.FC = () => {
   const { t, language } = useLanguage();
-  const { profile: currentAdmin } = useAuth();
+  const { profile: currentAdmin, user, refreshProfile } = useAuth();
+  const { refreshWallet } = useWallet();
 
   /* ── State ─────────────────────────────────────────── */
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
@@ -57,7 +65,13 @@ export const Admin: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [editingWalletProfile, setEditingWalletProfile] = useState<Profile | null>(null);
+  const [editingControlProfile, setEditingControlProfile] = useState<Profile | null>(null);
+  const [walletAmount, setWalletAmount] = useState<string>("");
+  const [walletReason, setWalletReason] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; msg: string } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
 
@@ -101,10 +115,12 @@ export const Admin: React.FC = () => {
       if (showCreateModal) setShowCreateModal(false);
       else if (showTopUpModal) setShowTopUpModal(false);
       else if (editingProfile) setEditingProfile(null);
+      else if (editingWalletProfile) setEditingWalletProfile(null);
+      else if (editingControlProfile) setEditingControlProfile(null);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showCreateModal, showTopUpModal, editingProfile]);
+  }, [showCreateModal, showTopUpModal, editingProfile, editingWalletProfile, editingControlProfile]);
 
   /* ── Data fetchers ─────────────────────────────────── */
   const fetchProfiles = async () => {
@@ -171,6 +187,116 @@ export const Admin: React.FC = () => {
     fetchAuditLogs();
   };
 
+  const handleUpdateWallet = async (type: 'deposit' | 'withdraw') => {
+    if (!editingWalletProfile) return;
+    const amount = parseFloat(walletAmount);
+    if (isNaN(amount) || amount <= 0) return;
+
+    if (!window.confirm(t("confirmWalletAdjustment"))) return;
+
+    setIsSaving(true);
+    const newBalance = type === 'deposit' 
+      ? editingWalletProfile.balance + amount 
+      : editingWalletProfile.balance - amount;
+
+    // 1. Update Profile Balance
+    const { error: balanceError } = await supabase
+      .from("profiles")
+      .update({ balance: newBalance })
+      .eq("id", editingWalletProfile.id);
+
+    if (balanceError) {
+      console.error("Failed to update wallet balance:", balanceError);
+    } else {
+      // 2. Insert Transaction Record for User
+      const { error: txError } = await supabase
+        .from("transactions")
+        .insert({
+          user_id: editingWalletProfile.id,
+          type: type,
+          asset_symbol: 'USD',
+          amount: amount,
+          price: 1,
+          total: amount,
+          status: 'success',
+          description: walletReason || (type === 'deposit' ? (language === 'th' ? 'รายการฝากเงิน' : 'Deposit') : (language === 'th' ? 'รายการถอนเงิน' : 'Withdrawal'))
+        });
+
+      if (txError) {
+        console.error("Failed to create transaction record:", txError);
+      }
+
+      // 3. Send Email Notification
+      if (type === 'deposit') {
+        emailService.sendDepositNotification({
+          email: editingWalletProfile.email,
+          userName: `${editingWalletProfile.first_name} ${editingWalletProfile.last_name}`,
+          amount: amount,
+          lang: language as "th" | "en",
+        });
+      } else {
+        emailService.sendWithdrawNotification({
+          email: editingWalletProfile.email,
+          userName: `${editingWalletProfile.first_name} ${editingWalletProfile.last_name}`,
+          amount: amount,
+          lang: language as "th" | "en",
+        });
+      }
+
+      // 4. Log Admin Audit
+      await logAdminAction(
+        type === 'deposit' ? "WALLET_DEPOSIT" : "WALLET_WITHDRAW",
+        type === 'deposit' 
+          ? `Refilled balance for user ${editingWalletProfile.username}`
+          : `Withdrew balance from user ${editingWalletProfile.username}`,
+        { 
+          amount, 
+          reason: walletReason || 'None',
+          oldBalance: editingWalletProfile.balance, 
+          newBalance 
+        },
+        editingWalletProfile
+      );
+
+      alert(type === 'deposit' ? t("topUpSuccess") : (language === 'th' ? 'ทำรายการถอนสำเร็จ' : 'Withdrawal successful'));
+      
+      // If updating self, refresh own wallet context
+      if (editingWalletProfile.id === user?.id) {
+        await refreshProfile();
+        await refreshWallet();
+      }
+
+      fetchProfiles();
+      setEditingWalletProfile(null);
+      setWalletAmount("");
+      setWalletReason("");
+    }
+    setIsSaving(false);
+  };
+
+  const handleUpdateControl = async () => {
+    if (!editingControlProfile) return;
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ trade_control: editingControlProfile.trade_control })
+      .eq("id", editingControlProfile.id);
+
+    if (error) {
+      console.error("Failed to update trade control:", error);
+    } else {
+      await logAdminAction(
+        "TRADE_CONTROL_UPDATE",
+        `Updated trade control for ${editingControlProfile.username} to ${editingControlProfile.trade_control}`,
+        { trade_control: editingControlProfile.trade_control },
+        editingControlProfile
+      );
+      fetchProfiles();
+      setEditingControlProfile(null);
+    }
+    setIsSaving(false);
+  };
+
   const handleUpdateProfile = async (profile: Profile) => {
     setIsSaving(true);
     const updateData: any = {
@@ -179,6 +305,7 @@ export const Admin: React.FC = () => {
       email: profile.email,
       phone_number: profile.phone_number,
       balance: profile.balance,
+      trade_control: profile.trade_control,
     };
     if (profile.password && !isHashed(profile.password)) {
       updateData.password = await hashPassword(profile.password);
@@ -248,6 +375,66 @@ export const Admin: React.FC = () => {
       );
     } else {
       alert("Error updating role: " + error.message);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    // Use the current admin profile from useAuth
+    const adminEmail = currentAdmin?.email || "";
+
+    if (!adminEmail) {
+      setTestResult({ success: false, msg: "Current admin email not found. Please ensure you have an email address set in your profile." });
+      return;
+    }
+
+    setIsTestingEmail(true);
+    setTestResult(null);
+
+    try {
+      const result = await emailService.sendOTP({
+        email: adminEmail,
+        code: "123456",
+        userName: currentAdmin?.first_name || "Admin",
+        lang: language as any,
+        type: 'verification'
+      });
+
+      setIsTestingEmail(false);
+      if (result.success) {
+        const msgId = result.data?.messageId || "";
+        setTestResult({ 
+          success: true, 
+          msg: `Test email sent successfully! Please check ${adminEmail}${msgId ? ` (Message ID: ${msgId})` : ""}` 
+        });
+      } else {
+        setTestResult({ success: false, msg: result.error || "Failed to send test email." });
+      }
+    } catch (err: any) {
+      setIsTestingEmail(false);
+      setTestResult({ success: false, msg: err.message || "An unexpected error occurred during testing." });
+    }
+  };
+
+  const handleVerifyUser = async (profile: Profile) => {
+    if (!window.confirm(t("confirmManualVerify"))) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_verified: true, otp_code: null })
+      .eq("id", profile.id);
+
+    if (!error) {
+      setProfiles((prev) =>
+        prev.map((p) => (p.id === profile.id ? { ...p, is_verified: true, otp_code: undefined } : p))
+      );
+      await logAdminAction(
+        "VERIFY_USER" as any,
+        `Manually verified user ${profile.username}`,
+        { verified: true },
+        profile,
+      );
+    } else {
+      alert("Error verifying user: " + error.message);
     }
   };
 
@@ -355,24 +542,51 @@ export const Admin: React.FC = () => {
                   profiles={filteredProfiles.filter((p) => p.is_admin)}
                   loading={loading}
                   onEdit={setEditingProfile}
+                  onEditWallet={setEditingWalletProfile}
+                  onEditControl={setEditingControlProfile}
                   onToggleRole={handleToggleRole}
                   emptyMessage={t("noAdminFound")}
                 />
               </div>
 
-              {/* Regular Accounts */}
+              {/* Pending Verification Accounts */}
+              {filteredProfiles.some(p => !p.is_admin && !p.is_verified) && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail size={18} className="text-orange-500" />
+                    <h2 className="text-base font-bold text-white tracking-tight">{t("pendingVerificationAccounts")}</h2>
+                    <span className="px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 text-[9px] font-bold uppercase whitespace-nowrap flex items-center gap-1">
+                      {filteredProfiles.filter((p) => !p.is_admin && !p.is_verified).length} {t("unverifiedCountSuffix")}
+                    </span>
+                  </div>
+                  <UserTable
+                    profiles={filteredProfiles.filter((p) => !p.is_admin && !p.is_verified)}
+                    loading={loading}
+                    onEdit={setEditingProfile}
+                    onEditWallet={setEditingWalletProfile}
+                    onEditControl={setEditingControlProfile}
+                    onToggleRole={handleToggleRole}
+                    onVerify={handleVerifyUser}
+                    emptyMessage={t("noUserFound")}
+                  />
+                </div>
+              )}
+
+              {/* Regular Accounts (Verified Only) */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp size={18} className="text-accent" />
                   <h2 className="text-base font-bold text-white tracking-tight">{t("regularAccounts")}</h2>
                   <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-400 text-[9px] font-bold uppercase whitespace-nowrap flex items-center gap-1">
-                    {filteredProfiles.filter((p) => !p.is_admin).length} {t("userCountSuffix")}
+                    {filteredProfiles.filter((p) => !p.is_admin && p.is_verified).length} {t("userCountSuffix")}
                   </span>
                 </div>
                 <UserTable
-                  profiles={filteredProfiles.filter((p) => !p.is_admin)}
+                  profiles={filteredProfiles.filter((p) => !p.is_admin && p.is_verified)}
                   loading={loading}
                   onEdit={setEditingProfile}
+                  onEditWallet={setEditingWalletProfile}
+                  onEditControl={setEditingControlProfile}
                   onToggleRole={handleToggleRole}
                   emptyMessage={t("noUserFound")}
                 />
@@ -633,6 +847,35 @@ export const Admin: React.FC = () => {
                     />
                   </button>
                 </div>
+
+                <div className="pt-4 border-t border-white/5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-white">{language === "th" ? "ทดสอบการเชื่อมต่อ" : "Test Connection"}</p>
+                      <p className="text-[10px] text-slate-500">{language === "th" ? "ส่งอีเมลทดสอบไปยังบัญชีของคุณเพื่อตรวจสอบระบบ" : "Send a test email to your account to verify settings"}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleTestEmail}
+                      disabled={isTestingEmail}
+                      className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[11px] font-bold transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isTestingEmail ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                      {language === "th" ? "ทดสอบอีเมล" : "Test Email"}
+                    </button>
+                  </div>
+
+                  {testResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-3 rounded-xl text-[11px] flex gap-3 ${testResult.success ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}
+                    >
+                      {testResult.success ? <Shield size={16} /> : <ShieldAlert size={16} />}
+                      <span>{testResult.msg}</span>
+                    </motion.div>
+                  )}
+                </div>
               </div>
 
               <button
@@ -712,26 +955,6 @@ export const Admin: React.FC = () => {
                     isPhone={true}
                   />
                 </div>
-
-                {/* Balance (read-only display) */}
-                <div className="md:col-span-2 p-5 md:p-6 rounded-2xl bg-primary/5 border border-primary/20">
-                  <label className="block text-[10px] font-bold text-primary uppercase tracking-widest mb-2">
-                    {t("walletBalanceEdit")}
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <TrendingUp className="text-primary" size={24} />
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={editingProfile.balance}
-                      readOnly
-                      onChange={(e) =>
-                        setEditingProfile({ ...editingProfile!, balance: parseFloat(e.target.value) || 0 })
-                      }
-                      className="bg-transparent border-none text-xl md:text-2xl font-black text-white focus:outline-none w-full"
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* Actions */}
@@ -751,6 +974,127 @@ export const Admin: React.FC = () => {
                   {t("updateProfile")}
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Wallet Management Modal ─────────────────── */}
+      <AnimatePresence>
+        {editingWalletProfile && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setEditingWalletProfile(null)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-card w-full max-w-md relative z-10 p-5 sm:p-6"
+            >
+              <div className="flex justify-between items-start gap-4 mb-6">
+                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 leading-tight">
+                  <Wallet className="flex-shrink-0 text-emerald-400" size={20} />
+                  <span>{t("walletBalanceEdit")}: {editingWalletProfile.username}</span>
+                </h3>
+                <button onClick={() => setEditingWalletProfile(null)} className="flex-shrink-0 p-1 text-slate-500 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t("balance")}</p>
+                <p className="text-2xl sm:text-3xl font-black text-white">${editingWalletProfile.balance.toLocaleString()}</p>
+              </div>
+
+              <div className="space-y-4">
+                <AdminInput
+                  label={t("amount")}
+                  type="number"
+                  value={walletAmount}
+                  onChange={(val) => setWalletAmount(val)}
+                />
+
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleUpdateWallet('withdraw')}
+                    disabled={isSaving}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold hover:bg-rose-500/20 transition-all text-sm sm:text-base min-h-[56px]"
+                  >
+                    <ArrowDown size={16} className="flex-shrink-0" />
+                    <span className="text-center">{t("walletWithdraw")}</span>
+                  </button>
+                  <button
+                    onClick={() => handleUpdateWallet('deposit')}
+                    disabled={isSaving}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold hover:bg-emerald-500/20 transition-all text-sm sm:text-base min-h-[56px]"
+                  >
+                    <ArrowUp size={16} className="flex-shrink-0" />
+                    <span className="text-center">{t("walletDeposit")}</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Trade Control Modal ─────────────────────── */}
+      <AnimatePresence>
+        {editingControlProfile && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setEditingControlProfile(null)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-card w-full max-w-md relative z-10 p-5 sm:p-6"
+            >
+              <div className="flex justify-between items-start gap-4 mb-6">
+                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 leading-tight">
+                  <Settings2 className="flex-shrink-0 text-indigo-400" size={20} />
+                  <span>{t("tradeControl")}: {editingControlProfile.username}</span>
+                </h3>
+                <button onClick={() => setEditingControlProfile(null)} className="flex-shrink-0 p-1 text-slate-500 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 mb-6">
+                {[
+                  { id: 'normal', label: t("tradeNormal"), color: 'text-slate-400', bg: 'bg-slate-900' },
+                  { id: 'always_win', label: t("tradeAlwaysWin"), color: 'text-green-400', bg: 'bg-green-500/10' },
+                  { id: 'always_loss', label: t("tradeAlwaysLoss"), color: 'text-red-400', bg: 'bg-red-500/10' },
+                  { id: 'low_win_rate', label: t("tradeLowWinRate"), color: 'text-orange-400', bg: 'bg-orange-500/10' },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setEditingControlProfile({ ...editingControlProfile!, trade_control: option.id as any })}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                      editingControlProfile.trade_control === option.id 
+                        ? "border-primary bg-primary/10 shadow-[0_0_20px_rgba(var(--color-primary),0.1)]" 
+                        : "border-white/5 bg-slate-900/50 hover:bg-slate-900"
+                    }`}
+                  >
+                    <span className={`text-xs font-bold ${option.color}`}>{option.label}</span>
+                    {editingControlProfile.trade_control === option.id && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--color-primary),0.8)]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleUpdateControl}
+                disabled={isSaving}
+                className="w-full btn-primary py-3 font-bold text-sm flex items-center justify-center gap-2"
+              >
+                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                {t("confirm")}
+              </button>
             </motion.div>
           </div>
         )}

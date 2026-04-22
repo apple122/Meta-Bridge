@@ -36,7 +36,10 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
 
   const getLogInfo = (type: string) => {
     switch (type) {
-      case 'TOP_UP':          return { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: 'border-l-emerald-500', icon: <Wallet size={13} />,       label: t('logTopUp') };
+      case 'TOP_UP':          
+      case 'WALLET_DEPOSIT':    return { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: 'border-l-emerald-500', icon: <Wallet size={13} />,       label: t('logTopUp') };
+      case 'WALLET_WITHDRAW':   return { color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',          accent: 'border-l-rose-500',    icon: <Wallet size={13} />,       label: t('logWalletWithdraw') };
+      case 'TRADE_CONTROL_UPDATE': return { color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',    accent: 'border-l-indigo-500', icon: <SettingsIcon size={13} />, label: t('tradeControl') };
       case 'EDIT_PROFILE':    return { color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',          accent: 'border-l-blue-500',    icon: <UserCog size={13} />,      label: t('logEditProfile') };
       case 'TOGGLE_ROLE':     return { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       accent: 'border-l-amber-500',   icon: <Key size={13} />,          label: t('logToggleRole') };
       case 'CREATE_USER':     return { color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',    accent: 'border-l-purple-500',  icon: <UserPlus size={13} />,     label: t('logCreateUser') };
@@ -57,12 +60,22 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
 
   const renderDetails = (log: AuditLog) => {
     if (!log.details) return null;
-    if (log.action_type === 'TOP_UP') {
+    if (log.action_type === 'TOP_UP' || log.action_type === 'WALLET_DEPOSIT') {
       return (
         <div className="flex items-center justify-between bg-emerald-500/5 px-4 py-3 rounded-xl border border-emerald-500/10 max-w-sm">
           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t('topUpAmount')}</span>
           <span className="text-emerald-400 font-black font-mono text-lg ml-6">
             +${Number(log.details.amount).toLocaleString()}
+          </span>
+        </div>
+      );
+    }
+    if (log.action_type === 'WALLET_WITHDRAW') {
+      return (
+        <div className="flex items-center justify-between bg-rose-500/5 px-4 py-3 rounded-xl border border-rose-500/10 max-w-sm">
+          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t('amount')}</span>
+          <span className="text-rose-400 font-black font-mono text-lg ml-6">
+            -${Number(log.details.amount).toLocaleString()}
           </span>
         </div>
       );

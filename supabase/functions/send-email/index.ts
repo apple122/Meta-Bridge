@@ -2,12 +2,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
 // Using the email address you registered with Brevo
-const SENDER_EMAIL = "apple.emd.a01@gmail.com"; 
-const SENDER_NAME = "Meta Bridge";
+const SENDER_EMAIL = Deno.env.get("SENDER_EMAIL") || "apple.emd.a01@gmail.com"; 
+const SENDER_NAME = Deno.env.get("SENDER_NAME") || "Meta Bridge";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const TRANSLATIONS: Record<string, any> = {
@@ -313,6 +314,8 @@ const TEMPLATES = {
 };
 
 serve(async (req) => {
+  console.log(`[Send-Email] Received request: ${req.method} ${req.url}`);
+  
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -415,6 +418,11 @@ serve(async (req) => {
       .replace(/{{email_footer_brand}}/g, t.footer_brand)
       .replace(/{{email_footer_auto}}/g, t.footer_auto);
 
+    // Debug logs
+    console.log(`[Send-Email] Attempting to send to: ${to}`);
+    console.log(`[Send-Email] Using sender: ${SENDER_EMAIL}`);
+    console.log(`[Send-Email] API Key prefix: ${BREVO_API_KEY?.substring(0, 10)}...`);
+
     // Call Brevo API
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -432,11 +440,15 @@ serve(async (req) => {
     });
 
     const resData = await res.json();
+    console.log(`[Send-Email] Brevo Response Status: ${res.status}`);
+    console.log(`[Send-Email] Brevo Response Data:`, JSON.stringify(resData));
+
     return new Response(JSON.stringify(resData), {
       status: res.status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    console.error(`[Send-Email] CRITICAL ERROR:`, error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

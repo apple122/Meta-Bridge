@@ -10,6 +10,7 @@ import {
   Filter,
   Trophy,
   TrendingDown,
+  TrendingUp,
   Zap,
   Search,
   CheckCircle2,
@@ -52,10 +53,10 @@ export const History: React.FC = () => {
   // Fetch Login History / Security Activities
   React.useEffect(() => {
     if (view === 'security' && user?.id) {
-       setLoadingActivities(true);
-       activityService.fetchActivities({ userId: user.id, type: 'login' })
-         .then(setActivities)
-         .finally(() => setLoadingActivities(false));
+      setLoadingActivities(true);
+      activityService.fetchActivities({ userId: user.id, type: 'login' })
+        .then(setActivities)
+        .finally(() => setLoadingActivities(false));
     }
   }, [view, user?.id]);
 
@@ -304,18 +305,16 @@ export const History: React.FC = () => {
       <div className="flex p-1 bg-slate-900/60 border border-white/5 rounded-2xl mb-6">
         <button
           onClick={() => setView('trading')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-            view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
-          }`}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
+            }`}
         >
           <ClipboardList size={16} />
           {isth ? 'ประวัติเทรด' : 'Trading'}
         </button>
         <button
           onClick={() => setView('security')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-            view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
-          }`}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
+            }`}
         >
           <ShieldCheck size={16} />
           {isth ? 'ความปลอดภัย' : 'Security'}
@@ -393,34 +392,6 @@ export const History: React.FC = () => {
               </div>
             </div>
 
-            {/* Trading List Header */}
-            {(() => {
-              const hasTransactionsOnSelectedDate = filteredTransactions.some(
-                (tx) => new Date(tx.timestamp).toLocaleDateString() === selectedDate.toLocaleDateString()
-              );
-              if (!hasTransactionsOnSelectedDate) return null;
-              return (
-                <div id={`date-header-${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`} className="sticky md:top-[74px] top-[64px] z-10 flex items-center h-12 bg-background backdrop-blur-xl -mx-6 px-6 shadow-2xl overflow-hidden">
-                  <div className="flex-1 basis-0 min-w-0 flex items-center gap-3">
-                    <h3 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] whitespace-nowrap">
-                      {t("transactionsUpTo") || "Transactions up to"}
-                    </h3>
-                    <div className="h-px flex-grow bg-white/5" />
-                  </div>
-                  <span className="flex-shrink-0 text-[8px] font-black text-primary uppercase tracking-[0.2em] whitespace-nowrap bg-primary/10 py-1 px-3 rounded-full border border-primary/20 shadow-lg shadow-primary/5 mx-4">
-                    {(() => {
-                      const todayStr = new Date().toLocaleDateString();
-                      const targetStr = selectedDate.toLocaleDateString();
-                      if (targetStr === todayStr) return t("today") || "Today";
-                      return formatDate(selectedDate, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-                    })()}
-                  </span>
-                  <div className="flex-1 basis-0 min-w-0 flex items-center">
-                    <div className="h-px flex-grow bg-white/5" />
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* Trading List */}
             {filteredTransactions.length === 0 ? (
@@ -433,81 +404,92 @@ export const History: React.FC = () => {
             ) : (
               <div className="space-y-2.5">
                 {filteredTransactions.map((tx, index) => {
-                   const isExpanded = expandedId === tx.id;
-                   const isWin = tx.binary_result?.toLowerCase() === "win" || !!tx.is_win;
-                   const isBinaryBet = !!tx.binary_type && !tx.binary_result;
-                   const txDateStr = new Date(tx.timestamp).toLocaleDateString();
-                   const prevTxDateStr = index > 0 ? new Date(filteredTransactions[index - 1].timestamp).toLocaleDateString() : null;
-                   let showDateHeader = txDateStr !== prevTxDateStr;
-                   
-                   // Avoid redundant inline header if it perfectly matches the top sticky header
-                   if (index === 0 && txDateStr === selectedDate.toLocaleDateString()) {
-                       showDateHeader = false;
-                   }
+                  const isExpanded = expandedId === tx.id;
+                  const isWin = tx.binary_result?.toLowerCase() === "win" || !!tx.is_win;
+                  const isDeposit = tx.type === 'deposit';
+                  const isPositive = isWin || isDeposit;
+                  const isBinaryBet = !!tx.binary_type && !tx.binary_result;
+                  const txDateStr = new Date(tx.timestamp).toLocaleDateString();
+                  const prevTxDateStr = index > 0 ? new Date(filteredTransactions[index - 1].timestamp).toLocaleDateString() : null;
+                  const showDateHeader = txDateStr !== prevTxDateStr;
 
-                   return (
-                     <React.Fragment key={tx.id}>
-                       {showDateHeader && (
-                         <div className="flex items-center gap-3 py-3 mt-4 first:mt-0">
-                           <div className="h-px bg-white/5 flex-grow" />
-                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/5">
-                             {(() => {
-                               const todayStr = new Date().toLocaleDateString();
-                               if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
-                               return formatDate(new Date(tx.timestamp), { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-                             })()}
-                           </span>
-                           <div className="h-px bg-white/5 flex-grow" />
-                         </div>
-                       )}
-                       <motion.div
-                         layout
-                         initial={{ opacity: 0, x: -10 }}
-                         animate={{ opacity: 1, x: 0 }}
-                         onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-                         className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5" : ""}`}
-                       >
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4 min-w-0">
-                              <div className="relative flex-shrink-0">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 ${isWin ? "bg-green-500/10 text-green-500 border-green-500/20" : isBinaryBet ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}`}>
-                                  {isWin ? <Trophy size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
-                                </div>
-                                <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-slate-700/90 backdrop-blur-sm border border-slate-500/50 text-[8px] font-black text-slate-200 tabular-nums uppercase shadow-lg shadow-black/20 z-10">
-                                  #{tx.smart_id || tx.id.slice(-4)}
-                                </span>
+                  return (
+                    <React.Fragment key={tx.id}>
+                      {showDateHeader && (
+                        <div 
+                          id={`date-header-${new Date(tx.timestamp).getFullYear()}-${new Date(tx.timestamp).getMonth()}-${new Date(tx.timestamp).getDate()}`}
+                          className="sticky md:top-[74px] top-[64px] z-10 flex items-center gap-3 py-4 -mx-6 px-6 bg-background/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/20"
+                        >
+                          <div className="h-px bg-white/5 flex-grow" />
+                          <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
+                            {(() => {
+                              const todayStr = new Date().toLocaleDateString();
+                              if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
+                              return formatDate(new Date(tx.timestamp), { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+                            })()}
+                          </span>
+                          <div className="h-px bg-white/5 flex-grow" />
+                        </div>
+                      )}
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        onClick={() => setExpandedId(isExpanded ? null : tx.id)}
+                        className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5" : ""}`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="relative flex-shrink-0">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 ${isPositive ? "bg-green-500/10 text-green-500 border-green-500/20" : isBinaryBet ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}`}>
+                                {isWin ? <Trophy size={20} /> : isDeposit ? <TrendingUp size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
                               </div>
-                              <div className="min-w-0">
-                                <h3 className="font-bold text-white text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
-                                  {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
-                                </div>
-                              </div>
+                              <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-slate-700/90 backdrop-blur-sm border border-slate-500/50 text-[8px] font-black text-slate-200 tabular-nums uppercase shadow-lg shadow-black/20 z-10">
+                                #{tx.smart_id || tx.id.slice(-4)}
+                              </span>
                             </div>
-                            <div className="text-right shrink-0">
-                              <p className={`text-base font-black ${isWin ? "text-green-400" : isBinaryBet ? "text-indigo-400" : "text-red-400"}`}>{isWin ? "+" : "-"}{formatCurrency(tx.total)}</p>
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-white text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
+                                {tx.binary_type && (
+                                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter ${
+                                    tx.binary_type === 'up' 
+                                      ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                      : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                  }`}>
+                                    {tx.binary_type === 'up' ? '▲ UP' : '▼ DOWN'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
+                                {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
+                              </div>
                             </div>
                           </div>
+                          <div className="text-right shrink-0">
+                            <p className={`text-base font-black ${isPositive ? "text-green-400" : isBinaryBet ? "text-indigo-400" : "text-red-400"}`}>{isPositive ? "+" : "-"}{formatCurrency(tx.total)}</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
+                          </div>
+                        </div>
 
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-white/5 grid grid-cols-2 gap-4 overflow-hidden">
-                                 <div>
-                                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("transactionId")}</p>
-                                   <p className="text-[9px] text-white font-mono break-all leading-tight mt-1">#{tx.id}</p>
-                                 </div>
-                                 <div>
-                                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("dateTime")}</p>
-                                   <p className="text-[10px] text-white font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
-                                 </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                       </motion.div>
-                     </React.Fragment>
-                   );
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-white/5 grid grid-cols-2 gap-4 overflow-hidden">
+                              <div>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("transactionId")}</p>
+                                <p className="text-[9px] text-white font-mono break-all leading-tight mt-1">#{tx.id}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("dateTime")}</p>
+                                <p className="text-[10px] text-white font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    </React.Fragment>
+                  );
                 })}
 
                 {hasMoreTransactions && (

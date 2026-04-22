@@ -5,7 +5,10 @@ export type AdminActionType =
   | 'EDIT_PROFILE' 
   | 'TOGGLE_ROLE' 
   | 'CREATE_USER' 
-  | 'UPDATE_SETTINGS';
+  | 'UPDATE_SETTINGS'
+  | 'WALLET_DEPOSIT'
+  | 'WALLET_WITHDRAW'
+  | 'TRADE_CONTROL_UPDATE';
 
 interface LogActionParams {
   adminId: string;

