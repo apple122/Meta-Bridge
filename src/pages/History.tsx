@@ -69,7 +69,7 @@ export const History: React.FC = () => {
     }
   };
 
-  const tradeTransactions = transactions.filter(
+  const tradeTransactions = useMemo(() => transactions.filter(
     (tx) =>
       tx.type === "buy" ||
       tx.type === "sell" ||
@@ -77,7 +77,7 @@ export const History: React.FC = () => {
       tx.type === "withdraw" ||
       tx.type === "win" ||
       tx.type === "loss",
-  );
+  ), [transactions]);
 
   const uniqueAssets = useMemo(() => {
     const assets = new Set<string>();
@@ -416,12 +416,12 @@ export const History: React.FC = () => {
                   return (
                     <React.Fragment key={tx.id}>
                       {showDateHeader && (
-                        <div 
+                        <div
                           id={`date-header-${new Date(tx.timestamp).getFullYear()}-${new Date(tx.timestamp).getMonth()}-${new Date(tx.timestamp).getDate()}`}
-                          className="sticky md:top-[74px] top-[64px] z-10 flex items-center gap-3 py-4 -mx-6 px-6 bg-background/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/20"
+                          className="sticky md:top-[74px] top-[64px] z-10 flex items-center gap-3 py-1 -mx-6 px-6 bg-background/95 backdrop-blur-md"
                         >
                           <div className="h-px bg-white/5 flex-grow" />
-                          <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
+                          <span className="text-[7.5px] text-primary font-black uppercase tracking-[0.2em] px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
                             {(() => {
                               const todayStr = new Date().toLocaleDateString();
                               if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
@@ -432,8 +432,7 @@ export const History: React.FC = () => {
                         </div>
                       )}
                       <motion.div
-                        layout
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         onClick={() => setExpandedId(isExpanded ? null : tx.id)}
                         className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5" : ""}`}
@@ -452,11 +451,10 @@ export const History: React.FC = () => {
                               <div className="flex items-center gap-2">
                                 <h3 className="font-bold text-white text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
                                 {tx.binary_type && (
-                                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter ${
-                                    tx.binary_type === 'up' 
-                                      ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
-                                      : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                                  }`}>
+                                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter ${tx.binary_type === 'up'
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                    : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                    }`}>
                                     {tx.binary_type === 'up' ? '▲ UP' : '▼ DOWN'}
                                   </span>
                                 )}

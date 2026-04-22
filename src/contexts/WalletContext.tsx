@@ -106,7 +106,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         .from("transactions")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (txError) {
         console.error(
@@ -141,6 +142,11 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         const tradeIdToSmartId: Record<string, string> = {};
 
         // 3. Sequential Pairing (Prioritize Direct ID > then FIFO fallback)
+        const idMap: Record<string, Transaction> = {};
+        processed.forEach(tx => {
+          if (tx.smart_id) idMap[tx.smart_id] = tx;
+        });
+
         processed.forEach((tx) => {
           const isStake = (tx.type === 'buy' || tx.type === 'sell') && tx.binary_type && !tx.binary_result;
           const isResult = tx.type === 'win' || tx.type === 'loss' || (tx.type === 'deposit' && tx.trade_id && tradeIdToSmartId[tx.trade_id]);
@@ -148,6 +154,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           if (isStake) {
             const tid = (tx.trade_id || tx.id).slice(-4).toUpperCase();
             tx.smart_id = tid;
+            idMap[tid] = tx;
             
             // Map the direct binary_trade_id to this smart_id for future results
             if (tx.trade_id) tradeIdToSmartId[tx.trade_id] = tid;
@@ -172,9 +179,9 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
             }
 
             // --- MERGING LOGIC ---
-            // Find the parent stake transaction (by smart_id) and update it
-            const parentStake = processed.find(t => t.smart_id === tx.smart_id && (t.type === 'buy' || t.type === 'sell') && !t.binary_result);
-            if (parentStake) {
+            // Use map for fast lookup
+            const parentStake = tx.smart_id ? idMap[tx.smart_id] : null;
+            if (parentStake && (parentStake.type === 'buy' || parentStake.type === 'sell') && !parentStake.binary_result) {
               // If it's a deposit linked to a trade, it's a refund
               if (tx.type === 'deposit') {
                 parentStake.binary_result = 'Refunded';

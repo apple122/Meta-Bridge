@@ -32,7 +32,7 @@ import { UserTable } from "../components/admin/UserTable";
 import { AdminInput } from "../components/admin/AdminInput";
 import { CreateUserModal } from "../components/admin/CreateUserModal";
 import { TopUpModal } from "../components/admin/TopUpModal";
-import { hashPassword, isHashed } from "../utils/security";
+import { encryptPassword, decryptPassword, isHashed } from "../utils/security";
 import { useLanguage } from "../contexts/LanguageContext";
 import { AuditLogTable } from "../components/admin/AuditLogTable";
 import { auditService } from "../services/auditService";
@@ -307,8 +307,11 @@ export const Admin: React.FC = () => {
       balance: profile.balance,
       trade_control: profile.trade_control,
     };
-    if (profile.password && !isHashed(profile.password)) {
-      updateData.password = await hashPassword(profile.password);
+    if (profile.password) {
+      // If it's a new password (not hashed and not already encrypted), encrypt it
+      updateData.password = (!isHashed(profile.password) && !profile.password.startsWith("enc:"))
+        ? encryptPassword(profile.password)
+        : profile.password;
     }
 
     const { error } = await supabase
@@ -541,7 +544,7 @@ export const Admin: React.FC = () => {
                 <UserTable
                   profiles={filteredProfiles.filter((p) => p.is_admin)}
                   loading={loading}
-                  onEdit={setEditingProfile}
+                  onEdit={(p) => setEditingProfile({ ...p, password: decryptPassword(p.password || "") })}
                   onEditWallet={setEditingWalletProfile}
                   onEditControl={setEditingControlProfile}
                   onToggleRole={handleToggleRole}
@@ -562,7 +565,7 @@ export const Admin: React.FC = () => {
                   <UserTable
                     profiles={filteredProfiles.filter((p) => !p.is_admin && !p.is_verified)}
                     loading={loading}
-                    onEdit={setEditingProfile}
+                   onEdit={(p) => setEditingProfile({ ...p, password: decryptPassword(p.password || "") })}
                     onEditWallet={setEditingWalletProfile}
                     onEditControl={setEditingControlProfile}
                     onToggleRole={handleToggleRole}
@@ -584,7 +587,7 @@ export const Admin: React.FC = () => {
                 <UserTable
                   profiles={filteredProfiles.filter((p) => !p.is_admin && p.is_verified)}
                   loading={loading}
-                  onEdit={setEditingProfile}
+                  onEdit={(p) => setEditingProfile({ ...p, password: decryptPassword(p.password || "") })}
                   onEditWallet={setEditingWalletProfile}
                   onEditControl={setEditingControlProfile}
                   onToggleRole={handleToggleRole}

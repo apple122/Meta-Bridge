@@ -146,6 +146,7 @@ export const AdminInput: React.FC<AdminInputProps> = ({
             }}
             placeholder={placeholder}
             disabled={disabled}
+            autoComplete="new-password"
             className={`w-full h-full text-white text-sm focus:outline-none placeholder:text-slate-600 transition-all bg-transparent border-none py-3 ${icon && !isPhone ? "pl-11" : "pl-4"} ${isPassword ? "pr-11" : "pr-4"}`}
           />
           {isPassword && (

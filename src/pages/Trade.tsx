@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { useWallet } from "../contexts/WalletContext";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, Search, X } from "lucide-react";
 import TradingChart from "../components/trade/TradingChart";
@@ -16,8 +15,7 @@ import { TIMEFRAMES, MIN_TRADE_AMOUNT } from "../constants/trade";
 import { useLanguage } from "../contexts/LanguageContext";
 
 export const Trade: React.FC = () => {
-  const { balance, createBinaryTrade, transactions, activeBinaryTrades, refreshWallet } = useWallet();
-  const { refreshProfile } = useAuth();
+  const { balance, createBinaryTrade, transactions, activeBinaryTrades } = useWallet();
   const { t } = useLanguage();
   const location = useLocation();
 
@@ -54,10 +52,6 @@ export const Trade: React.FC = () => {
   // Real-time price fetch from market API
   useEffect(() => {
     const fetchLatest = async () => {
-      // Refresh user balance and wallet data
-      refreshProfile();
-      refreshWallet();
-
       const result = await marketService.fetchSymbolPrice(selectedAsset.symbol);
       if (result && typeof result.price === "number") {
         const newPrice = result.price;

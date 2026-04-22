@@ -1143,7 +1143,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       const isCurrent = hist.sessionId && currentUserSessionId && hist.sessionId === currentUserSessionId;
 
                       return (
-                        <div key={hist.id || i} className={`p-4 rounded-xl bg-white/5 border transition-all ${isCurrent ? "border-primary/40 shadow-lg shadow-primary/5" : "border-white/5 hover:bg-white/10"}`}>
+                        <div key={hist.id || i} className={`p-4 rounded-xl transition-all ${isCurrent ? "bg-primary/5 border-primary/40 shadow-xl shadow-primary/5 ring-1 ring-primary/20" : "bg-white/5 border-white/5 hover:bg-white/10 opacity-70"}`}>
                           <div className="flex items-start sm:items-center gap-3 md:gap-4">
                             <div className={`mt-0.5 sm:mt-0 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400"}`}>
                               {isTablet ? <Tablet size={20} /> : isMobile ? <Smartphone size={20} /> : <Monitor size={20} />}
@@ -1152,15 +1152,19 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                               
                               <div className="flex items-center gap-2 mb-1">
                                 <p className="text-white font-bold text-sm truncate">{hist.device || hist.device_name || "Legacy Session"}</p>
-                                {isCurrent && (
-                                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black text-primary whitespace-nowrap shrink-0">
-                                    {language === 'th' ? 'ปัจจุบัน' : 'Current'}
+                                {isCurrent ? (
+                                  <span className="px-2 py-0.5 rounded-full bg-primary text-[9px] font-black text-background whitespace-nowrap shrink-0 shadow-lg shadow-primary/20">
+                                    {language === 'th' ? 'เซสชันปัจจุบัน' : 'Current Session'}
                                   </span>
-                                )}
-                                {!isCurrent && hist.isActive && (
+                                ) : hist.isActive ? (
                                   <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[9px] font-bold text-emerald-500 whitespace-nowrap">{language === 'th' ? 'กำลังออนไลน์' : 'Active'}</span>
+                                    <span className="text-[9px] font-bold text-emerald-500 whitespace-nowrap">{language === 'th' ? 'กำลังออนไลน์' : 'Online'}</span>
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 shrink-0 opacity-60">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                    <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">{language === 'th' ? 'ออฟไลน์' : 'Offline'}</span>
                                   </span>
                                 )}
                               </div>
