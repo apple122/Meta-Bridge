@@ -72,6 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   // --- Session Verification ---
   const verifySession = async (sessionId: string) => {
+    if (!supabase) return false;
     try {
       const { data, error } = await supabase
         .from("user_sessions")
@@ -98,6 +99,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) return;
     setIsProfileLoading(true);
     try {
       const { data, error } = await supabase
@@ -163,6 +165,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     // Handle session registration and history
     (async () => {
+      if (!supabase) return;
       try {
         const { deviceName, osName, browserName } = getDeviceDetails();
         let ip = "Unknown IP";
@@ -205,7 +208,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const handleLogout = async (cleanupDb = true) => {
     const sessionId = localStorage.getItem("metabridge_session_id");
     
-    if (cleanupDb && sessionId) {
+    if (cleanupDb && sessionId && supabase) {
       await supabase.from("user_sessions").delete().eq("id", sessionId);
     }
 
@@ -219,6 +222,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     const checkUser = async () => {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
       const storedUserId = localStorage.getItem("metabridge_user_id");
       const storedSessionId = localStorage.getItem("metabridge_session_id");
       

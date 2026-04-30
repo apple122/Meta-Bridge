@@ -41,7 +41,7 @@ export const activityService = {
       .select('id, user_id, device_name, os_name, browser_name, ip_address');
     
     const sessionMap = new Map<string, any>();
-    activeSessions?.forEach(s => {
+    activeSessions?.forEach((s: any) => {
       // Key format: userId | device | browser | os | ip
       const key = `${s.user_id}|${s.device_name}|${s.browser_name}|${s.os_name}|${s.ip_address}`;
       sessionMap.set(key, s.id);
@@ -190,7 +190,7 @@ export const activityService = {
 
         if (histories && histories.length > 0) {
           // Find the most recent history that matches the current session's signature
-          const matchingHistory = histories.find(h => 
+          const matchingHistory = histories.find((h: any) => 
             h.device_name === currentSession.device_name &&
             h.os_name === currentSession.os_name &&
             h.browser_name === currentSession.browser_name &&

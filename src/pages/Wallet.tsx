@@ -17,6 +17,7 @@ import {
 import { DepositModal } from "../components/wallet/DepositModal";
 import { WithdrawModal } from "../components/wallet/WithdrawModal";
 import { assets } from "../data/marketData";
+import { WalletSkeleton } from "../components/shared/PageSkeletons";
 
 import { formatCurrency, formatUnits } from "../utils/format";
 import { formatDate, formatTime } from "../utils/date";
@@ -26,7 +27,7 @@ import type { ModalType } from "../types";
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export const Wallet: React.FC = () => {
   const { t } = useLanguage();
-  const { balance, transactions } = useWallet();
+  const { balance, transactions, loading } = useWallet();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -64,6 +65,10 @@ export const Wallet: React.FC = () => {
       color: "from-red-500/20 to-rose-600/20",
     },
   ];
+
+  if (loading) {
+    return <WalletSkeleton />;
+  }
 
   return (
     <div className="pt-24 pb-32 px-6 max-w-5xl mx-auto space-y-8">
@@ -403,14 +408,14 @@ export const Wallet: React.FC = () => {
                             <Zap size={48} className="text-yellow-400 mx-auto drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" />
                             <div className="space-y-1">
                               <p className="text-white font-black text-xl uppercase tracking-tighter">
-                                Coming Soon
+                                {t("comingSoon")}
                               </p>
                               <p className="text-yellow-400/80 text-[11px] font-bold uppercase tracking-wider">
-                                Staking pools will launch soon
+                                {t("stakingPoolsSoon")}
                               </p>
                             </div>
                             <p className="text-slate-400 text-sm leading-relaxed">
-                              Earn up to <span className="text-yellow-400 font-black text-lg">12%</span> APY on BTC, ETH, and more global assets.
+                              {t("stakingEarnDesc")}
                             </p>
                           </div>
                           <button

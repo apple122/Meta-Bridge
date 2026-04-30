@@ -20,6 +20,7 @@ import { AdminHeader } from "../components/admin/AdminHeader";
 import { AdminTabs } from "../components/admin/AdminTabs";
 import { UsersTab } from "../components/admin/tabs/UsersTab";
 import { SettingsTab } from "../components/admin/tabs/SettingsTab";
+import { AdminSkeleton } from "../components/shared/PageSkeletons";
 
 /* ─── Types ────────────────────────────────────────────── */
 type AdminTab = "users" | "activity" | "logs" | "issues" | "settings";
@@ -41,6 +42,7 @@ export const Admin: React.FC = () => {
   const [pendingIssuesCount, setPendingIssuesCount] = useState(0);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({
     contact_phone: "",
     contact_line: "",
@@ -63,8 +65,11 @@ export const Admin: React.FC = () => {
 
   /* ── Effects ───────────────────────────────────────── */
   useEffect(() => {
-    fetchSettings();
-    fetchPendingIssuesCount();
+    const init = async () => {
+      await Promise.all([fetchSettings(), fetchPendingIssuesCount()]);
+      setPageLoading(false);
+    };
+    init();
   }, []);
 
   useEffect(() => {
@@ -166,6 +171,10 @@ export const Admin: React.FC = () => {
     }
     setActiveTab(newTab);
   };
+
+  if (pageLoading) {
+    return <AdminSkeleton />;
+  }
 
   return (
     <div className="pt-24 pb-32 px-4 md:px-6 max-w-7xl mx-auto">

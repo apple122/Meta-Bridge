@@ -13,9 +13,10 @@ import { getInitialTradeSymbol } from "../utils/trade";
 import { formatCurrency, formatPercentage } from "../utils/format";
 import { TIMEFRAMES, MIN_TRADE_AMOUNT } from "../constants/trade";
 import { useLanguage } from "../contexts/LanguageContext";
+import { TradeSkeleton } from "../components/shared/PageSkeletons";
 
 export const Trade: React.FC = () => {
-  const { balance, createBinaryTrade, transactions, activeBinaryTrades } = useWallet();
+  const { balance, createBinaryTrade, transactions, activeBinaryTrades, loading } = useWallet();
   const { t } = useLanguage();
   const location = useLocation();
 
@@ -64,7 +65,7 @@ export const Trade: React.FC = () => {
     };
 
     fetchLatest();
-    const interval = setInterval(fetchLatest, 15000); // 15 seconds refresh for everything
+    const interval = setInterval(fetchLatest, 3000); // 3 seconds refresh for near real-time feel
     return () => clearInterval(interval);
   }, [selectedAsset.symbol]);
 
@@ -141,12 +142,16 @@ export const Trade: React.FC = () => {
       a.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  if (loading) {
+    return <TradeSkeleton />;
+  }
+
   return (
     <div className="pt-24 pb-32 px-4 md:px-6 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 relative">
       <NotificationList notifications={notifications} />
 
       {/* Chart & Asset Info */}
-      <div className="lg:col-span-2 space-y-6 w-full">
+      <div className="lg:col-span-2 space-y-4 w-full">
         <div className="w-full relative z-30">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -156,12 +161,12 @@ export const Trade: React.FC = () => {
             {/* Background Accent Gradient */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] pointer-events-none" />
 
-            <div className="relative md:p-8 space-y-6 z-50">
+            <div className="relative p-3 md:p-4 space-y-2 z-50">
               {/* Top Row: Identity & Price */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
                   <div
-                    className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group cursor-pointer hover:scale-105 transition-all"
+                    className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group cursor-pointer hover:scale-105 transition-all"
                     onClick={() => setShowMarketDetails(true)}
                     title={t("viewMarketDetails")}
                   >
@@ -333,7 +338,7 @@ export const Trade: React.FC = () => {
 
                 {/* Main Price Display */}
                 <div className="flex flex-col items-start md:items-end">
-                  <div className="text-3xl md:text-5xl font-black text-white tracking-tighter tabular-nums leading-none">
+                  <div className="text-2xl md:text-4xl font-black text-white tracking-tighter tabular-nums leading-none">
                     {formatCurrency(livePrice)}
                   </div>
                   <div
@@ -359,10 +364,10 @@ export const Trade: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 p-4 md:p-5 rounded-2xl bg-white/5 border border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 p-2.5 md:p-3.5 rounded-2xl bg-white/5 border border-white/5">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    24h High
+                    {t('high24h')}
                   </p>
                   <p className="text-base font-bold text-white tabular-nums">
                     {formatCurrency(selectedAsset.high || 0)}
@@ -370,7 +375,7 @@ export const Trade: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    24h Low
+                    {t('low24h')}
                   </p>
                   <p className="text-base font-bold text-white tabular-nums">
                     {formatCurrency(selectedAsset.low || 0)}
@@ -378,17 +383,15 @@ export const Trade: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    24h Vol
+                    {t('vol24h')}
                   </p>
-                  <p className="text-base font-bold text-slate-300 tabular-nums">
-                    {selectedAsset.volume
-                      ? `$${(selectedAsset.volume / 1000000).toFixed(2)}M`
-                      : "---"}
+                  <p className="text-base font-bold text-white tabular-nums">
+                    {selectedAsset.volume ? `$${(selectedAsset.volume / 1000000).toFixed(2)}M` : '---'}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    Sentiment
+                    {t('sentiment')}
                   </p>
                   <p
                     className={`text-base font-bold capitalize tabular-nums ${

@@ -6,15 +6,22 @@ import { NewsAnalysis } from "../components/news/NewsAnalysis";
 import { TechnicalAnalysisGrid } from "../components/news/TechnicalAnalysisGrid";
 import { RecommendationCard } from "../components/news/RecommendationCard";
 import { KeyFactors } from "../components/news/KeyFactors";
+import { useAuth } from "../contexts/AuthContext";
+import { NewsSkeleton } from "../components/shared/PageSkeletons";
 
 export const News: React.FC = () => {
   const { t } = useLanguage();
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <NewsSkeleton />;
+  }
 
   return (
     <div className="pt-24 pb-32 px-6 max-w-4xl mx-auto space-y-8">
       <NewsHeader
-        title="ข่าวสาร!"
-        subtitle="บทวิเคราะห์และการประเมินสถานการณ์ตลาดล่าสุด"
+        title={t("newsTitle")}
+        subtitle={t("newsSubtitle")}
         badgeText={t("news")}
       />
 
@@ -34,7 +41,7 @@ export const News: React.FC = () => {
         className="pt-12 text-center"
       >
         <p className="text-cyan-500 font-black text-sm tracking-widest mb-1 italic">
-          THANK YOU FOR READ
+          {t("thankYouReading")}
         </p>
         <p className="text-cyan-900 font-black text-xs tracking-widest uppercase">
           MetaBridge

@@ -135,7 +135,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           trade_id: tx.binary_trade_id || tx.reference_id || tx.id,
           smart_id: (tx.binary_trade_id || tx.id).slice(-4).toUpperCase(), 
           description: tx.description,
-        }) as Transaction).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        }) as Transaction).sort((a: Transaction, b: Transaction) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         // 2. Direct Linking & Map of "open" trade Ticket IDs
         const openStacks: Record<string, string[]> = {};
@@ -143,11 +143,11 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
 
         // 3. Sequential Pairing (Prioritize Direct ID > then FIFO fallback)
         const idMap: Record<string, Transaction> = {};
-        processed.forEach(tx => {
+        processed.forEach((tx: Transaction) => {
           if (tx.smart_id) idMap[tx.smart_id] = tx;
         });
 
-        processed.forEach((tx) => {
+        processed.forEach((tx: Transaction) => {
           const isStake = (tx.type === 'buy' || tx.type === 'sell') && tx.binary_type && !tx.binary_result;
           const isResult = tx.type === 'win' || tx.type === 'loss' || (tx.type === 'deposit' && tx.trade_id && tradeIdToSmartId[tx.trade_id]);
 
@@ -204,8 +204,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         // 4. Sort back to newest first for the UI (with ID tie-breaker)
         setTransactions(
           processed
-            .filter(t => t.type !== 'win' && t.type !== 'loss' && t.type !== 'refund-marker')
-            .sort((a, b) => {
+            .filter((t: Transaction) => t.type !== 'win' && t.type !== 'loss' && t.type !== 'refund-marker')
+            .sort((a: Transaction, b: Transaction) => {
               const timeA = new Date(a.timestamp).getTime();
               const timeB = new Date(b.timestamp).getTime();
               if (timeA !== timeB) return timeB - timeA;
@@ -304,13 +304,13 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
       // To keep it simple and fast, we just treat the new batch as independent for now
       // knowing that results/stakes crossing a 100-batch boundary is rare.
       
-      const processedNew = newRaw.map(tx => ({...tx}) as Transaction);
+      const processedNew = newRaw.map((tx: any) => ({...tx}) as Transaction);
       
       // Basic linking for the new batch
       const openStacks: Record<string, string[]> = {};
-      processedNew.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      processedNew.sort((a: Transaction, b: Transaction) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       
-      processedNew.forEach(tx => {
+      processedNew.forEach((tx: Transaction) => {
         if (!tx.binary_type) return;
         const key = `${tx.asset}-${tx.binary_type}`;
         if (!tx.binary_result) {
@@ -320,7 +320,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           if (openStacks[key] && openStacks[key].length > 0) {
             tx.smart_id = openStacks[key].shift();
           }
-          const parent = processedNew.find(t => t.smart_id === tx.smart_id && !t.binary_result);
+          const parent = processedNew.find((t: Transaction) => t.smart_id === tx.smart_id && !t.binary_result);
           if (parent) {
             parent.binary_result = tx.binary_result;
             if (tx.binary_result?.toLowerCase().includes('win')) {
@@ -334,8 +334,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       const finalNew = processedNew
-        .filter(t => t.type !== 'win' && t.type !== 'loss')
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        .filter((t: Transaction) => t.type !== 'win' && t.type !== 'loss')
+        .sort((a: Transaction, b: Transaction) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       setTransactions(prev => [...prev, ...finalNew]);
       
@@ -468,7 +468,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
           table: 'binary_trades',
           filter: `user_id=eq.${user.id}`
         },
-        async (payload) => {
+        async (payload: any) => {
           const updatedTrade = payload.new as any;
           
           // If a trade was settled (won/lost)
@@ -529,14 +529,14 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
     const interval = setInterval(async () => {
       const now = Date.now();
       const expiredTrades = activeBinaryTrades.filter(
-        (t) => now >= t.expiryTime && (t.status === "pending" || t.status === "active"),
+        (t: any) => now >= t.expiryTime && (t.status === "pending" || t.status === "active"),
       );
 
       if (expiredTrades.length === 0) return;
 
-      const newExpired = expiredTrades.filter(t => !processingTradeIds.current.has(t.id));
+      const newExpired = expiredTrades.filter((t: any) => !processingTradeIds.current.has(t.id));
       if (newExpired.length > 0) {
-        newExpired.forEach(t => processingTradeIds.current.add(t.id));
+        newExpired.forEach((t: any) => processingTradeIds.current.add(t.id));
         try {
           // Ping the edge function to wake it up
           const { error } = await supabase.functions.invoke('resolve-trades');
@@ -555,7 +555,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
         
       if (dbTrades) {
          let resolvedCount = 0;
-         dbTrades.forEach(dbTrade => {
+         dbTrades.forEach((dbTrade: any) => {
             if (dbTrade.status === 'won' || dbTrade.status === 'lost') {
                 const won = dbTrade.status === 'won';
                 const payout = won 

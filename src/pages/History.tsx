@@ -22,6 +22,7 @@ import {
   Clock,
   ShieldCheck,
 } from "lucide-react";
+import { HistorySkeleton } from "../components/shared/PageSkeletons";
 import {
   getDaysInMonth,
   getFirstDayOfMonth,
@@ -35,7 +36,7 @@ import { activityService, type ActivityItem } from "../services/activityService"
 export const History: React.FC = () => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { transactions, hasMoreTransactions, loadMoreTransactions, loadingMore } = useWallet();
+  const { transactions, hasMoreTransactions, loadMoreTransactions, loadingMore, loading } = useWallet();
 
   const [view, setView] = useState<'trading' | 'security'>('trading');
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -153,20 +154,15 @@ export const History: React.FC = () => {
 
   // Month names for display
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    t("january"), t("february"), t("march"), t("april"), t("mayFull"), t("june"),
+    t("july"), t("august"), t("september"), t("october"), t("november"), t("december")
   ];
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const dayNames = [t("sun"), t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat")];
+
+  if (loading) {
+    return <HistorySkeleton />;
+  }
 
   return (
     <div className="pt-24 pb-32 px-6 max-w-4xl mx-auto space-y-8">
@@ -178,7 +174,7 @@ export const History: React.FC = () => {
             {t("history") || "History"}
           </h1>
           <p className="text-sm font-semibold text-slate-400 mt-1">
-            Calendar View
+            {t("calendarView")}
           </p>
         </div>
       </div>
@@ -309,7 +305,7 @@ export const History: React.FC = () => {
             }`}
         >
           <ClipboardList size={16} />
-          {isth ? 'ประวัติเทรด' : 'Trading'}
+          {t("tradingActivity")}
         </button>
         <button
           onClick={() => setView('security')}

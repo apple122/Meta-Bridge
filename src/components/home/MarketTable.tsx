@@ -104,12 +104,12 @@ export const MarketTable: React.FC<MarketTableProps> = ({ stocks, t }) => {
               <th className="px-6 py-4 text-right">{t("latestPrice")}</th>
               <th className="px-6 py-4 text-right">{t("change24h")}</th>
               <th className="px-6 py-4 text-right hidden md:table-cell">
-                Market Cap
+                {t('marketCap')}
               </th>
               <th className="px-6 py-4 text-right hidden lg:table-cell">
-                Volume
+                {t('volume')}
               </th>
-              <th className="px-6 py-4 text-right">Action</th>
+              <th className="px-6 py-4 text-right">{t('action')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">

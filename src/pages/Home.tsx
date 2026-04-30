@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useWallet } from "../contexts/WalletContext";
+import { HomeSkeleton } from "../components/shared/PageSkeletons";
 import { mockStocks } from "../data/mockStocks";
 import { MarketTable } from "../components/home/MarketTable";
 import { marketService } from "../services/marketService";
@@ -21,6 +23,7 @@ import {
 
 export const Home: React.FC = () => {
   const { t } = useLanguage();
+  const { loading } = useWallet();
   const navigate = useNavigate();
   const [stocks, setStocks] = useState<StockData[]>(mockStocks as StockData[]);
   const goldStock = stocks.find((s: StockData) => s.symbol === "GOLD");
@@ -39,6 +42,10 @@ export const Home: React.FC = () => {
     const interval = setInterval(updateMarketData, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
   }, []);
+
+  if (loading) {
+    return <HomeSkeleton />;
+  }
 
   return (
     <div className="pt-24 pb-32 px-6 max-w-7xl mx-auto space-y-12">

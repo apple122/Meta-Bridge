@@ -13,6 +13,8 @@ import { AuthForms } from "./components/auth/AuthForms";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Admin } from "./pages/Admin";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
+import { SystemLoader } from "./components/shared/SystemLoader";
+import { supabaseUrl, supabaseAnonKey } from "./lib/supabase";
 
 function AppContent() {
   const { session, isAdmin, loading } = useAuth();
@@ -79,12 +81,13 @@ function AppContent() {
     };
   }, []);
 
+  // If environment variables are missing, show the loading/error screen with a specific message
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return <SystemLoader message="System Configuration Missing" />;
+  }
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <SystemLoader message="Accessing Meta Bridge" />;
   }
 
   if (!session) {

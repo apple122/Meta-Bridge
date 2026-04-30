@@ -146,19 +146,19 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
           <thead>
             <tr className="bg-slate-900/95 border-b border-white/5">
               <th className="text-left px-5 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[180px]">
-                {language === 'th' ? 'ประเภท' : 'Type'}
+                {t('type')}
               </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                {language === 'th' ? 'รายละเอียด' : 'Description'}
+                {t('description')}
               </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[190px]">
-                {language === 'th' ? 'แอดมิน' : 'Admin'}
+                {t('administrator')}
               </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[190px]">
-                {language === 'th' ? 'เป้าหมาย' : 'Target'}
+                {t('target')}
               </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[120px]">
-                {language === 'th' ? 'เวลา' : 'Time'}
+                {t('time')}
               </th>
               <th className="w-10" />
             </tr>

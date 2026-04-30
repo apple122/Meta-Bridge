@@ -149,7 +149,7 @@ export const AuthForms: React.FC = () => {
           .or(`username.eq.${username},email.eq.${email}`);
 
         if (existing && existing.length > 0) {
-          throw new Error(existing.some(u => u.username === username) ? "Username taken" : "Email already registered");
+          throw new Error(existing.some((u: any) => u.username === username) ? "Username taken" : "Email already registered");
         }
 
         // Get registration settings

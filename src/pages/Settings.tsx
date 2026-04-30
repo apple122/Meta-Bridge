@@ -23,12 +23,13 @@ import { SettingsContent } from "../components/settings/SettingsContent";
 import { InstallModal } from "../components/settings/InstallModal";
 import { ShareModal } from "../components/shared/ShareModal";
 import { LayoutGrid } from "lucide-react";
+import { SettingsSkeleton } from "../components/shared/PageSkeletons";
 
 export const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
-  const { balance, transactions } = useWallet();
-  const { user, profile, refreshProfile, logout } = useAuth();
+  const { balance, transactions, loading } = useWallet();
+  const { user, profile, refreshProfile, logout, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "profile" | "bank" | "security" | "history" | "notifications" | "language" | "reports"
   >(() => {
@@ -153,6 +154,10 @@ export const Settings: React.FC = () => {
       }
     }
   };
+
+  if (loading || authLoading) {
+    return <SettingsSkeleton />;
+  }
 
   return (
     <div className="pt-24 pb-32 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col md:flex-row gap-6 sm:gap-8">
