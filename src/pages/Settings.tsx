@@ -31,7 +31,7 @@ export const Settings: React.FC = () => {
   const { balance, transactions, loading } = useWallet();
   const { user, profile, refreshProfile, logout, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "bank" | "security" | "history" | "notifications" | "language" | "reports"
+    "profile" | "bank" | "security" | "history" | "notifications" | "language" | "display" | "reports"
   >(() => {
     return (sessionStorage.getItem("settings_active_tab") as any) || "profile";
   });
@@ -122,6 +122,7 @@ export const Settings: React.FC = () => {
       | "history"
       | "notifications"
       | "language"
+      | "display"
       | "reports",
   ) => {
     setActiveTab(tab);
@@ -265,6 +266,12 @@ export const Settings: React.FC = () => {
               onClick={() => handleTabChange("language")}
               icon={<div className="w-5 h-5 flex flex-col items-center justify-center leading-[0.7] text-[7px] font-black bg-white/10 rounded border border-white/10"><span>EN</span><div className="w-3 h-[1px] bg-white/20 my-0.5" /><span>TH</span></div>}
               label={t("languageSettings")}
+            />
+            <TabButton
+              active={activeTab === "display"}
+              onClick={() => handleTabChange("display")}
+              icon={<LayoutGrid size={18} />}
+              label={t("displaySettings")}
             />
             <TabButton
               active={activeTab === "reports"}

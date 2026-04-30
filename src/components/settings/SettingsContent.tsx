@@ -21,6 +21,8 @@ import {
   Monitor,
   Send,
   MessageSquare,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   getNotificationPermissionStatus,
@@ -36,6 +38,7 @@ import { encryptPassword, comparePassword } from "../../utils/security";
 import { Check, Globe, Zap } from "lucide-react";
 import { activityService } from "../../services/activityService";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const THAI_BANKS = [
   { id: 'KBank', name: 'Kasikorn Bank', nameTh: 'ธนาคารกสิกรไทย', color: '#00A950', icon: 'K' },
@@ -73,7 +76,7 @@ const CRYPTO_NETWORKS = [
 ];
 
 interface SettingsContentProps {
-  activeTab: "profile" | "bank" | "security" | "history" | "notifications" | "language" | "reports";
+  activeTab: "profile" | "bank" | "security" | "history" | "notifications" | "language" | "display" | "reports";
   balance: number;
   t: (key: string) => string;
   onClose: () => void;
@@ -1731,6 +1734,81 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           </motion.div>
         )}
 
+        {activeTab === "display" && (
+          <motion.div
+            key="display"
+            initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+            className="glass-card max-w-lg relative"
+          >
+            {isMobile && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"
+              >
+                <ChevronRight className="rotate-180" size={20} />
+              </button>
+            )}
+            <h2 className="text-base font-bold text-white mb-1">
+              {t("displaySettings")}
+            </h2>
+            <p className="text-slate-400 text-[11px] mb-5">
+              {language === 'th' ? "ปรับแต่งหน้าตาของแอปพลิเคชันตามที่คุณต้องการ" : "Personalize the appearance of the application"}
+            </p>
+
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("theme")}</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { id: 'dark', label: t("darkMode"), icon: <Moon size={20} />, colors: "bg-slate-900" },
+                  { id: 'light', label: t("lightMode"), icon: <Sun size={20} />, colors: "bg-slate-50" },
+                ].map((mode) => {
+                  const { theme, setTheme } = useTheme();
+                  const isActive = theme === mode.id;
+
+                  return (
+                    <button
+                      key={mode.id}
+                      onClick={() => setTheme(mode.id as 'dark' | 'light')}
+                      className={`relative group flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all duration-300 ${isActive
+                        ? 'bg-primary/10 border-primary/50 ring-1 ring-primary/20'
+                        : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+                        }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 ${mode.colors} ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+                        {mode.icon}
+                      </div>
+                      <span className={`text-[11px] font-bold uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                        {mode.label}
+                      </span>
+                      {isActive && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center text-background">
+                          <Check size={12} strokeWidth={4} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5">
+                 <div className="flex items-center gap-3 mb-3">
+                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                     <Zap size={16} />
+                   </div>
+                   <h4 className="text-xs font-bold text-white uppercase tracking-tight">{language === 'th' ? "ประสิทธิภาพ" : "Performance"}</h4>
+                 </div>
+                 <p className="text-[11px] text-slate-400 leading-relaxed">
+                   {language === 'th' 
+                     ? "การสลับธีมจะเปลี่ยนรูปแบบการแสดงผลทันทีโดยไม่ต้องรีโหลดหน้าเว็บ และระบบจะจำค่าที่คุณเลือกไว้ในเครื่องนี้" 
+                     : "Theme switching happens instantly without page reload, and your preference is saved locally on this device."}
+                 </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {activeTab === "reports" && (
           <motion.div
             key="reports"

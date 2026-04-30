@@ -118,14 +118,18 @@ function AppContent() {
   );
 }
 
+import { ThemeProvider } from "./contexts/ThemeContext";
+
 function App() {
   return (
     <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
