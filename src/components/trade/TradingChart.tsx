@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, memo, useState } from 'react';
-import { Skeleton } from '../shared/Skeleton';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface TradingViewChartProps {
   symbol: string;
@@ -9,6 +9,7 @@ interface TradingViewChartProps {
 const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol, interval = "1" }) => {
   const container = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!container.current) return;
@@ -39,7 +40,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol, interval = 
       "symbol": tvSymbol,
       "interval": interval,
       "timezone": "Etc/UTC",
-      "theme": "dark",
+      "theme": theme === "light" ? "light" : "dark",
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
@@ -58,71 +59,44 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol, interval = 
     if (widgetContainer) {
       widgetContainer.appendChild(script);
     }
-  }, [symbol, interval]);
+  }, [symbol, interval, theme]);
 
   return (
-    <div className="tradingview-widget-container h-full w-full rounded-2xl overflow-hidden border border-white/5 shadow-2xl relative" ref={container}>
+    <div className="tradingview-widget-container h-full w-full rounded-2xl overflow-hidden border border-border shadow-2xl relative" ref={container}>
       {!isLoaded && (
-        <div className="absolute inset-0 z-10 bg-slate-950 overflow-hidden">
-          {/* Main Shimmer Background */}
-          <Skeleton className="w-full h-full rounded-none opacity-40" />
-          
-          {/* Mock Chart Elements */}
-          <div className="absolute inset-0 p-4 md:p-6 flex flex-col justify-between pointer-events-none">
-            {/* Grid Lines */}
-            <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-10">
-              {[...Array(36)].map((_, i) => (
-                <div key={i} className="border-[0.5px] border-white/20" />
-              ))}
-            </div>
+        <div className="absolute inset-0 z-10 bg-card overflow-hidden flex items-center justify-center">
+          {/* Subtle Grid Background */}
+          <div 
+            className="absolute inset-0 opacity-[0.05] dark:opacity-[0.08]"
+            style={{
+              backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+              backgroundPosition: 'center center'
+            }}
+          />
 
-            {/* Mock Chart Line SVG */}
-            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-              <svg className="w-full h-full opacity-20" viewBox="0 0 1000 400" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,200 L50,180 L100,220 L150,190 L200,250 L250,210 L300,280 L350,230 L400,260 L450,200 L500,240 L550,180 L600,210 L650,150 L700,190 L750,140 L800,170 L850,120 L900,150 L950,100 L1000,130 L1000,400 L0,400 Z"
-                  fill="url(#chartGradient)"
-                  className="animate-pulse"
-                />
-                <path
-                  d="M0,200 L50,180 L100,220 L150,190 L200,250 L250,210 L300,280 L350,230 L400,260 L450,200 L500,240 L550,180 L600,210 L650,150 L700,190 L750,140 L800,170 L850,120 L900,150 L950,100 L1000,130"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="text-primary animate-pulse"
-                  strokeDasharray="1000"
-                  strokeDashoffset="1000"
-                  style={{ animation: 'chartLine 2s ease-out forwards' }}
-                />
-              </svg>
+          {/* Elegant Centered Loader */}
+          <div className="relative z-20 flex flex-col items-center justify-center gap-5">
+            <div className="relative flex items-center justify-center">
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse scale-150" />
+              {/* Spinner */}
+              <div className="w-12 h-12 md:w-14 md:h-14 border-[3px] border-primary/10 border-t-primary border-r-primary/50 rounded-full animate-spin shadow-lg" />
             </div>
-
-            {/* Price Labels Mockup */}
-            <div className="absolute right-2 top-0 bottom-0 flex flex-col justify-around py-4 opacity-20">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} variant="text" width={40} height={10} />
-              ))}
-            </div>
-
-            {/* Time Labels Mockup */}
-            <div className="absolute bottom-2 left-0 right-0 flex justify-around px-12 opacity-20">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} variant="text" width={30} height={8} />
-              ))}
-            </div>
-
-            {/* Center Loading Indicator */}
-            <div className="relative z-20 flex flex-col items-center gap-4 m-auto">
-              <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Loading Market Data...</p>
+            
+            {/* Status Pill */}
+            <div className="bg-card/80 backdrop-blur-md border border-border/50 px-5 py-2.5 rounded-full shadow-xl">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <p className="text-[10px] md:text-[11px] font-black text-text-main uppercase tracking-[0.2em] opacity-80">
+                  Loading Chart
+                </p>
+              </div>
             </div>
           </div>
+          
+          {/* Bottom Gradient Fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-card to-transparent pointer-events-none z-10" />
         </div>
       )}
       <div className="tradingview-widget-container__widget h-full w-full"></div>

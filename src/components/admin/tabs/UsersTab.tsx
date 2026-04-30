@@ -239,17 +239,17 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
       {/* Search & Actions */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
         <div className="relative flex-1 max-w-lg group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
           <input
             type="text"
             placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900/60 backdrop-blur-md border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm shadow-xl"
+            className="w-full bg-input-bg backdrop-blur-md border border-input-border rounded-2xl py-3.5 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm shadow-xl"
           />
         </div>
         <div className="flex gap-3">
-          <button onClick={() => setShowTopUpModal(true)} className="flex-1 md:flex-none px-6 py-3.5 rounded-2xl bg-white/5 border border-white/5 text-white text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center gap-2">
+          <button onClick={() => setShowTopUpModal(true)} className="flex-1 md:flex-none px-6 py-3.5 rounded-2xl bg-card border border-border text-text-main text-xs font-black uppercase tracking-widest hover:bg-card-header transition-all active:scale-95 flex items-center justify-center gap-2">
             <ArrowUp size={16} className="text-green-500" /> {t("topUp")}
           </button>
           <button onClick={() => setShowCreateModal(true)} className="flex-1 md:flex-none px-6 py-3.5 rounded-2xl bg-primary text-white text-xs font-black uppercase tracking-widest hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2">
@@ -264,7 +264,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Shield size={18} className="text-primary" />
-            <h2 className="text-lg font-bold text-white tracking-tight">{t("adminAccounts")}</h2>
+            <h2 className="text-lg font-bold text-text-main tracking-tight">{t("adminAccounts")}</h2>
             <span className="ml-2 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black uppercase">
               {profiles.filter((p) => p.is_admin).length}
             </span>
@@ -284,8 +284,8 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <TrendingUp size={18} className="text-accent" />
-            <h2 className="text-lg font-bold text-white tracking-tight">{t("regularAccounts")}</h2>
-            <span className="ml-2 px-2 py-0.5 rounded-md bg-white/5 text-slate-400 text-[10px] font-black uppercase">
+            <h2 className="text-lg font-bold text-text-main tracking-tight">{t("regularAccounts")}</h2>
+            <span className="ml-2 px-2 py-0.5 rounded-md bg-card-header text-text-muted text-[10px] font-black uppercase border border-border">
               {profiles.filter((p) => !p.is_admin && p.is_verified).length}
             </span>
           </div>
@@ -305,7 +305,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-1">
               <Activity size={18} className="text-orange-500" />
-              <h2 className="text-lg font-bold text-white tracking-tight">{t("pendingVerification")}</h2>
+              <h2 className="text-lg font-bold text-text-main tracking-tight">{t("pendingVerification")}</h2>
               <span className="ml-2 px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase">
                 {profiles.filter((p) => !p.is_verified && !p.is_admin).length}
               </span>
@@ -339,31 +339,31 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             className="w-full max-w-xl glass-card p-0 overflow-hidden shadow-2xl cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-card-header/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Edit2 size={20} /></div>
-                <h3 className="text-lg font-bold text-white">{t("editUser")}: {editingProfile.username}</h3>
+                <h3 className="text-lg font-bold text-text-main">{t("editUser")}: {editingProfile.username}</h3>
               </div>
-              <button onClick={() => setEditingProfile(null)} className="p-2 hover:bg-white/5 rounded-xl text-slate-400 transition-all"><X size={24} /></button>
+              <button onClick={() => setEditingProfile(null)} className="p-2 hover:bg-card-header rounded-xl text-text-muted transition-all"><X size={24} /></button>
             </div>
             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("firstNameLabel")}</label>
-                  <input type="text" value={editingProfile.first_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, first_name: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
+                  <input type="text" value={editingProfile.first_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, first_name: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("lastNameLabel")}</label>
-                  <input type="text" value={editingProfile.last_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, last_name: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
+                  <input type="text" value={editingProfile.last_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, last_name: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("emailAddressLabel")}</label>
-                <input type="email" value={editingProfile.email} onChange={(e) => setEditingProfile({ ...editingProfile, email: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
+                <input type="email" value={editingProfile.email} onChange={(e) => setEditingProfile({ ...editingProfile, email: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("newPasswordOptional")}</label>
-                <input type="password" placeholder="Leave blank to keep current" onChange={(e) => setEditingProfile({ ...editingProfile, password: e.target.value })} className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
+                <input type="password" placeholder="Leave blank to keep current" onChange={(e) => setEditingProfile({ ...editingProfile, password: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <button onClick={() => handleUpdateProfile(editingProfile)} disabled={isSaving} className="w-full py-4 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50">
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {t("saveChanges")}
@@ -385,25 +385,25 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             className="w-full max-w-md glass-card p-0 overflow-hidden shadow-2xl cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-card-header/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent"><ArrowUp size={20} /></div>
-                <h3 className="text-lg font-bold text-white">{t("adjustWallet")}: {editingWalletProfile.username}</h3>
+                <h3 className="text-lg font-bold text-text-main">{t("adjustWallet")}: {editingWalletProfile.username}</h3>
               </div>
-              <button onClick={() => setEditingWalletProfile(null)} className="p-2 hover:bg-white/5 rounded-xl text-slate-400 transition-all"><X size={24} /></button>
+              <button onClick={() => setEditingWalletProfile(null)} className="p-2 hover:bg-card-header rounded-xl text-text-muted transition-all"><X size={24} /></button>
             </div>
             <div className="p-8 space-y-6">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center">
-                <span className="text-xs text-slate-400 font-bold uppercase">{t("currentBalance")}</span>
-                <span className="text-xl font-black text-white">${editingWalletProfile.balance.toLocaleString()}</span>
+              <div className="p-4 rounded-xl bg-card-header border border-border flex justify-between items-center shadow-inner">
+                <span className="text-xs text-text-muted font-bold uppercase">{t("currentBalance")}</span>
+                <span className="text-xl font-black text-text-main">${editingWalletProfile.balance.toLocaleString()}</span>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("amount")} (USD)</label>
-                <input type="number" value={walletAmount} onChange={(e) => setWalletAmount(e.target.value)} placeholder="0.00" className="w-full bg-slate-900 border border-white/5 rounded-xl p-4 text-xl font-black text-white focus:border-primary/50 outline-none transition-all" />
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">{t("amount")} (USD)</label>
+                <input type="number" value={walletAmount} onChange={(e) => setWalletAmount(e.target.value)} placeholder="0.00" className="w-full bg-input-bg border border-input-border rounded-xl p-4 text-xl font-black text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("reason")} / Memo</label>
-                <input type="text" value={walletReason} onChange={(e) => setWalletReason(e.target.value)} placeholder="..." className="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-primary/50 outline-none transition-all" />
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">{t("reason")} / Memo</label>
+                <input type="text" value={walletReason} onChange={(e) => setWalletReason(e.target.value)} placeholder="..." className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <button onClick={() => handleUpdateWallet('withdraw')} disabled={isSaving || !walletAmount} className="py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-30 flex items-center justify-center gap-2">
@@ -430,12 +430,12 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             className="w-full max-w-md glass-card p-0 overflow-hidden shadow-2xl cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-card-header/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Activity size={20} /></div>
-                <h3 className="text-lg font-bold text-white">{t("tradeControlTitle")}: {editingControlProfile.username}</h3>
+                <h3 className="text-lg font-bold text-text-main">{t("tradeControlTitle")}: {editingControlProfile.username}</h3>
               </div>
-              <button onClick={() => setEditingControlProfile(null)} className="p-2 hover:bg-white/5 rounded-xl text-slate-400 transition-all"><X size={24} /></button>
+              <button onClick={() => setEditingControlProfile(null)} className="p-2 hover:bg-card-header rounded-xl text-text-muted transition-all"><X size={24} /></button>
             </div>
             <div className="p-8 space-y-8">
               <div className="grid grid-cols-1 gap-4">
@@ -443,7 +443,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
                   const isActive = editingControlProfile.trade_control === mode;
                   const bgClass = isActive 
                     ? (mode === 'always_win' ? "bg-green-500 border-green-500 shadow-green-500/20" : mode === 'always_loss' ? "bg-red-500 border-red-500 shadow-red-500/20" : "bg-primary border-primary shadow-primary/20")
-                    : "bg-white/5 border-white/5 hover:border-white/10";
+                    : "bg-card-header border-border hover:border-primary/40 shadow-sm";
 
                   return (
                     <button 
@@ -452,12 +452,12 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
                       className={`p-5 rounded-2xl border transition-all text-left group shadow-lg ${bgClass}`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`text-sm font-black uppercase tracking-widest ${isActive ? "text-white" : "text-slate-300"}`}>
+                        <span className={`text-sm font-black uppercase tracking-widest ${isActive ? "text-white" : "text-text-main"}`}>
                           {mode.replace('_', ' ')}
                         </span>
                         {isActive && <Save size={16} className="text-white animate-pulse" />}
                       </div>
-                      <p className={`text-[10px] mt-1 font-bold ${isActive ? "text-white/70" : "text-slate-500"}`}>
+                      <p className={`text-[10px] mt-1 font-bold ${isActive ? "text-white/70" : "text-text-muted"}`}>
                         {mode === 'normal' ? 'Random market behavior' : mode === 'always_win' ? 'User will win every trade' : 'User will lose every trade'}
                       </p>
                     </button>

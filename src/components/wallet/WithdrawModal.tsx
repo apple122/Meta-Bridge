@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle2,
+  UserX
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { depositMethods } from "../../data/depositMethods";
@@ -15,7 +16,6 @@ import { SupportContactList } from "./SupportContactList";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 import type { GlobalSettings } from "../../types";
-import { UserX } from "lucide-react";
 
 type WithdrawStep = "select" | "form" | "result" | "kyc_required";
 
@@ -97,14 +97,14 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           exit={{ opacity: 0 }}
           className="flex flex-col"
         >
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
+            <h2 className="text-lg font-black text-text-main flex items-center gap-2">
                <UserX size={20} className="text-amber-500" />
                {language === 'th' ? "ต้องยืนยันตัวตน (KYC)" : "KYC Verification Required"}
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -112,26 +112,26 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
           <div className="p-6">
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
-                <AlertCircle size={32} className="text-amber-400" />
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 shadow-sm">
+                <AlertCircle size={32} className="text-amber-500" />
               </div>
-              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+              <p className="text-text-main text-sm leading-relaxed mb-4">
                 {language === 'th' 
                   ? (<>เพื่อความปลอดภัยของบัญชี กรุณายืนยันตัวตน{" "}
                       <button
                         onClick={() => { onClose(); sessionStorage.setItem("settings_active_tab", "profile"); navigate("/settings"); }}
-                        className="text-amber-400 underline underline-offset-2 hover:text-amber-300 font-bold transition-colors cursor-pointer"
+                        className="text-amber-600 underline underline-offset-2 hover:text-amber-700 font-bold transition-colors cursor-pointer"
                       >(KYC)</button>{" "}
                       ให้เสร็จสมบูรณ์ก่อนทำรายการฝาก-ถอนเงินครับ</>) 
                   : (<>For account security, please complete{" "}
                       <button
                         onClick={() => { onClose(); sessionStorage.setItem("settings_active_tab", "profile"); navigate("/settings"); }}
-                        className="text-amber-400 underline underline-offset-2 hover:text-amber-300 font-bold transition-colors cursor-pointer"
+                        className="text-amber-600 underline underline-offset-2 hover:text-amber-700 font-bold transition-colors cursor-pointer"
                       >KYC verification</button>{" "}
                       before depositing or withdrawing funds.</>)}
               </p>
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-400">{profile?.kyc_status?.toUpperCase() || 'UNVERIFIED'}</span>
+              <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest">
+                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-600">{profile?.kyc_status?.toUpperCase() || 'UNVERIFIED'}</span>
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
             <button
               onClick={onClose}
-              className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-sm transition-all"
+              className="w-full py-4 rounded-xl bg-card-header hover:bg-card-header/80 text-text-main font-black text-sm transition-all border border-border"
             >
               {t('closeLabel')}
             </button>
@@ -159,19 +159,19 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           className="flex flex-col"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
             <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <h2 className="text-lg font-black text-text-main flex items-center gap-2">
                 <ArrowUpCircle size={20} className="text-red-500" />
                 {t('withdraw')}
               </h2>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+              <p className="text-text-muted text-[10px] font-bold uppercase tracking-wider mt-0.5">
                 {t('selectWithdrawMethod')}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -180,9 +180,9 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           {/* Body */}
           <div className="p-6">
             {/* Balance badge */}
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
-              <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">{t('availableBalanceLabel')}</span>
-              <span className="text-white font-black text-lg">
+            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-6 flex items-center justify-between shadow-inner">
+              <span className="text-text-muted text-xs font-bold uppercase tracking-wider">{t('availableBalanceLabel')}</span>
+              <span className="text-text-main font-black text-lg tabular-nums">
                 ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -195,18 +195,18 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                     setSelected(m);
                     setStep("form");
                   }}
-                  className={`w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-tr ${m.color} border ${m.border} hover:border-white/30 transition-all group`}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all group shadow-sm`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{m.flag}</span>
                     <div className="text-left">
-                      <p className="text-white font-bold text-sm">{m.label}</p>
-                      <p className="text-slate-400 text-xs">{m.bank}</p>
+                      <p className="text-text-main font-bold text-sm">{m.label}</p>
+                      <p className="text-text-muted text-xs">{m.bank}</p>
                     </div>
                   </div>
                   <ChevronRight
                     size={16}
-                    className="text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all"
+                    className="text-text-muted group-hover:text-primary group-hover:translate-x-1 transition-all"
                   />
                 </button>
               ))}
@@ -225,16 +225,16 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           className="flex flex-col"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
             <button
               onClick={() => setStep("select")}
-              className="text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1"
+              className="text-text-muted hover:text-text-main text-xs font-bold flex items-center gap-1 transition-colors"
             >
               <ChevronRight size={14} className="rotate-180" /> {t('back')}
             </button>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -244,25 +244,25 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           <div className="p-6">
             <div className="text-center mb-6">
               <span className="text-3xl">{selected.flag}</span>
-              <h2 className="text-lg font-black text-white mt-1">
+              <h2 className="text-lg font-black text-text-main mt-1">
                 {selected.label}
               </h2>
-              <p className="text-slate-400 text-xs">{selected.bank}</p>
+              <p className="text-text-muted text-xs">{selected.bank}</p>
             </div>
 
             <div className="space-y-4 mb-6">
               {/* Verified Bank Details */}
-              <div className="bg-slate-900 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-card-header/50 border border-border rounded-xl p-4 flex items-center justify-between shadow-inner">
                 <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{selected.id === "usdt" ? t('network') : t('bankName')}</p>
-                  <p className="text-white font-bold text-sm">{profile?.bank_network || 'N/A'}</p>
-                  <p className="text-slate-400 text-xs mt-0.5 max-w-[120px] truncate">{profile?.bank_name || ''}</p>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">{selected.id === "usdt" ? t('network') : t('bankName')}</p>
+                  <p className="text-text-main font-bold text-sm">{profile?.bank_network || 'N/A'}</p>
+                  <p className="text-text-muted text-xs mt-0.5 max-w-[120px] truncate">{profile?.bank_name || ''}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{selected.id === "usdt" ? t('walletAddress') : t('accountNumberLabel')}</p>
-                  <p className="text-white font-mono text-sm tracking-widest">{profile?.bank_account ? `${profile.bank_account.substring(0, 4)}...${profile.bank_account.slice(-4)}` : 'N/A'}</p>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">{selected.id === "usdt" ? t('walletAddress') : t('accountNumberLabel')}</p>
+                  <p className="text-text-main font-mono text-sm tracking-widest">{profile?.bank_account ? `${profile.bank_account.substring(0, 4)}...${profile.bank_account.slice(-4)}` : 'N/A'}</p>
                   <div className="flex justify-end mt-1">
-                    <span className="text-[9px] bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded border border-green-500/20 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span className="text-[9px] bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/20 font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm">
                       <CheckCircle2 size={10} /> Verified
                     </span>
                   </div>
@@ -271,11 +271,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
               {/* Amount */}
               <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1.5 block ml-1">
                   {t('amountToWithdraw')}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">
                     $
                   </span>
                   <input
@@ -299,11 +299,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                       }
                     }}
                     placeholder="0.00"
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl py-4 pl-8 pr-20 text-xl font-black text-white focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-slate-700"
+                    className="w-full bg-input-bg border border-input-border rounded-xl py-4 pl-8 pr-20 text-xl font-black text-text-main focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-text-muted/30 shadow-inner"
                   />
                   <button
                     onClick={() => setAmount(balance.toFixed(2))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-red-400 hover:text-red-300 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-red-500 hover:text-red-600 transition-colors"
                   >
                     MAX
                   </button>
@@ -321,21 +321,21 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                           setAmountError("");
                         }
                       }}
-                      className="flex-1 py-2 rounded-lg bg-white/5 text-slate-400 text-[10px] font-black hover:bg-white/10 hover:text-white transition-colors border border-white/5"
+                      className="flex-1 py-2 rounded-lg bg-card-header text-text-muted text-[10px] font-black hover:bg-card-header/80 hover:text-text-main transition-all border border-border shadow-sm"
                     >
                       ${v.toLocaleString()}
                     </button>
                   ))}
                 </div>
                 {amountError && (
-                  <p className="text-red-400 text-[11px] font-bold mt-2 flex items-center gap-1">
+                  <p className="text-red-500 text-[11px] font-bold mt-2 flex items-center gap-1">
                     <AlertCircle size={12} /> {amountError}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="text-[10px] font-bold uppercase tracking-wide text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 leading-relaxed">
+            <div className="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 leading-relaxed shadow-sm">
               {t('checkDetailsWarning')}
             </div>
 
@@ -365,14 +365,14 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           className="flex flex-col"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
+            <h2 className="text-lg font-black text-text-main flex items-center gap-2">
               <AlertCircle size={20} className="text-red-500" />
               {t('withdrawProblemTitle')}
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -381,45 +381,45 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           {/* Body */}
           <div className="p-6">
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
-                <AlertCircle size={32} className="text-red-400" />
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 shadow-sm">
+                <AlertCircle size={32} className="text-red-500" />
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">
+              <p className="text-text-main text-sm leading-relaxed whitespace-pre-line">
                 {t('withdrawProblemDesc')}
               </p>
             </div>
 
             {/* Withdraw summary */}
-            <div className="bg-white/5 border border-white/5 rounded-xl p-4 mb-6 space-y-3">
+            <div className="bg-card-header/30 border border-border rounded-xl p-4 mb-6 space-y-3 shadow-inner">
               <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
-                <span className="text-slate-500">{t('currency')}</span>
-                <span className="text-white">{selected?.label}</span>
+                <span className="text-text-muted">{t('currency')}</span>
+                <span className="text-text-main">{selected?.label}</span>
               </div>
               <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider gap-4">
-                <span className="text-slate-500 shrink-0">
+                <span className="text-text-muted shrink-0">
                   {selected?.id === "usdt" ? "Network" : t('bankName')}
                 </span>
-                <span className="text-white text-right break-words">
+                <span className="text-text-main text-right break-words">
                   {selected?.id === "usdt" ? profile?.bank_network : profile?.bank_name || '-'}
                 </span>
               </div>
               <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider gap-4">
-                <span className="text-slate-500 shrink-0">
+                <span className="text-text-muted shrink-0">
                   {selected?.id === "usdt" ? "Name" : "Account Name"}
                 </span>
-                <span className="text-white text-right break-words">
+                <span className="text-text-main text-right break-words">
                   {profile?.first_name} {profile?.last_name}
                 </span>
               </div>
               <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider gap-4">
-                <span className="text-slate-500 shrink-0">{selected?.id === "usdt" ? "Wallet" : t('accountNumberLabel')}</span>
-                <span className="text-white font-mono text-right break-all">
+                <span className="text-text-muted shrink-0">{selected?.id === "usdt" ? "Wallet" : t('accountNumberLabel')}</span>
+                <span className="text-text-main font-mono text-right break-all">
                   {profile?.bank_account || '-'}
                 </span>
               </div>
-              <div className="flex justify-between text-[13px] border-t border-white/5 pt-3 mt-1">
-                <span className="text-slate-400 font-bold uppercase tracking-wider">{t('amount')}</span>
-                <span className="text-red-500 font-black">
+              <div className="flex justify-between text-[13px] border-t border-border pt-3 mt-1">
+                <span className="text-text-muted font-bold uppercase tracking-wider">{t('amount')}</span>
+                <span className="text-red-500 font-black tabular-nums">
                   $
                   {parseFloat(amount).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -434,7 +434,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
             <button
               onClick={onClose}
-              className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-base transition-all"
+              className="w-full py-4 rounded-xl bg-card-header hover:bg-card-header/80 text-text-main font-black text-base transition-all border border-border"
             >
               {t('closeLabel')}
             </button>

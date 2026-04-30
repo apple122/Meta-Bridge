@@ -30,7 +30,7 @@ export const AdminMobileNav: React.FC<AdminMobileNavProps> = ({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[1000] glass border-t border-white/5 px-2 pb-safe pt-2 backdrop-blur-xl pointer-events-auto lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-[1000] glass border-t border-border px-2 pb-safe pt-2 backdrop-blur-xl pointer-events-auto lg:hidden">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -42,7 +42,7 @@ export const AdminMobileNav: React.FC<AdminMobileNavProps> = ({
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className={`flex flex-col items-center gap-1 py-2 flex-1 transition-all duration-300 relative ${
-                isActive ? "text-primary" : "text-slate-500"
+                isActive ? "text-primary" : "text-text-muted"
               }`}
             >
               <motion.div
@@ -51,12 +51,12 @@ export const AdminMobileNav: React.FC<AdminMobileNavProps> = ({
               >
                 {item.icon}
                 {item.badge ? item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border border-slate-900 animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border border-background animate-pulse">
                     {item.badge}
                   </span>
                 ) : null}
               </motion.div>
-              <span className={`text-[9px] font-bold uppercase tracking-tight ${isActive ? "text-primary" : "text-slate-600"}`}>
+              <span className={`text-[9px] font-bold uppercase tracking-tight ${isActive ? "text-primary" : "text-text-muted"}`}>
                 {item.label}
               </span>
               {isActive && (

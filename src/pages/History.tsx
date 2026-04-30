@@ -169,36 +169,36 @@ export const History: React.FC = () => {
       {/* Calendar Header */}
       <div className="flex items-center justify-between border-l-4 border-primary pl-4">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl font-black text-text-main flex items-center gap-2">
             <CalendarIcon size={24} className="text-primary" />
             {t("history") || "History"}
           </h1>
-          <p className="text-sm font-semibold text-slate-400 mt-1">
+          <p className="text-sm font-semibold text-text-muted mt-1">
             {t("calendarView")}
           </p>
         </div>
       </div>
 
       {/* Calendar Component */}
-      <div className="glass-card bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+      <div className="glass-card bg-card border border-border rounded-3xl p-6 relative overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
 
         {/* Calendar Nav */}
         <div className="flex items-center justify-between mb-6 relative z-10">
           <button
             onClick={prevMonth}
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-300"
+            className="p-2 hover:bg-card-header rounded-xl transition-colors text-text-muted hover:text-text-main"
           >
             <ChevronLeft size={24} />
           </button>
 
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-xl font-black text-text-main tracking-tight">
             {monthNames[currentMonth]} {currentYear}
           </h2>
 
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-300"
+            className="p-2 hover:bg-card-header rounded-xl transition-colors text-text-muted hover:text-text-main"
           >
             <ChevronRight size={24} />
           </button>
@@ -211,7 +211,7 @@ export const History: React.FC = () => {
             {dayNames.map((day) => (
               <div
                 key={day}
-                className="text-center text-xs font-bold text-slate-500 uppercase"
+                className="text-center text-xs font-bold text-text-muted uppercase"
               >
                 {day}
               </div>
@@ -276,8 +276,8 @@ export const History: React.FC = () => {
                       ${isSelected
                         ? "bg-gradient-to-tr from-primary to-accent text-white shadow-lg shadow-primary/30"
                         : isToday
-                          ? "bg-white/10 text-white border border-white/20"
-                          : "text-slate-400 hover:text-white hover:bg-white/5"
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "text-text-muted hover:text-text-main hover:bg-card-header/50"
                       }
                     `}
                   >
@@ -298,10 +298,10 @@ export const History: React.FC = () => {
       </div>
 
       {/* View Switcher */}
-      <div className="flex p-1 bg-slate-900/60 border border-white/5 rounded-2xl mb-6">
+      <div className="flex p-1 bg-card-header/50 border border-border rounded-2xl mb-6 shadow-inner">
         <button
           onClick={() => setView('trading')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-text-muted hover:text-text-main"
             }`}
         >
           <ClipboardList size={16} />
@@ -309,7 +309,7 @@ export const History: React.FC = () => {
         </button>
         <button
           onClick={() => setView('security')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-slate-300"
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-text-muted hover:text-text-main"
             }`}
         >
           <ShieldCheck size={16} />
@@ -328,10 +328,10 @@ export const History: React.FC = () => {
             className="space-y-6"
           >
             {/* Advanced Filter Panel */}
-            <div className="glass-card bg-slate-900/40 border border-white/5 rounded-3xl p-3 sm:p-4 space-y-3 shadow-xl">
+            <div className="glass-card bg-card-header/40 border border-border rounded-3xl p-3 sm:p-4 space-y-3 shadow-xl">
               <div className="flex flex-col lg:flex-row gap-3">
                 <div className="relative group flex-grow">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors">
                     <Search size={16} />
                   </div>
                   <input
@@ -339,28 +339,28 @@ export const History: React.FC = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t("searchHistory") === "searchHistory" ? "ค้นหา Order ID, สินทรัพย์..." : t("searchHistory")}
-                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 text-white font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all placeholder:text-slate-600"
+                    className="w-full bg-input-bg border border-input-border rounded-2xl py-2.5 pl-11 pr-4 text-text-main font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-text-muted/30 shadow-inner"
                   />
                 </div>
 
-                <div className="flex items-center gap-1 p-1 bg-slate-950/50 border border-white/5 rounded-2xl flex-shrink-0">
+                <div className="flex items-center gap-1 p-1 bg-input-bg border border-input-border rounded-2xl flex-shrink-0 shadow-inner">
                   <button
                     onClick={() => setStatusFilter('all')}
-                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all' ? "bg-white/10 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"}`}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all' ? "bg-card text-text-main shadow-md border border-border" : "text-text-muted hover:text-text-main"}`}
                   >
                     <LayoutGrid size={12} />
                     {t("all") || "All"}
                   </button>
                   <button
                     onClick={() => setStatusFilter('win')}
-                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win' ? "bg-green-500/20 text-green-500 shadow-lg shadow-green-500/10" : "text-slate-500 hover:text-slate-400"}`}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win' ? "bg-green-500/20 text-green-600 shadow-md border border-green-500/20" : "text-text-muted hover:text-text-main"}`}
                   >
                     <CheckCircle2 size={12} />
                     {t("win") || "Win"}
                   </button>
                   <button
                     onClick={() => setStatusFilter('loss')}
-                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss' ? "bg-red-500/20 text-red-500 shadow-lg shadow-red-500/10" : "text-slate-500 hover:text-slate-400"}`}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss' ? "bg-red-500/20 text-red-600 shadow-md border border-red-500/20" : "text-text-muted hover:text-text-main"}`}
                   >
                     <XCircle size={12} />
                     {t("loss") || "Loss"}
@@ -368,20 +368,20 @@ export const History: React.FC = () => {
                 </div>
 
                 <div className="relative group lg:w-48">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none group-focus-within:text-primary transition-colors">
                     <Filter size={14} />
                   </div>
                   <select
                     value={selectedAsset}
                     onChange={(e) => setSelectedAsset(e.target.value)}
-                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-2.5 pl-10 pr-4 text-[10px] font-black text-white outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
+                    className="w-full bg-input-bg border border-input-border rounded-2xl py-2.5 pl-10 pr-4 text-[10px] font-black text-text-main outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all shadow-inner"
                   >
                     <option value="all"> {t("allAssets") || "All Assets"} </option>
                     {uniqueAssets.map((asset) => (
                       <option key={asset} value={asset}>{asset}</option>
                     ))}
                   </select>
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
                     <ChevronRight size={14} className="rotate-90" />
                   </div>
                 </div>
@@ -391,11 +391,11 @@ export const History: React.FC = () => {
 
             {/* Trading List */}
             {filteredTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-slate-900/30">
-                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-600">
+              <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-card-header/30 rounded-3xl border border-border border-dashed">
+                <div className="w-16 h-16 rounded-full bg-card-header flex items-center justify-center text-text-muted shadow-inner">
                   <ClipboardList size={32} />
                 </div>
-                <p className="text-slate-500 font-medium tracking-wide text-sm">No trading activity found.</p>
+                <p className="text-text-muted font-medium tracking-wide text-sm">No trading activity found.</p>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -417,15 +417,15 @@ export const History: React.FC = () => {
                           className={`sticky md:top-[74px] top-[64px] z-10 ${index === 0 ? "mt-0" : "mt-4"} bg-background/95 backdrop-blur-md -mx-6`}
                         >
                           <div className="flex items-center gap-3 py-2 px-6">
-                            <div className="h-px bg-white/5 flex-grow" />
-                            <span className="text-[7px] text-primary font-black uppercase tracking-[0.2em] px-2.5 py-1 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5 leading-none">
+                            <div className="h-px bg-border flex-grow" />
+                            <span className="text-[7px] text-primary font-black uppercase tracking-[0.2em] px-2.5 py-1 bg-primary/10 rounded-full border border-primary/20 shadow-sm leading-none">
                               {(() => {
                                 const todayStr = new Date().toLocaleDateString();
                                 if (txDateStr === todayStr) return language === 'th' ? 'วันนี้' : 'Today';
                                 return formatDate(new Date(tx.timestamp), { weekday: "short", month: "short", day: "numeric", year: "numeric" });
                               })()}
                             </span>
-                            <div className="h-px bg-white/5 flex-grow" />
+                            <div className="h-px bg-border flex-grow" />
                           </div>
                         </div>
                       )}
@@ -433,52 +433,52 @@ export const History: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-                        className={`glass-card bg-slate-900/60 hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl shadow-primary/5" : ""}`}
+                        className={`glass-card bg-card border border-border hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden shadow-sm ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl" : ""}`}
                       >
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-4 min-w-0">
                             <div className="relative flex-shrink-0">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 ${isPositive ? "bg-green-500/10 text-green-500 border-green-500/20" : isBinaryBet ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}`}>
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 shadow-sm ${isPositive ? "bg-green-500/10 text-green-600 border-green-500/20" : isBinaryBet ? "bg-primary/10 text-primary border-primary/20" : "bg-red-500/10 text-red-600 border-red-500/20"}`}>
                                 {isWin ? <Trophy size={20} /> : isDeposit ? <TrendingUp size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
                               </div>
-                              <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-slate-700/90 backdrop-blur-sm border border-slate-500/50 text-[8px] font-black text-slate-200 tabular-nums uppercase shadow-lg shadow-black/20 z-10">
+                              <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-card-header border border-border text-[8px] font-black text-text-muted tabular-nums uppercase shadow-md z-10">
                                 #{tx.smart_id || tx.id.slice(-4)}
                               </span>
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-white text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
+                                <h3 className="font-bold text-text-main text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
                                 {tx.binary_type && (
-                                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter ${tx.binary_type === 'up'
-                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                    : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter shadow-sm ${tx.binary_type === 'up'
+                                    ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                                    : 'bg-red-500/10 text-red-600 border border-red-500/20'
                                     }`}>
                                     {tx.binary_type === 'up' ? '▲ UP' : '▼ DOWN'}
                                   </span>
                                 )}
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
-                                {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
+                                <span className="text-[10px] text-text-muted font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
+                                {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap shadow-sm ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
                               </div>
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className={`text-base font-black ${isPositive ? "text-green-400" : isBinaryBet ? "text-indigo-400" : "text-red-400"}`}>{isPositive ? "+" : "-"}{formatCurrency(tx.total)}</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
+                            <p className={`text-base font-black tabular-nums ${isPositive ? "text-green-600" : isBinaryBet ? "text-primary" : "text-red-600"}`}>{isPositive ? "+" : "-"}{formatCurrency(tx.total)}</p>
+                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
                           </div>
                         </div>
 
                         <AnimatePresence>
                           {isExpanded && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-white/5 grid grid-cols-2 gap-4 overflow-hidden">
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-border grid grid-cols-2 gap-4 overflow-hidden">
                               <div>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("transactionId")}</p>
-                                <p className="text-[9px] text-white font-mono break-all leading-tight mt-1">#{tx.id}</p>
+                                <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">{t("transactionId")}</p>
+                                <p className="text-[9px] text-text-main font-mono break-all leading-tight mt-1">#{tx.id}</p>
                               </div>
                               <div>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t("dateTime")}</p>
-                                <p className="text-[10px] text-white font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
+                                <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">{t("dateTime")}</p>
+                                <p className="text-[10px] text-text-main font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
                               </div>
                             </motion.div>
                           )}
@@ -490,8 +490,8 @@ export const History: React.FC = () => {
 
                 {hasMoreTransactions && (
                   <div className="pt-6 pb-10 flex justify-center">
-                    <button onClick={loadMoreTransactions} disabled={loadingMore} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95">
-                      {loadingMore ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : <Zap size={18} className="text-primary" />}
+                    <button onClick={loadMoreTransactions} disabled={loadingMore} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-card border border-border hover:border-primary/30 text-text-main font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-lg">
+                      {loadingMore ? <div className="w-4 h-4 border-2 border-text-muted border-t-primary rounded-full animate-spin" /> : <Zap size={18} className="text-primary" />}
                       {loadingMore ? t("loading") : t("loadMore")}
                     </button>
                   </div>
@@ -508,10 +508,10 @@ export const History: React.FC = () => {
             className="space-y-4"
           >
             <div className="flex items-center gap-2">
-              <h3 className="text-white text-sm font-bold uppercase tracking-widest">
+              <h3 className="text-text-main text-sm font-bold uppercase tracking-widest">
                 {isth ? 'ประวัติการเข้าใช้งาน' : 'Login History'}
               </h3>
-              <div className="h-px flex-1 bg-white/5" />
+              <div className="h-px flex-1 bg-border" />
             </div>
 
             {loadingActivities ? (
@@ -519,8 +519,8 @@ export const History: React.FC = () => {
                 <div className="w-8 h-8 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
               </div>
             ) : activities.length === 0 ? (
-              <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-white/5 border-dashed">
-                <p className="text-slate-500 text-sm font-medium">No history found.</p>
+              <div className="text-center py-20 bg-card-header/40 rounded-3xl border border-border border-dashed shadow-inner">
+                <p className="text-text-muted text-sm font-medium">No history found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
@@ -531,34 +531,34 @@ export const History: React.FC = () => {
                       key={act.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center justify-between group relative overflow-hidden ${isCurrent ? 'ring-1 ring-primary/40 shadow-lg shadow-primary/5' : ''}`}
+                      className={`bg-card border border-border rounded-2xl p-4 flex items-center justify-between group relative overflow-hidden shadow-sm transition-all ${isCurrent ? 'ring-1 ring-primary/40 shadow-lg' : 'hover:border-primary/20'}`}
                     >
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${act.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${act.isActive ? 'bg-green-500/10 text-green-600' : 'bg-card-header text-text-muted'}`}>
                           <Monitor size={20} />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white text-[13px] font-bold truncate">
+                            <span className="text-text-main text-[13px] font-bold truncate">
                               {act.device || 'Unknown Device'}
                             </span>
                             {isCurrent && (
-                              <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[8px] font-black text-primary uppercase">
+                              <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[8px] font-black text-primary uppercase shadow-sm">
                                 {isth ? 'เซสชันปัจจุบัน' : 'Current Session'}
                               </span>
                             )}
                             {!isCurrent && act.isActive && (
-                              <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-400 uppercase">
-                                <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="inline-flex items-center gap-1 text-[8px] font-black text-green-600 uppercase">
+                                <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
                                 {isth ? 'กำลังออนไลน์' : 'Active'}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+                            <span className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
                               <Wifi size={10} /> {act.ip}
                             </span>
-                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+                            <span className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
                               <Clock size={10} /> {new Date(act.createdAt).toLocaleString()}
                             </span>
                           </div>
@@ -568,7 +568,7 @@ export const History: React.FC = () => {
                       {!isCurrent && act.isActive && act.sessionId && (
                         <button
                           onClick={() => handleKick(act.sessionId!)}
-                          className="p-2.5 rounded-xl text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                          className="p-2.5 rounded-xl text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
                           title={isth ? 'เตะออกจากระบบ' : 'Kick Out'}
                         >
                           <LogOut size={16} />

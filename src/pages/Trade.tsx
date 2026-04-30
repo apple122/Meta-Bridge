@@ -156,21 +156,21 @@ export const Trade: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card relative w-full"
+            className="glass-card relative w-full bg-card border-border shadow-xl"
           >
             {/* Background Accent Gradient */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none" />
 
             <div className="relative p-3 md:p-4 space-y-2 z-50">
               {/* Top Row: Identity & Price */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-2xl relative flex-shrink-0 overflow-hidden group cursor-pointer hover:scale-105 transition-all"
+                    className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-card border border-border flex items-center justify-center shadow-lg relative flex-shrink-0 overflow-hidden group cursor-pointer hover:scale-105 transition-all"
                     onClick={() => setShowMarketDetails(true)}
                     title={t("viewMarketDetails")}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {selectedAsset.iconUrl ? (
                       <img
                         src={selectedAsset.iconUrl}
@@ -186,16 +186,16 @@ export const Trade: React.FC = () => {
                       />
                     ) : null}
                     <span
-                      className={`fallback-letter text-white font-black text-2xl tracking-tighter relative z-10 ${selectedAsset.iconUrl ? "hidden" : ""}`}
+                      className={`fallback-letter text-text-main font-black text-2xl tracking-tighter relative z-10 ${selectedAsset.iconUrl ? "hidden" : ""}`}
                     >
                       {selectedAsset.symbol[0]}
                     </span>
-                    <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent opacity-20 blur-md rounded-2xl" />
+                    <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-accent opacity-10 blur-md rounded-2xl" />
                   </div>
                   <div className="relative" ref={searchRef}>
                     <div className="flex items-center gap-2 md:gap-3">
                       <h2
-                        className="text-xl md:text-3xl font-black text-white tracking-tight leading-none mb-1 cursor-pointer hover:text-primary transition-colors"
+                        className="text-xl md:text-3xl font-black text-text-main tracking-tight leading-none mb-1 cursor-pointer hover:text-primary transition-colors"
                         onClick={() => setShowMarketDetails(true)}
                         title={t("viewMarketDetails")}
                       >
@@ -203,7 +203,7 @@ export const Trade: React.FC = () => {
                       </h2>
                       <button
                         onClick={() => setShowSearch(!showSearch)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${showSearch ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all shadow-sm ${showSearch ? "bg-primary/20 border-primary/30 text-primary" : "bg-card-header/50 border-border text-text-muted hover:bg-card-header hover:text-text-main"}`}
                       >
                         {showSearch ? <X size={14} /> : <Search size={14} />}
                         <span className="text-xs font-black uppercase tracking-wider">
@@ -212,12 +212,12 @@ export const Trade: React.FC = () => {
                       </button>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-slate-400 tracking-wider">
+                      <span className="text-sm font-bold text-text-muted tracking-wider">
                         {selectedAsset.symbol} / USD
                       </span>
                       <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest leading-none">
+                        <span className="text-[10px] font-black text-green-600 uppercase tracking-widest leading-none">
                           Live
                         </span>
                       </div>
@@ -230,18 +230,18 @@ export const Trade: React.FC = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className="absolute md:left-0 left-[-50%] top-full mt-4 w-80 md:w-96 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 p-4 space-y-4"
+                          className="absolute md:left-0 left-[-50%] top-full mt-4 w-80 md:w-96 bg-card border border-border rounded-2xl shadow-2xl z-50 p-4 space-y-4"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="relative">
                             <Search
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
                               size={14}
                             />
                             <input
                               type="text"
                               placeholder={t('searchAssets') + "..."}
-                              className="w-full bg-slate-800 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/40"
+                              className="w-full bg-input-bg border border-input-border rounded-xl py-2 pl-9 pr-4 text-sm text-text-main font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-inner"
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -258,12 +258,12 @@ export const Trade: React.FC = () => {
                                 }}
                                 className={`group w-full flex items-center justify-between p-3 rounded-xl transition-all border border-transparent ${
                                   selectedAsset.symbol === asset.symbol
-                                    ? "bg-primary/10 border-primary/20"
-                                    : "hover:bg-white/5 hover:border-white/10"
+                                    ? "bg-primary/10 border-primary/20 shadow-sm"
+                                    : "hover:bg-card-header/50 hover:border-border"
                                 }`}
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                                  <div className="w-8 h-8 rounded-lg bg-card-header border border-border flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                                     <img
                                       src={asset.iconUrl}
                                       className="w-full h-full object-cover relative z-10"
@@ -281,17 +281,17 @@ export const Trade: React.FC = () => {
                                           fallback.classList.remove("hidden");
                                       }}
                                     />
-                                    <span className="dropdown-fallback hidden text-[10px] font-black text-white relative z-10 uppercase">
+                                    <span className="dropdown-fallback hidden text-[10px] font-black text-text-main relative z-10 uppercase">
                                       {asset.symbol[0]}
                                     </span>
                                   </div>
                                   <div className="text-left flex flex-col items-start">
                                     <p
-                                      className={`text-xs font-bold ${selectedAsset.symbol === asset.symbol ? "text-primary" : "text-white"}`}
+                                      className={`text-xs font-bold ${selectedAsset.symbol === asset.symbol ? "text-primary" : "text-text-main"}`}
                                     >
                                       {asset.name}
                                     </p>
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5">
                                       {asset.symbol}
                                     </p>
                                   </div>
@@ -299,7 +299,7 @@ export const Trade: React.FC = () => {
 
                                 <div className="flex items-center gap-3 md:gap-4">
                                   <div className="text-right flex flex-col justify-center items-end">
-                                    <span className="text-xs font-bold text-white tabular-nums">
+                                    <span className="text-xs font-bold text-text-main tabular-nums">
                                       {formatCurrency(asset.price || 0)}
                                     </span>
                                     <span
@@ -309,10 +309,10 @@ export const Trade: React.FC = () => {
                                     </span>
                                   </div>
                                   <div
-                                    className={`px-2.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    className={`px-2.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
                                       selectedAsset.symbol === asset.symbol
                                         ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                        : "bg-white/5 text-slate-400 group-hover:bg-primary group-hover:text-white"
+                                        : "bg-card-header text-text-muted group-hover:bg-primary group-hover:text-white"
                                     }`}
                                   >
                                     {selectedAsset.symbol === asset.symbol
@@ -324,7 +324,7 @@ export const Trade: React.FC = () => {
                             ))}
                             {filteredAssets.length === 0 && (
                               <div className="text-center py-6">
-                                <p className="text-sm font-bold text-slate-400">
+                                <p className="text-sm font-bold text-text-muted">
                                   {t('noRecordsFound')}
                                 </p>
                               </div>
@@ -338,7 +338,7 @@ export const Trade: React.FC = () => {
 
                 {/* Main Price Display */}
                 <div className="flex flex-col items-start md:items-end">
-                  <div className="text-2xl md:text-4xl font-black text-white tracking-tighter tabular-nums leading-none">
+                  <div className="text-2xl md:text-4xl font-black text-text-main tracking-tighter tabular-nums leading-none">
                     {formatCurrency(livePrice)}
                   </div>
                   <div
@@ -364,33 +364,33 @@ export const Trade: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 p-2.5 md:p-3.5 rounded-2xl bg-white/5 border border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 p-2.5 md:p-3.5 rounded-2xl bg-card-header/50 border border-border shadow-inner">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                     {t('high24h')}
                   </p>
-                  <p className="text-base font-bold text-white tabular-nums">
+                  <p className="text-base font-bold text-text-main tabular-nums">
                     {formatCurrency(selectedAsset.high || 0)}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                     {t('low24h')}
                   </p>
-                  <p className="text-base font-bold text-white tabular-nums">
+                  <p className="text-base font-bold text-text-main tabular-nums">
                     {formatCurrency(selectedAsset.low || 0)}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                     {t('vol24h')}
                   </p>
-                  <p className="text-base font-bold text-white tabular-nums">
+                  <p className="text-base font-bold text-text-main tabular-nums">
                     {selectedAsset.volume ? `$${(selectedAsset.volume / 1000000).toFixed(2)}M` : '---'}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                     {t('sentiment')}
                   </p>
                   <p
@@ -409,7 +409,7 @@ export const Trade: React.FC = () => {
         </div>
 
         {/* Chart Area */}
-        <div className="glass-card h-[400px] md:h-[500px] p-0 overflow-hidden relative z-0 w-full">
+        <div className="glass-card h-[400px] md:h-[500px] p-0 overflow-hidden relative z-0 w-full bg-card border-border shadow-xl">
           <TradingChart symbol={selectedAsset.symbol} interval={timeframe.minutes.toString()} />
         </div>
       </div>
@@ -446,16 +446,16 @@ export const Trade: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden relative mb-16 md:mb-0"
+              className="bg-card border border-border rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden relative mb-16 md:mb-0"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Decorative Blur */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
 
               {/* Header */}
-              <div className="p-6 md:p-8 border-b border-white/5 flex items-start justify-between relative z-10">
+              <div className="p-6 md:p-8 border-b border-border flex items-start justify-between relative z-10 bg-card-header/50">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center shadow-lg overflow-hidden shrink-0">
                     {selectedAsset.iconUrl ? (
                       <img
                         src={selectedAsset.iconUrl}
@@ -463,23 +463,23 @@ export const Trade: React.FC = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-white font-black text-2xl uppercase">
+                      <span className="text-text-main font-black text-2xl uppercase">
                         {selectedAsset.symbol[0]}
                       </span>
                     )}
                   </div>
                   <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                    <h2 className="text-2xl md:text-3xl font-black text-text-main tracking-tight">
                       {selectedAsset.name} {t('assetInfo')}
                     </h2>
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-1">
+                    <p className="text-text-muted font-bold uppercase tracking-widest text-xs mt-1">
                       {selectedAsset.symbol} / USD
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowMarketDetails(false)}
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+                  className="p-2 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
                 >
                   <X size={20} />
                 </button>
@@ -488,16 +488,16 @@ export const Trade: React.FC = () => {
               {/* Data Grid content */}
               <div className="p-6 md:p-8 space-y-8 relative z-10">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">
+                  <div className="bg-card-header/50 border border-border rounded-2xl p-4 shadow-sm">
+                    <p className="text-[10px] uppercase font-black text-text-muted tracking-widest mb-1">
                       {t('livePrice')}
                     </p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-lg font-bold text-text-main">
                       {formatCurrency(livePrice)}
                     </p>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">
+                  <div className="bg-card-header/50 border border-border rounded-2xl p-4 shadow-sm">
+                    <p className="text-[10px] uppercase font-black text-text-muted tracking-widest mb-1">
                       {t('change24h')}
                     </p>
                     <p
@@ -506,31 +506,31 @@ export const Trade: React.FC = () => {
                       {formatPercentage(selectedAsset.change ?? 0, true)}
                     </p>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">
+                  <div className="bg-card-header/50 border border-border rounded-2xl p-4 shadow-sm">
+                    <p className="text-[10px] uppercase font-black text-text-muted tracking-widest mb-1">
                       24h High
                     </p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-lg font-bold text-text-main">
                       {formatCurrency(selectedAsset.high || 0)}
                     </p>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                    <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">
+                  <div className="bg-card-header/50 border border-border rounded-2xl p-4 shadow-sm">
+                    <p className="text-[10px] uppercase font-black text-text-muted tracking-widest mb-1">
                       24h Low
                     </p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-lg font-bold text-text-main">
                       {formatCurrency(selectedAsset.low || 0)}
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 shadow-inner">
                   <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-3">
                     {t('marketOverview')}
                   </h3>
-                  <p className="text-slate-300 text-sm leading-relaxed">
+                  <p className="text-text-muted text-sm leading-relaxed">
                     Trade{" "}
-                    <span className="font-bold text-white">
+                    <span className="font-bold text-text-main">
                       {selectedAsset.name}
                     </span>{" "}
                     with ultra-low latency execution and deep liquidity.
@@ -543,7 +543,6 @@ export const Trade: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowMarketDetails(false);
-                    // Focus logic is natively handled by user focusing the right panel, but auto-closing smooths the UX.
                   }}
                   className="w-full relative group overflow-hidden py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-black hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2"
                 >

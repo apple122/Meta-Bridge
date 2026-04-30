@@ -662,11 +662,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 8, scale: 0.95 }}
               className={`px-2 py-1.5 rounded-lg shadow-xl flex items-start gap-1.5 pointer-events-auto backdrop-blur-xl border text-[9px] font-bold leading-tight ${n.type === "success"
-                ? "bg-green-500/10 border-green-500/20 text-green-400"
-                : "bg-red-500/10 border-red-500/20 text-red-400"
+                ? "bg-green-500/10 border-green-500/20 text-green-600"
+                : "bg-red-500/10 border-red-500/20 text-red-600"
                 }`}
             >
-              <div className={`shrink-0 mt-px ${n.type === "success" ? "text-green-400" : "text-red-400"}`}>
+              <div className={`shrink-0 mt-px ${n.type === "success" ? "text-green-600" : "text-red-600"}`}>
                 {n.type === "success" ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
               </div>
               <span className="whitespace-nowrap flex-1">{n.message}</span>
@@ -698,13 +698,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <ChevronRight className="rotate-180" size={24} />
               </button>
             )}
-            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+            <div className="flex items-center gap-3 border-b border-border pb-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                 <User size={20} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white leading-tight">{t("verification")}</h2>
-                <p className="text-slate-400 text-[11px]">{t("managePersonalInfo")}</p>
+                <h2 className="text-base font-bold text-text-main leading-tight">{t("verification")}</h2>
+                <p className="text-text-muted text-[11px]">{t("managePersonalInfo")}</p>
               </div>
             </div>
 
@@ -804,14 +804,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
             <div className="flex flex-col gap-6">
               {/* Bank/Crypto Toggle */}
-              <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-full max-w-sm mx-auto">
+              <div className="flex p-1 bg-input-bg rounded-2xl border border-input-border w-full max-w-sm mx-auto shadow-inner">
                 {(["bank", "crypto"] as const).map((type) => (
                   <button
                     key={type}
                     onClick={() => setBankType(type)}
                     className={`flex-1 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${bankType === type
                       ? "bg-primary text-white shadow-lg shadow-primary/20"
-                      : "text-slate-500 hover:text-white"
+                      : "text-text-muted hover:text-text-main"
                       }`}
                   >
                     {type === "bank" ? <Landmark size={14} /> : <Zap size={14} />}
@@ -874,7 +874,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <div className="space-y-6">
                   {bankType === "bank" ? (
                     <div className="space-y-3">
-                      <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
+                      <label className="text-[11px] sm:text-[10px] font-bold text-text-muted uppercase tracking-widest block ml-1">
                         {t("selectBank")}
                       </label>
                       {/* Custom Dropdown */}
@@ -885,7 +885,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                             setTempBankNetwork(e.target.value);
                             setTempBankName("");
                           }}
-                          className="w-full appearance-none bg-slate-900 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                          className="w-full appearance-none bg-input-bg border border-input-border rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-text-main font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer shadow-inner"
                         >
                           <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
                           {THAI_BANKS.map((bank) => (
@@ -907,22 +907,22 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                                 {bank.icon}
                               </div>
                             ) : (
-                              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                                <Landmark size={16} className="text-slate-500" />
+                              <div className="w-9 h-9 rounded-full bg-card-header/50 flex items-center justify-center border border-border">
+                                <Landmark size={16} className="text-text-muted" />
                               </div>
                             );
                           })()}
                         </div>
 
                         {/* Right: chevron arrow */}
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
                           <ChevronRight size={16} className="rotate-90" />
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <label className="text-[11px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest block ml-1">
+                      <label className="text-[11px] sm:text-[10px] font-bold text-text-muted uppercase tracking-widest block ml-1">
                         {t("network")}
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -932,8 +932,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                             type="button"
                             onClick={() => setTempBankNetwork(net.id)}
                             className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all  ${tempBankNetwork === net.id
-                              ? "bg-white/10 border-white/30 ring-1 ring-white/10"
-                              : "bg-white/5 border-white/5 hover:border-white/10"
+                              ? "bg-primary/10 border-primary/30 ring-1 ring-primary/10 shadow-md"
+                              : "bg-input-bg border-input-border hover:border-primary/30"
                               }`}
                           >
                             <div
@@ -943,8 +943,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                               {net.icon}
                             </div>
                             <div className="text-left">
-                              <p className="text-white font-bold text-[11px] leading-tight">{net.name}</p>
-                              <p className="text-[9px] text-slate-500 leading-none mt-1">{net.desc}</p>
+                              <p className={`font-bold text-[11px] leading-tight ${tempBankNetwork === net.id ? 'text-text-main' : 'text-text-muted'}`}>{net.name}</p>
+                              <p className="text-[9px] text-text-muted/60 leading-none mt-1">{net.desc}</p>
                             </div>
                             {tempBankNetwork === net.id && (
                               <div className="ml-auto text-primary">
@@ -957,7 +957,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     </div>
                   )}
 
-                  <div className="bg-white/5 p-3.5 sm:p-4 rounded-2xl border border-white/10 space-y-3">
+                  <div className="bg-card-header/40 p-3.5 sm:p-4 rounded-2xl border border-border space-y-3 shadow-inner">
                     <div className="space-y-1">
                       <SettingsInput
                         label={bankType === "bank" ? t("accountNumberLabel") : t("walletAddress")}
@@ -966,7 +966,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                         onChange={(e) => setTempBankAccount(e.target.value)}
                       />
                       {accountError && (
-                        <p className="text-red-400 text-[10px] font-bold ml-1 animate-pulse">
+                        <p className="text-red-500 text-[10px] font-bold ml-1 animate-pulse">
                           ⚠️ {accountError}
                         </p>
                       )}
@@ -986,11 +986,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   <p>{t("bankWarning")}</p>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-white/5">
+                <div className="flex justify-end pt-6 border-t border-border">
                   <button
                     type="submit"
                     disabled={isSaving || !tempBankNetwork || !tempBankAccount || !tempBankName || !!accountError}
-                    className="btn-primary flex items-center justify-center gap-4 px-10 disabled:opacity-50 h-11 sm:h-12 w-full sm:w-auto"
+                    className="w-full sm:w-auto px-10 py-3.5 sm:py-4 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50"
                   >
                     {isSaving ? (
                       <Loader2 size={18} className="animate-spin" />
@@ -1026,35 +1026,35 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <div className="space-y-8">
                 {/* Account Binding Section */}
                 <div>
-                  <h2 className="text-base font-bold text-white mb-1">
+                  <h2 className="text-base font-bold text-text-main mb-1">
                     {t("accountSecurity") || t("changePassword")}
                   </h2>
-                  <p className="text-slate-400 text-[11px] mb-3">
+                  <p className="text-text-muted text-[11px] mb-3">
                     {t("securityDescription")}
                   </p>
 
-                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-text-main mb-4 flex items-center gap-2">
                     <Globe size={16} className="text-primary" />
                     {t("loginMethods") || "Login Methods"}
                   </h3>
 
-                  <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+                  <div className="p-3 sm:p-4 rounded-xl bg-card-header/50 border border-border flex items-center justify-between gap-3 shadow-sm">
                     <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-inner">
                         <Mail size={20} />
                       </div>
                       <div className="overflow-hidden">
-                        <p className="text-white font-bold text-sm truncate">{t("emailLogin")}</p>
-                        <p className="text-xs text-slate-400 truncate">{maskEmail(profileData.email)}</p>
+                        <p className="text-text-main font-bold text-sm truncate">{t("emailLogin")}</p>
+                        <p className="text-xs text-text-muted truncate">{maskEmail(profileData.email)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                      <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider hidden lg:block">
+                      <span className="px-2 py-1 rounded bg-green-500/10 text-green-600 text-[10px] font-bold uppercase tracking-wider hidden lg:block border border-green-500/10">
                         {t("connected") || "Connected"}
                       </span>
                       <button
                         onClick={() => setIsEmailFlow(true)}
-                        className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary whitespace-nowrap"
+                        className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shadow-sm whitespace-nowrap"
                       >
                         {t("changeEmail") || "Change Email"}
                       </button>
@@ -1063,19 +1063,19 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 </div>
 
                 {/* Login History Section */}
-                <div className="pt-6 border-t border-white/5">
-                  <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <div className="pt-6 border-t border-border">
+                  <h3 className="text-sm font-bold text-text-main mb-4 flex items-center gap-2">
                     <History size={16} className="text-primary" />
                     {t("loginHistory")}
                   </h3>
-                  <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-card-header/50 border border-border shadow-sm">
                     <div className="overflow-hidden">
-                      <p className="text-white font-bold text-sm truncate">{t("recentActivity")}</p>
-                      <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("viewRecentSignins")}</p>
+                      <p className="text-text-main font-bold text-sm truncate">{t("recentActivity")}</p>
+                      <p className="text-[11px] sm:text-xs text-text-muted truncate">{t("viewRecentSignins")}</p>
                     </div>
                     <button
                       onClick={() => setIsLoginHistoryFlow(true)}
-                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
+                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap shadow-sm"
                     >
                       {t("viewHistory")}
                     </button>
@@ -1083,9 +1083,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 </div>
 
                 {/* Password Section */}
-                <div className="pt-6 border-t border-white/5">
+                <div className="pt-6 border-t border-border">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-text-main flex items-center gap-2">
                       <KeyRound size={16} className="text-primary" />
                       {t("changePassword")}
                     </h3>
@@ -1097,14 +1097,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     </button>
                   </div>
 
-                  <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="p-3 sm:p-4 flex items-center justify-between gap-3 rounded-xl bg-card-header/50 border border-border shadow-sm">
                     <div className="overflow-hidden">
-                      <p className="text-white font-bold text-sm truncate">{t("accountPassword")}</p>
-                      <p className="text-[11px] sm:text-xs text-slate-400 truncate">{t("updatePasswordDesc")}</p>
+                      <p className="text-text-main font-bold text-sm truncate">{t("accountPassword")}</p>
+                      <p className="text-[11px] sm:text-xs text-text-muted truncate">{t("updatePasswordDesc")}</p>
                     </div>
                     <button
                       onClick={() => setIsChangingPassword(true)}
-                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap"
+                      className="text-[10px] sm:text-xs font-bold text-primary hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary hover:border-primary shrink-0 whitespace-nowrap shadow-sm"
                     >
                       {t("changePassword")}
                     </button>
@@ -1171,15 +1171,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <div className="flex items-center gap-2 mb-2">
                   <button
                     onClick={() => setIsLoginHistoryFlow(false)}
-                    className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
+                    className="p-1 hover:bg-card-header rounded-lg text-text-muted hover:text-text-main transition-colors"
                   >
                     <ArrowLeft size={20} />
                   </button>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">{t("loginHistory")}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-text-main">{t("loginHistory")}</h2>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                  <p className="text-slate-400 text-xs sm:text-sm">
+                  <p className="text-text-muted text-xs sm:text-sm">
                     {t("loginHistoryDesc")}
                   </p>
                   {loginHistoryList.length > 0 && (
@@ -1207,28 +1207,28 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       const isCurrent = hist.sessionId && currentUserSessionId && hist.sessionId === currentUserSessionId;
 
                       return (
-                        <div key={hist.id || i} className={`p-4 rounded-xl transition-all ${isCurrent ? "bg-primary/5 border-primary/40 shadow-xl shadow-primary/5 ring-1 ring-primary/20" : "bg-white/5 border-white/5 hover:bg-white/10 opacity-70"}`}>
+                        <div key={hist.id || i} className={`p-4 rounded-xl transition-all ${isCurrent ? "bg-primary/5 border-primary/40 shadow-xl shadow-primary/5 ring-1 ring-primary/20" : "bg-card-header/40 border border-border hover:bg-card-header/60"}`}>
                           <div className="flex items-start sm:items-center gap-3 md:gap-4">
-                            <div className={`mt-0.5 sm:mt-0 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400"}`}>
+                            <div className={`mt-0.5 sm:mt-0 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${isCurrent ? "bg-primary/20 text-primary" : "bg-card-header text-text-muted"}`}>
                               {isTablet ? <Tablet size={20} /> : isMobile ? <Smartphone size={20} /> : <Monitor size={20} />}
                             </div>
                             <div className="flex-1 min-w-0">
                               
                               <div className="flex items-center gap-2 mb-1">
-                                <p className="text-white font-bold text-sm truncate">{hist.device || hist.device_name || "Legacy Session"}</p>
+                                <p className="text-text-main font-bold text-sm truncate">{hist.device || hist.device_name || "Legacy Session"}</p>
                                 {isCurrent ? (
                                   <span className="px-2 py-0.5 rounded-full bg-primary text-[9px] font-black text-background whitespace-nowrap shrink-0 shadow-lg shadow-primary/20">
                                     {language === 'th' ? 'เซสชันปัจจุบัน' : 'Current Session'}
                                   </span>
                                 ) : hist.isActive ? (
                                   <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[9px] font-bold text-emerald-500 whitespace-nowrap">{language === 'th' ? 'กำลังออนไลน์' : 'Online'}</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    <span className="text-[9px] font-bold text-green-600 whitespace-nowrap">{language === 'th' ? 'กำลังออนไลน์' : 'Online'}</span>
                                   </span>
                                 ) : (
-                                  <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 shrink-0 opacity-60">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                                    <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">{language === 'th' ? 'ออฟไลน์' : 'Offline'}</span>
+                                  <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-card-header border border-border shrink-0 opacity-60">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-text-muted" />
+                                    <span className="text-[9px] font-bold text-text-muted whitespace-nowrap">{language === 'th' ? 'ออฟไลน์' : 'Offline'}</span>
                                   </span>
                                 )}
                               </div>
@@ -1295,8 +1295,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       <Mail size={32} />
                     </div>
                     <div className="space-y-2">
-                      <p className="text-white font-bold">{t("verifyCurrentEmail")}</p>
-                      <p className="text-sm text-slate-400 px-8">
+                      <p className="text-text-main font-bold">{t("verifyCurrentEmail")}</p>
+                      <p className="text-sm text-text-muted px-8">
                         {t("verifyCurrentEmailDesc")}
                         <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
                       </p>
@@ -1336,7 +1336,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     <button
                       type="button"
                       onClick={handleSendOldEmailOtp}
-                      className="w-full text-xs font-bold text-slate-500 hover:text-white"
+                      className="w-full text-xs font-bold text-text-muted hover:text-text-main"
                     >
                       {t("didntGetCode")}
                     </button>
@@ -1524,10 +1524,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <ChevronRight className="rotate-180" size={20} />
               </button>
             )}
-            <h2 className="text-base font-bold text-white mb-1">
+            <h2 className="text-base font-bold text-text-main mb-1">
               {t("historyDeposit")}
             </h2>
-            <p className="text-slate-400 text-[11px] mb-4">
+            <p className="text-text-muted text-[11px] mb-4">
               {t("historyDepositDesc")}
             </p>
 
@@ -1548,29 +1548,29 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   .map((tx) => (
                     <div
                       key={tx.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+                      className="flex items-center justify-between p-3 rounded-xl bg-card-header/50 border border-border shadow-sm"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-green-500/10 text-green-600 flex items-center justify-center font-bold text-xs border border-green-500/20">
                           +
                         </div>
                         <div>
-                          <p className="text-white font-bold text-sm uppercase">
+                          <p className="text-text-main font-bold text-sm uppercase">
                             {tx.asset || "Deposit"}
                           </p>
-                          <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                          <p className="text-[10px] text-text-muted font-bold mt-0.5">
                             {new Date(tx.timestamp).toLocaleString()}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-green-500 font-bold text-[13px]">
+                        <p className="text-green-600 font-bold text-[13px]">
                           +$
                           {tx.amount.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                           })}
                         </p>
-                        <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 font-bold">
+                        <p className="text-[9px] text-text-muted uppercase tracking-widest mt-0.5 font-bold">
                           {tx.status}
                         </p>
                       </div>
@@ -1605,20 +1605,20 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </p>
 
             <div className="space-y-5">
-              <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+              <div className="p-3 sm:p-4 rounded-xl bg-card-header/50 border border-border flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${notificationPermission === 'granted' ? 'bg-green-500/20 text-green-500' :
-                    notificationPermission === 'denied' ? 'bg-red-500/20 text-red-500' : 'bg-primary/20 text-primary'
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-inner ${notificationPermission === 'granted' ? 'bg-green-500/10 text-green-600' :
+                    notificationPermission === 'denied' ? 'bg-red-500/10 text-red-600' : 'bg-primary/10 text-primary'
                     }`}>
                     {notificationPermission === 'granted' ? <Bell size={16} /> :
                       notificationPermission === 'denied' ? <BellOff size={16} /> : <Bell size={16} />}
                   </div>
                   <div>
-                    <p className="text-white font-bold text-xs">
+                    <p className="text-text-main font-bold text-xs">
                       {notificationPermission === 'granted' ? t("notificationsEnabled") :
                         notificationPermission === 'denied' ? t("notificationsDisabled") : t("enableNotifications")}
                     </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
+                    <p className="text-[10px] text-text-muted mt-0.5">
                       {notificationPermission === 'unsupported' ? t("notificationsUnsupported") :
                         notificationPermission === 'denied' ? t("notificationsDenied") : 'Web Push Notifications'}
                     </p>
@@ -1647,18 +1647,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               )}
 
               <div className="space-y-3">
-                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t("notificationTypes")}</h4>
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">{t("notificationTypes")}</h4>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 shadow-sm">
-                    <span className="text-xs font-bold text-white">{t("tradeOutcomes")}</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-card-header/50 shadow-inner border border-border">
+                    <span className="text-xs font-bold text-text-main">{t("tradeOutcomes")}</span>
                     <div className="w-8 h-4 rounded-full bg-green-500 relative cursor-default">
                       <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 opacity-50">
-                    <span className="text-xs font-bold text-white">{t("priceAlerts")}</span>
-                    <div className="w-8 h-4 rounded-full bg-slate-700 relative cursor-not-allowed">
-                      <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-slate-500 rounded-full" />
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-card-header/30 opacity-50 border border-border shadow-inner">
+                    <span className="text-xs font-bold text-text-main">{t("priceAlerts")}</span>
+                    <div className="w-8 h-4 rounded-full bg-card relative cursor-not-allowed border border-border">
+                      <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-text-muted rounded-full" />
                     </div>
                   </div>
                 </div>
@@ -1683,10 +1683,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <ChevronRight className="rotate-180" size={20} />
               </button>
             )}
-            <h2 className="text-base font-bold text-white mb-1">
+            <h2 className="text-base font-bold text-text-main mb-1">
               {t("languageSettings")}
             </h2>
-            <p className="text-slate-400 text-[11px] mb-5">
+            <p className="text-text-muted text-[11px] mb-5">
               {t("languageSettingsDesc")}
             </p>
 
@@ -1709,7 +1709,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-2xl leading-none">{lang.icon}</span>
-                      <span className={`font-bold ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                      <span className={`font-bold ${isActive ? 'text-text-main' : 'text-text-main'}`}>
                         {lang.label}
                       </span>
                     </div>
@@ -1723,11 +1723,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               })}
             </div>
 
-            <div className="mt-12 p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="mt-12 p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4 shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
                 <Globe size={24} />
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-text-muted leading-relaxed">
                 {t("translationsApplied")}
               </p>
             </div>
@@ -1750,10 +1750,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <ChevronRight className="rotate-180" size={20} />
               </button>
             )}
-            <h2 className="text-base font-bold text-white mb-1">
+            <h2 className="text-base font-bold text-text-main mb-1">
               {t("displaySettings")}
             </h2>
-            <p className="text-slate-400 text-[11px] mb-5">
+            <p className="text-text-muted text-[11px] mb-5">
               {language === 'th' ? "ปรับแต่งหน้าตาของแอปพลิเคชันตามที่คุณต้องการ" : "Personalize the appearance of the application"}
             </p>
 
@@ -1777,10 +1777,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                         : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
                         }`}
                     >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 ${mode.colors} ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-inner ${mode.colors} ${isActive ? 'text-primary' : 'text-text-muted'}`}>
                         {mode.icon}
                       </div>
-                      <span className={`text-[11px] font-bold uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                      <span className={`text-[11px] font-bold uppercase tracking-widest ${isActive ? 'text-text-main' : 'text-text-muted'}`}>
                         {mode.label}
                       </span>
                       {isActive && (
@@ -1793,14 +1793,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 })}
               </div>
 
-              <div className="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5">
+              <div className="mt-8 p-5 rounded-2xl bg-card-header/50 border border-border shadow-inner">
                  <div className="flex items-center gap-3 mb-3">
-                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shadow-sm">
                      <Zap size={16} />
                    </div>
-                   <h4 className="text-xs font-bold text-white uppercase tracking-tight">{language === 'th' ? "ประสิทธิภาพ" : "Performance"}</h4>
+                   <h4 className="text-xs font-bold text-text-main uppercase tracking-tight">{language === 'th' ? "ประสิทธิภาพ" : "Performance"}</h4>
                  </div>
-                 <p className="text-[11px] text-slate-400 leading-relaxed">
+                 <p className="text-[11px] text-text-muted leading-relaxed">
                    {language === 'th' 
                      ? "การสลับธีมจะเปลี่ยนรูปแบบการแสดงผลทันทีโดยไม่ต้องรีโหลดหน้าเว็บ และระบบจะจำค่าที่คุณเลือกไว้ในเครื่องนี้" 
                      : "Theme switching happens instantly without page reload, and your preference is saved locally on this device."}
@@ -1827,13 +1827,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   <ChevronRight className="rotate-180" size={20} />
                 </button>
               )}
-              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-                <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+              <div className="flex items-center gap-3 border-b border-border pb-4">
+                <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0 shadow-inner">
                   <MessageSquare size={18} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white leading-tight">{language === 'th' ? "แจ้งรายงานปัญหา" : "Report an Issue"}</h2>
-                  <p className="text-slate-400 text-[11px]">{language === 'th' ? "แจ้งปัญหาที่คุณพบเพื่อรับการช่วยเหลือ" : "Let us know about any issues you encounter"}</p>
+                  <h2 className="text-base font-bold text-text-main leading-tight">{language === 'th' ? "แจ้งรายงานปัญหา" : "Report an Issue"}</h2>
+                  <p className="text-text-muted text-[11px]">{language === 'th' ? "แจ้งปัญหาที่คุณพบเพื่อรับการช่วยเหลือ" : "Let us know about any issues you encounter"}</p>
                 </div>
               </div>
 
@@ -1846,10 +1846,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                         key={cat}
                         type="button"
                         onClick={() => setReportForm(prev => ({ ...prev, category: cat }))}
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border shadow-sm ${
                           reportForm.category === cat 
                             ? "bg-primary/20 border-primary/40 text-primary" 
-                            : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10"
+                            : "bg-input-bg border-border text-text-muted hover:bg-card-header/50"
                         }`}
                       >
                         {cat}
@@ -1868,12 +1868,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{language === 'th' ? "รายละเอียดปัญหา" : "Problem Details"}</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">{language === 'th' ? "รายละเอียดปัญหา" : "Problem Details"}</label>
                   <textarea
                     value={reportForm.message}
                     onChange={(e) => setReportForm(prev => ({ ...prev, message: e.target.value }))}
                     placeholder={language === 'th' ? "อธิบายรายละเอียดปัญหาที่คุณพบ..." : "Describe the problem in detail..."}
-                    className="w-full bg-slate-900/50 border border-white/5 rounded-2xl p-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all min-h-[120px] resize-none"
+                    className="w-full bg-input-bg border border-input-border rounded-2xl p-4 text-xs text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all min-h-[120px] resize-none shadow-inner"
                   />
                 </div>
 
@@ -1892,8 +1892,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
             {/* Reports History */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 px-1">
-                <History size={14} className="text-slate-500" />
+              <h3 className="text-xs font-black text-text-main uppercase tracking-widest flex items-center gap-2 px-1">
+                <History size={14} className="text-text-muted" />
                 {language === 'th' ? "ประวัติการรายงาน" : "Report History"}
               </h3>
 
@@ -1909,22 +1909,22 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   </div>
                 ) : (
                   reports.map(report => (
-                    <div key={report.id} className="glass-card bg-slate-900/60 border-white/5 p-4 space-y-3 group hover:border-white/10 transition-all">
+                    <div key={report.id} className="glass-card bg-card border border-border p-4 space-y-3 group hover:border-primary/30 transition-all shadow-sm">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${
-                            report.status === 'resolved' ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-inner ${
+                            report.status === 'resolved' ? "bg-green-500/10 text-green-600" : "bg-orange-500/10 text-orange-600"
                           }`}>
                             #{report.smart_id}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-black text-primary uppercase tracking-tighter bg-primary/10 px-1.5 py-0.5 rounded-md">
+                              <span className="text-[10px] font-black text-primary uppercase tracking-tighter bg-primary/10 px-1.5 py-0.5 rounded-md shadow-sm">
                                 {report.category}
                               </span>
-                              <h4 className="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-none">{report.subject}</h4>
+                              <h4 className="text-xs font-bold text-text-main truncate max-w-[150px] sm:max-w-none">{report.subject}</h4>
                             </div>
-                            <p className="text-[9px] text-slate-500 font-bold mt-0.5 uppercase tracking-widest">
+                            <p className="text-[9px] text-text-muted font-bold mt-0.5 uppercase tracking-widest">
                               {new Date(report.created_at).toLocaleString()}
                             </p>
                           </div>
@@ -1936,18 +1936,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                         </div>
                       </div>
 
-                      <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                        <p className="text-[11px] text-slate-300 leading-relaxed italic">"{report.message}"</p>
+                      <div className="p-3 bg-card-header/50 rounded-xl border border-border shadow-inner">
+                        <p className="text-[11px] text-text-main leading-relaxed italic">"{report.message}"</p>
                       </div>
 
                       {report.admin_response && (
-                        <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 relative overflow-hidden">
+                        <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 relative overflow-hidden shadow-sm">
                           <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                           <div className="flex items-center gap-2 mb-1.5">
                             <ShieldCheck size={12} className="text-primary" />
                             <span className="text-[9px] font-black text-primary uppercase tracking-widest">{language === 'th' ? "แอดมินตอบกลับ" : "Admin Response"}</span>
                           </div>
-                          <p className="text-[11px] text-white font-medium leading-relaxed">{report.admin_response}</p>
+                          <p className="text-[11px] text-text-main font-medium leading-relaxed">{report.admin_response}</p>
                         </div>
                       )}
                     </div>

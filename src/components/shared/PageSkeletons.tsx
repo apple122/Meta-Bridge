@@ -83,7 +83,7 @@ export const TradeSkeleton: React.FC = () => (
             <Skeleton variant="text" width={80} height={20} />
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 p-2.5 md:p-3.5 bg-white/5 rounded-2xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 p-2.5 md:p-3.5 bg-card-header/50 rounded-2xl border border-border">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="space-y-2">
               <Skeleton variant="text" width="60%" height={10} />
@@ -119,17 +119,17 @@ export const WalletSkeleton: React.FC = () => (
       <div className="grid grid-cols-2 gap-4 w-full md:w-auto mt-8 md:mt-0">
         <Skeleton variant="rect" width={100} height={80} />
         <Skeleton variant="rect" width={100} height={80} />
-        <Skeleton variant="rect" width="100%" height={80} className="col-span-2" />
+        <Skeleton variant="rect" width={100} height={80} className="col-span-2" />
       </div>
     </div>
     <div className="glass-card p-0 overflow-hidden">
-      <div className="p-6 border-b border-white/5 flex justify-between items-center">
+      <div className="p-6 border-b border-border flex justify-between items-center bg-card-header/50">
         <Skeleton variant="text" width={200} height={30} />
         <Skeleton variant="rect" width={120} height={40} />
       </div>
       <div className="p-6 space-y-4">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
+          <div key={i} className="flex items-center justify-between p-4 bg-card-header/30 rounded-2xl border border-border">
             <div className="flex items-center gap-4">
               <Skeleton variant="rect" width={44} height={44} className="rounded-xl" />
               <div className="space-y-2">
@@ -152,7 +152,7 @@ export const HistorySkeleton: React.FC = () => (
   <div className="pt-24 pb-32 px-6 max-w-5xl mx-auto space-y-8">
     <Skeleton variant="text" width={250} height={40} />
     <div className="glass-card p-0 overflow-hidden">
-      <div className="p-6 border-b border-white/5 flex justify-between items-center">
+      <div className="p-6 border-b border-border flex justify-between items-center bg-card-header/50">
         <Skeleton variant="text" width={150} height={24} />
         <div className="flex gap-2">
           <Skeleton variant="rect" width={100} height={36} className="rounded-full" />
@@ -161,7 +161,7 @@ export const HistorySkeleton: React.FC = () => (
       </div>
       <div className="p-6 space-y-4">
         {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="flex items-center justify-between p-4 hover:bg-white/5 rounded-2xl transition-all">
+          <div key={i} className="flex items-center justify-between p-4 hover:bg-card-header/20 rounded-2xl transition-all border border-transparent hover:border-border">
             <div className="flex items-center gap-4">
               <Skeleton variant="rect" width={44} height={44} className="rounded-xl" />
               <div className="space-y-2">
@@ -211,12 +211,12 @@ export const AdminSkeleton: React.FC = () => (
       ))}
     </div>
     <div className="glass-card h-[500px] space-y-6">
-      <div className="flex justify-between border-b border-white/5 pb-4">
+      <div className="flex justify-between border-b border-border pb-4 bg-card-header/50 -mx-6 px-6 pt-1">
         <Skeleton variant="text" width={150} height={20} />
         <Skeleton variant="rect" width={100} height={30} className="rounded-lg" />
       </div>
       {[1, 2, 3, 4, 5].map(i => (
-        <div key={i} className="flex gap-4 items-center">
+        <div key={i} className="flex gap-4 items-center px-2">
           <Skeleton variant="circle" width={40} height={40} />
           <div className="flex-1 space-y-2">
             <Skeleton variant="text" width="30%" height={10} />
@@ -242,7 +242,7 @@ export const SettingsSkeleton: React.FC = () => (
               <Skeleton variant="text" width={60} height={10} />
             </div>
           </div>
-          <div className="pt-4 border-t border-white/5 space-y-2">
+          <div className="pt-4 border-t border-border space-y-2">
             <Skeleton variant="text" width={80} height={10} />
             <Skeleton variant="text" width={120} height={24} />
           </div>

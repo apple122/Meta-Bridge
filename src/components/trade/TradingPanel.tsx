@@ -96,15 +96,15 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass-card"
+        className="glass-card bg-card border-border shadow-xl"
       >
-        <div className="flex gap-2 p-1 bg-slate-900/50 rounded-xl mb-6">
+        <div className="flex gap-2 p-1 bg-card-header/50 rounded-xl mb-6 shadow-inner">
           <button
             onClick={() => setOrderType("up")}
             className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
               orderType === "up"
                 ? "bg-green-500 text-white shadow-lg shadow-green-500/20"
-                : "text-slate-500 hover:text-white"
+                : "text-text-muted hover:text-text-main"
             }`}
           >
             {t("upCall")}
@@ -114,7 +114,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
               orderType === "down"
                 ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
-                : "text-slate-500 hover:text-white"
+                : "text-text-muted hover:text-text-main"
             }`}
           >
             {t("downPut")}
@@ -124,7 +124,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
         <div className="space-y-4">
           {/* Consolidated Amount & Time Selector */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase ml-1">
+            <label className="text-xs font-bold text-text-muted uppercase ml-1">
               {t("investmentAndTime")}
             </label>
             <div
@@ -135,17 +135,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                 setShowAmountModal(true);
               }}
             >
-              <div className="w-full bg-slate-900 border border-white/5 hover:border-primary/30 rounded-xl p-4 transition-all flex items-center justify-between">
+              <div className="w-full bg-input-bg border border-input-border hover:border-primary/30 rounded-xl p-4 transition-all flex items-center justify-between shadow-inner">
                 <div className="flex flex-col">
-                  <span className="text-2xl font-black text-white">
+                  <span className="text-2xl font-black text-text-main">
                     {amount || "0.00"}{" "}
-                    <span className="text-sm text-slate-500 font-bold ml-1">
+                    <span className="text-sm text-text-muted font-bold ml-1">
                       USD
                     </span>
                   </span>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-lg border border-primary/20 shadow-sm">
                     <span className="text-sm font-black text-primary">
                       {timeframe.label}
                     </span>
@@ -158,7 +158,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-between text-[10px] font-bold text-slate-500 px-1">
+          <div className="flex justify-between text-[10px] font-bold text-text-muted px-1">
             <div className="flex flex-col gap-0.5">
               <span>
                 {t("availableBalance")}: {formatCurrency(balance)}
@@ -175,9 +175,9 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-white/5 space-y-2">
+          <div className="p-4 rounded-xl bg-card-header/30 border border-border shadow-inner space-y-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">
+              <span className="text-text-muted">
                 Profit if Won (+{timeframe.payout}%)
               </span>
               <span className="text-green-500 font-mono font-bold">
@@ -210,8 +210,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
 
       {/* Active Binary Trades */}
       {activeBinaryTrades.length > 0 && (
-        <div className="glass-card p-6">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
+        <div className="glass-card p-6 bg-card border-border shadow-xl">
+          <h3 className="text-sm font-bold text-text-main flex items-center gap-2 mb-4">
             <Clock size={16} className="text-primary" />
             {t("activeBinaryTrades")}
           </h3>
@@ -231,7 +231,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
               return (
                 <div
                   key={trade.id}
-                  className="p-3 bg-slate-900/50 rounded-xl border border-white/5 flex items-center justify-between"
+                  className="p-3 bg-card-header/50 rounded-xl border border-border flex items-center justify-between shadow-sm"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -244,19 +244,19 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                       )}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white uppercase">
+                      <p className="text-xs font-bold text-text-main uppercase">
                         {trade.assetSymbol}
                       </p>
-                      <p className="text-[10px] text-slate-500 font-medium">
+                      <p className="text-[10px] text-text-muted font-medium">
                         Entry: {formatCurrency(trade.entryPrice)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end">
-                    <p className="text-sm font-black text-white tabular-nums tracking-wider">
+                    <p className="text-sm font-black text-text-main tabular-nums tracking-wider">
                       {timeString}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-bold">
+                    <p className="text-[10px] text-text-muted font-bold">
                       {formatCurrency(trade.amount)}{" "}
                       <span className="text-green-500">
                         +{trade.payoutPercent}%
@@ -270,15 +270,15 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
         </div>
       )}
 
-      <div className="glass-card p-6">
+      <div className="glass-card p-6 bg-card border-border shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-text-main flex items-center gap-2">
             <HistoryIcon size={16} className="text-primary" />
             {t("recentTransactions")}
           </h3>
           <button
             onClick={() => navigate("/history")}
-            className="text-xs text-slate-500 hover:text-primary transition-colors"
+            className="text-xs text-text-muted hover:text-primary transition-colors"
           >
             {t("viewAll")}
           </button>
@@ -299,17 +299,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between py-3 border-b border-white/5 last:border-0 hover:translate-x-1 transition-transform cursor-pointer group"
+                  className="flex items-center justify-between py-3 border-b border-border last:border-0 hover:translate-x-1 transition-transform cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center relative flex-shrink-0 shadow-sm border-2 transition-colors ${
                           isPositive 
-                            ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                            ? "bg-green-500/10 text-green-600 border-green-500/20" 
                             : isBinaryBet 
-                              ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" 
-                              : "bg-red-500/10 text-red-500 border-red-500/20"
+                              ? "bg-primary/10 text-primary border-primary/20" 
+                              : "bg-red-500/10 text-red-600 border-red-500/20"
                         }`}
                       >
                         {isWin ? (
@@ -324,23 +324,23 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                           <ArrowDownLeft size={16} strokeWidth={2.5} />
                         )}
                       </div>
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full bg-slate-700 border border-slate-600 text-[8px] font-black text-slate-300 tabular-nums uppercase">
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full bg-card-header border border-border text-[8px] font-black text-text-muted tabular-nums uppercase shadow-sm">
                         #{tx.smart_id || tx.id.slice(-4)}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <p className="text-[10px] sm:text-[11px] font-black text-white uppercase truncate max-w-[80px] sm:max-w-none">
+                        <p className="text-[10px] sm:text-[11px] font-black text-text-main uppercase truncate max-w-[80px] sm:max-w-none">
                           {isBinaryBet ? t('predictionAmount') : tx.asset}
                         </p>
                         {tx.binary_type && (
-                          <span className={`text-[8px] font-black px-1 rounded flex-shrink-0 ${tx.binary_type === 'up' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                          <span className={`text-[8px] font-black px-1 rounded flex-shrink-0 ${tx.binary_type === 'up' ? 'bg-green-500/20 text-green-600' : 'bg-red-500/20 text-red-600'}`}>
                             {tx.binary_type === 'up' ? "▲" : "▼"} {tx.binary_type.toUpperCase()}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-tight">
+                        <p className="text-[8px] text-text-muted font-bold uppercase tracking-tight">
                           {new Date(tx.timestamp).getHours().toString().padStart(2, '0')}:
                           {new Date(tx.timestamp).getMinutes().toString().padStart(2, '0')}
                         </p>
@@ -355,13 +355,13 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                   <div className="text-right flex-shrink-0">
                     <p
                       className={`text-[11px] sm:text-xs font-bold ${
-                        isPositive ? "text-green-500" : isBinaryBet ? "text-indigo-400" : "text-red-500"
+                        isPositive ? "text-green-600" : isBinaryBet ? "text-primary" : "text-red-600"
                       }`}
                     >
                       {isPositive ? "+" : "-"}
                       {formatCurrency(tx.total)}
                     </p>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-[10px] text-text-muted">
                       {isBinaryBet ? t('active') : t(tx.status)}
                     </p>
                   </div>
@@ -386,18 +386,18 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="glass border border-white/10 rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden flex flex-col mb-16 md:mb-0"
+              className="bg-card border border-border rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden flex flex-col mb-16 md:mb-0"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
-                <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50 shadow-sm">
+                <h2 className="text-lg font-black text-text-main flex items-center gap-2">
                   <Clock size={20} className="text-primary" />{" "}
                   {t("setupOption")}
                 </h2>
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tabular-nums transition-colors ${timeLeftAmount <= 5 ? "bg-red-500/20 text-red-500 animate-pulse" : "bg-primary/20 text-primary"}`}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tabular-nums transition-colors ${timeLeftAmount <= 5 ? "bg-red-500/20 text-red-600 animate-pulse" : "bg-primary/20 text-primary"}`}
                   >
                     <Clock size={12} />
                     {Math.floor(timeLeftAmount / 60)
@@ -407,7 +407,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                   </div>
                   <button
                     onClick={() => setShowAmountModal(false)}
-                    className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+                    className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
                   >
                     <X size={18} />
                   </button>
@@ -416,18 +416,18 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
 
               <div className="p-6 space-y-6">
                 {/* Balance View */}
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-card-header/30 border border-border shadow-inner">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">
+                    <p className="text-[10px] font-black uppercase text-text-muted tracking-widest mb-1">
                       {t("availableBalance")}
                     </p>
-                    <p className="text-xl font-bold text-white tabular-nums">
+                    <p className="text-xl font-bold text-text-main tabular-nums">
                       {formatCurrency(balance)}
                     </p>
                   </div>
                   <button
                     onClick={() => setTempAmount(balance.toString())}
-                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-black uppercase transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-black uppercase transition-all shadow-sm"
                   >
                     Max
                   </button>
@@ -435,7 +435,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
 
                 {/* Amount Output */}
                 <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-500">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-text-muted">
                     $
                   </span>
                   <input
@@ -445,9 +445,9 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                     onChange={(e) => setTempAmount(e.target.value)}
                     placeholder="0.00"
                     autoFocus
-                    className="w-full bg-slate-900/80 border border-white/10 hover:border-primary/50 focus:border-primary rounded-2xl py-5 pl-10 pr-16 text-3xl font-black text-white focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all tabular-nums"
+                    className="w-full bg-input-bg border border-input-border hover:border-primary/50 focus:border-primary rounded-2xl py-5 pl-10 pr-16 text-3xl font-black text-text-main focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all tabular-nums shadow-inner"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-text-muted">
                     USD
                   </span>
                 </div>
@@ -464,14 +464,14 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                           payout: tf.payout,
                         })
                       }
-                      className={`py-3 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 ${
+                      className={`py-3 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 shadow-sm ${
                         timeframe.minutes === tf.minutes
-                          ? "bg-primary/20 border-primary shadow-sm shadow-primary/20"
-                          : "bg-slate-800 border-white/5 hover:border-white/20 hover:bg-slate-700"
+                          ? "bg-primary/20 border-primary shadow-md shadow-primary/10"
+                          : "bg-card-header/50 border-border hover:border-primary/30 hover:bg-card-header"
                       }`}
                     >
                       <span
-                        className={`font-bold text-lg ${timeframe.minutes === tf.minutes ? "text-primary" : "text-white"}`}
+                        className={`font-bold text-lg ${timeframe.minutes === tf.minutes ? "text-primary" : "text-text-main"}`}
                       >
                         {tf.label}
                       </span>

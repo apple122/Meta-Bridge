@@ -60,7 +60,7 @@ export const Home: React.FC = () => {
           <motion.div 
             key={idx} 
             whileHover={{ y: -3, transition: { duration: 0.2 } }}
-            className="glass-card group relative flex flex-col gap-3 p-4 overflow-hidden border-white/5 hover:border-white/10 transition-colors"
+            className="glass-card group relative flex flex-col gap-3 p-4 overflow-hidden transition-all bg-card border-border shadow-lg"
           >
             {/* Background Glow Decor */}
             <div 
@@ -70,7 +70,12 @@ export const Home: React.FC = () => {
             
             <div className="flex items-center justify-between">
               <div 
-                className={`w-9 h-9 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center text-${stat.color}-500 border border-${stat.color}-500/20 shadow-[0_0_12px_-3px_${stat.glow}] group-hover:scale-105 transition-transform`}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105 ${
+                  stat.color === 'blue' ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                  stat.color === 'green' ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                  stat.color === 'purple' ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
+                  "bg-red-500/10 text-red-500 border-red-500/20"
+                }`}
               >
                 {stat.icon}
               </div>
@@ -82,8 +87,8 @@ export const Home: React.FC = () => {
             </div>
             
             <div className="space-y-0.5 relative z-10">
-              <p className="text-[9px] font-black uppercase text-slate-500 tracking-[0.15em]">{stat.label}</p>
-              <h3 className="text-lg font-black text-white tracking-tight">{stat.value}</h3>
+              <p className="text-[9px] font-black uppercase text-text-muted tracking-[0.15em]">{stat.label}</p>
+              <h3 className="text-lg font-black text-text-main tracking-tight">{stat.value}</h3>
             </div>
           </motion.div>
         ))}
@@ -96,18 +101,18 @@ export const Home: React.FC = () => {
         className="relative overflow-hidden group cursor-pointer"
         onClick={() => navigate("/trade", { state: { symbol: "GOLD" } })}
       >
-        <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 to-orange-600/10 blur-[120px] pointer-events-none" />
-        <div className="glass-card border-yellow-500/20 bg-gradient-to-br from-yellow-500/[0.03] to-orange-500/[0.03] flex flex-col md:flex-row items-center justify-between gap-6 p-8 md:p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 to-orange-600/10 blur-[120px] pointer-events-none opacity-50" />
+        <div className="glass-card border-yellow-500/20 bg-card/60 backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6 p-8 md:p-12 relative overflow-hidden shadow-2xl">
           {/* Subtle Graphic Decor */}
           <div className="absolute -right-20 -top-20 w-80 h-80 bg-yellow-500/5 rounded-full blur-[80px]" />
           
           <div className="space-y-6 text-center md:text-left relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-black tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-xs font-black tracking-widest uppercase">
               <Star size={14} fill="currentColor" />
               {t('latestGoldPrice')}
             </div>
             <div className="space-y-1">
-              <h2 className="text-6xl md:text-7xl font-black text-white tracking-tighter tabular-nums">
+              <h2 className="text-6xl md:text-7xl font-black text-text-main tracking-tighter tabular-nums">
                 ${goldStock?.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </h2>
               <div className={`flex items-center justify-center md:justify-start gap-2 font-black text-xl ${(goldStock?.change ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
@@ -115,7 +120,7 @@ export const Home: React.FC = () => {
                 <span>{(goldStock?.change ?? 0) >= 0 ? "+" : ""}{(goldStock?.change ?? 0).toFixed(2)}% {t('all').toUpperCase()}</span>
               </div>
             </div>
-            <p className="text-slate-400 text-sm md:text-base max-w-md font-medium leading-relaxed">
+            <p className="text-text-muted text-sm md:text-base max-w-md font-medium leading-relaxed">
               {t('goldHeroDesc')}
             </p>
           </div>
@@ -135,11 +140,11 @@ export const Home: React.FC = () => {
         {/* Recommended Assets (Smart Picks) */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-              <Lightbulb className="text-yellow-400" size={20} />
+            <h3 className="text-xl font-black text-text-main uppercase tracking-tight flex items-center gap-2">
+              <Lightbulb className="text-yellow-500" size={20} />
               {t('recommendedAssets')}
             </h3>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('smartAiSelection')}</span>
+            <span className="text-xs font-bold text-text-muted uppercase tracking-widest">{t('smartAiSelection')}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stocks.sort((a, b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 4).map((asset) => (
@@ -147,19 +152,19 @@ export const Home: React.FC = () => {
                 key={asset.id}
                 whileHover={{ y: -4 }}
                 onClick={() => navigate("/trade", { state: { symbol: asset.symbol } })}
-                className="glass-card p-5 flex items-center justify-between group cursor-pointer border-white/5 hover:border-primary/30 transition-all"
+                className="glass-card p-5 flex items-center justify-between group cursor-pointer border-border hover:border-primary/30 transition-all bg-card shadow-lg"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-card-header border border-border flex items-center justify-center overflow-hidden flex-shrink-0 group-hover:scale-110 transition-transform shadow-md">
                     {asset.icon}
                   </div>
                   <div>
-                    <h4 className="font-bold text-white group-hover:text-primary transition-colors">{asset.name}</h4>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{asset.symbol}</p>
+                    <h4 className="font-bold text-text-main group-hover:text-primary transition-colors">{asset.name}</h4>
+                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{asset.symbol}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-base font-bold text-white">${asset.price.toLocaleString()}</p>
+                  <p className="text-base font-bold text-text-main">${asset.price.toLocaleString()}</p>
                   <p className={`text-[10px] font-black ${asset.change >= 0 ? "text-green-500" : "text-red-500"}`}>
                     {asset.change >= 0 ? "+" : ""}{asset.change}%
                   </p>
@@ -171,26 +176,26 @@ export const Home: React.FC = () => {
 
         {/* Market Insights / News */}
         <div className="space-y-6">
-          <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+          <h3 className="text-xl font-black text-text-main uppercase tracking-tight flex items-center gap-2">
             <ShieldCheck className="text-primary" size={20} />
             {t('marketInsights')}
           </h3>
-          <div className="glass-card bg-primary/5 border-primary/20 p-6 space-y-6">
+          <div className="glass-card bg-card border-border p-6 space-y-6 shadow-xl">
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
                 <Clock size={12} /> {t('justNow')}
               </div>
-              <h4 className="text-lg font-bold text-white leading-tight">{t('insightTitle1')}</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">{t('insightDesc1')}</p>
+              <h4 className="text-lg font-bold text-text-main leading-tight">{t('insightTitle1')}</h4>
+              <p className="text-xs text-text-muted leading-relaxed">{t('insightDesc1')}</p>
             </div>
-            <div className="pt-6 border-t border-white/5 space-y-4">
+            <div className="pt-6 border-t border-border space-y-4">
                <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <p className="text-xs font-bold text-slate-300">{t('insightNews1')}</p>
+                  <p className="text-xs font-bold text-text-muted">{t('insightNews1')}</p>
                </div>
                <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <p className="text-xs font-bold text-slate-300">{t('insightNews2')}</p>
+                  <p className="text-xs font-bold text-text-muted">{t('insightNews2')}</p>
                </div>
             </div>
           </div>
@@ -198,10 +203,10 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Platform Onboarding / How it Works */}
-      <div className="py-12 border-y border-white/5">
+      <div className="py-12 border-y border-border">
         <div className="text-center space-y-2 mb-12">
-          <h3 className="text-2xl md:text-3xl font-black text-white uppercase">{t('howItWorks')}</h3>
-          <p className="text-slate-500 text-sm max-w-lg mx-auto font-medium">{t('howItWorksDesc')}</p>
+          <h3 className="text-2xl md:text-3xl font-black text-text-main uppercase">{t('howItWorks')}</h3>
+          <p className="text-text-muted text-sm max-w-lg mx-auto font-medium">{t('howItWorksDesc')}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
@@ -209,13 +214,13 @@ export const Home: React.FC = () => {
             { step: "02", title: t('step2Title'), desc: t('step2Desc'), icon: <BarChart2 className="text-primary" size={32} /> },
             { step: "03", title: t('step3Title'), desc: t('step3Desc'), icon: <ArrowRight className="text-green-500" size={32} /> },
           ].map((item, idx) => (
-            <div key={idx} className="relative group p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all text-center">
-              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-xs font-black text-slate-500 tracking-tighter transition-all group-hover:text-primary">
+            <div key={idx} className="relative group p-8 rounded-3xl bg-card border border-border hover:border-primary/30 transition-all text-center shadow-lg">
+              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-2xl bg-card-header border border-border flex items-center justify-center text-xs font-black text-text-muted tracking-tighter transition-all group-hover:text-primary shadow-md">
                 {item.step}
               </div>
               <div className="mb-6 flex justify-center">{item.icon}</div>
-              <h4 className="text-xl font-bold text-white mb-3">{item.title}</h4>
-              <p className="text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+              <h4 className="text-xl font-bold text-text-main mb-3">{item.title}</h4>
+              <p className="text-sm text-text-muted leading-relaxed font-medium">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -226,4 +231,3 @@ export const Home: React.FC = () => {
     </div>
   );
 };
-

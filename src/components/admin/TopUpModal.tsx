@@ -69,7 +69,6 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
     setError("");
 
     try {
-      // Direct sum in code: user.balance + amount
       const newBalance = matchedUser.balance + topUpAmount;
       const { error: updateError } = await supabase
         .from("profiles")
@@ -81,8 +80,7 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
 
       if (updateError) throw updateError;
 
-      // Log transaction record
-      const { error: txError } = await supabase.from("transactions").insert({
+      await supabase.from("transactions").insert({
         user_id: matchedUser.id,
         type: "deposit",
         asset_symbol: "USD",
@@ -92,13 +90,8 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
         status: "success",
       });
 
-      if (txError) {
-        console.error("Failed to insert deposit transaction:", txError);
-      }
-
       alert(t("topUpSuccess"));
 
-      // Send email notification (fire & forget)
       emailService.sendDepositNotification({
         email: matchedUser.email,
         userName: `${matchedUser.first_name} ${matchedUser.last_name}`,
@@ -106,7 +99,6 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
         lang: language,
       });
 
-      // Log the admin action
       if (currentAdmin && currentAdmin.id) {
         try {
           await auditService.logAction({
@@ -145,17 +137,17 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-lg relative z-10 p-0 overflow-hidden max-h-[90vh] md:max-h-[95vh] flex flex-col mb-16 md:mb-0 shadow-2xl"
+        className="glass-card w-full max-w-lg relative z-10 p-0 overflow-hidden max-h-[90vh] md:max-h-[95vh] flex flex-col mb-16 md:mb-0 shadow-2xl bg-card border-border"
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <TrendingUp className="text-accent" size={20} />
+        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between relative bg-card-header/50">
+          <h3 className="text-lg font-bold text-text-main flex items-center gap-2">
+            <TrendingUp className="text-primary" size={20} />
             {t("topUp") + " " + t("users")}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+            className="p-1.5 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
           >
             <X size={20} />
           </button>
@@ -164,8 +156,7 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
         {/* Body */}
         <div className="p-4 sm:p-6 overflow-y-auto scrollbar-hide space-y-5">
           <div className="space-y-2">
-            {/* Input + Paste on same row */}
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">
+            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest ml-1 block">
               {t("searchByPrivateCode")}
             </label>
             <div className="flex gap-2">
@@ -174,54 +165,53 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
                   value={userCode}
                   onChange={(e) => setUserCode(e.target.value)}
                   placeholder="USERCODE123"
-                  className="flex-1 bg-slate-900 border border-white/10 rounded-xl py-2 px-4 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-slate-600 uppercase"
+                  className="flex-1 bg-input-bg border border-input-border rounded-xl py-2 px-4 text-text-main font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/40 uppercase shadow-inner"
                 />
               <button
                 type="button"
                 onClick={handlePasteCode}
-                className={`shrink-0 flex items-center gap-1.5 px-3 rounded-xl font-bold text-xs transition-all border ${
+                className={`shrink-0 flex items-center gap-1.5 px-3 rounded-xl font-bold text-xs transition-all border shadow-sm ${
                   codePasted
-                    ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                    : 'bg-white/5 text-slate-400 hover:bg-primary/20 hover:text-primary border-white/10 hover:border-primary/30'
+                    ? 'bg-green-500/20 text-green-600 border-green-500/30'
+                    : 'bg-card-header text-text-muted hover:text-primary border-border hover:border-primary/30'
                 }`}
               >
                 {codePasted ? <CheckCircle2 size={15} /> : <ClipboardPaste size={15} />}
                 {codePasted ? t("pasted") : t("paste")}
               </button>
             </div>
-            {/* Search button below */}
             <button
               onClick={handleSearchUser}
-              className="w-full py-2.5 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-all border border-white/5 text-xs"
+              className="w-full py-2.5 bg-primary/10 text-primary rounded-xl font-bold hover:bg-primary hover:text-white transition-all border border-primary/20 text-xs shadow-sm"
             >
               {t("search")}
             </button>
           </div>
 
           {error ? (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs md:text-sm font-bold rounded-xl text-center">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 text-xs md:text-sm font-bold rounded-xl text-center shadow-sm">
               {error}
             </div>
           ) : matchedUser ? (
             <motion.div
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-5 shadow-inner"
+              className="p-4 rounded-xl bg-card-header/30 border border-border space-y-5 shadow-inner"
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">
                     {t("confirmIdentity")}
                   </p>
-                  <p className="text-base font-bold text-white leading-tight">
+                  <p className="text-base font-bold text-text-main leading-tight">
                     {matchedUser.first_name} {matchedUser.last_name}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-text-muted mt-0.5">
                     @{matchedUser.username}
                   </p>
                 </div>
-                <div className="sm:text-right border-l sm:border-l-0 sm:border-t-0 border-white/10 pl-4 sm:pl-0 pt-1 sm:pt-0">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                <div className="sm:text-right border-l sm:border-l-0 sm:border-t-0 border-border pl-4 sm:pl-0 pt-1 sm:pt-0">
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">
                     {t("currentBalance")}
                   </p>
                   <p className="text-lg md:text-xl font-bold text-primary tabular-nums">
@@ -236,7 +226,7 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
 
               <form
                 onSubmit={handleSubmit}
-                className="space-y-5 pt-6 border-t border-white/5"
+                className="space-y-5 pt-6 border-t border-border"
               >
                  <AdminInput
                   label={t("topUpAmountLabel")}
@@ -247,9 +237,9 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
                   placeholder="0.00"
                 />
 
-                <div className="p-3.5 rounded-xl bg-accent/5 border border-accent/10 text-accent text-[10px] font-bold uppercase tracking-widest text-center shadow-inner">
+                <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest text-center shadow-inner">
                   {t("newBalanceIndicator")}
-                  <span className="text-white ml-2 text-sm tabular-nums">
+                  <span className="text-text-main ml-2 text-sm tabular-nums">
                     $
                     {(matchedUser.balance + topUpAmount).toLocaleString(
                       undefined,
@@ -262,14 +252,14 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
                   <button
                     type="button"
                     onClick={() => setMatchedUser(null)}
-                    className="flex-1 px-5 py-2.5 rounded-xl bg-white/5 text-slate-400 font-bold hover:text-white transition-all text-xs border border-white/5"
+                    className="flex-1 px-5 py-2.5 rounded-xl bg-card-header text-text-muted font-bold hover:text-text-main transition-all text-xs border border-border shadow-sm"
                   >
                     {t("clearData")}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || topUpAmount <= 0}
-                    className="flex-[2] py-2.5 bg-accent hover:bg-accent/90 text-white border border-accent/30 rounded-xl flex items-center justify-center gap-2 text-xs font-bold shadow-lg shadow-accent/20 transition-all active:scale-95 disabled:opacity-50"
+                    className="flex-[2] py-2.5 bg-primary hover:bg-primary/90 text-white border border-primary/30 rounded-xl flex items-center justify-center gap-2 text-xs font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <Loader2 size={16} className="animate-spin" />
@@ -282,7 +272,7 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
               </form>
             </motion.div>
           ) : (
-            <div className="py-12 flex flex-col items-center justify-center text-slate-600 border-2 border-dashed border-white/5 rounded-3xl">
+            <div className="py-12 flex flex-col items-center justify-center text-text-muted border-2 border-dashed border-border rounded-3xl bg-card-header/10">
                <TrendingUp size={48} className="opacity-10 mb-2" />
                <p className="text-xs font-bold uppercase tracking-widest">{t("waitingForUserSearch")}</p>
             </div>

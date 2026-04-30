@@ -17,12 +17,12 @@ import {
   Bell,
   Share2,
   ChevronRight,
+  LayoutGrid,
 } from "lucide-react";
 import { TabButton } from "../components/settings/TabButton";
 import { SettingsContent } from "../components/settings/SettingsContent";
 import { InstallModal } from "../components/settings/InstallModal";
 import { ShareModal } from "../components/shared/ShareModal";
-import { LayoutGrid } from "lucide-react";
 import { SettingsSkeleton } from "../components/shared/PageSkeletons";
 
 export const Settings: React.FC = () => {
@@ -166,34 +166,34 @@ export const Settings: React.FC = () => {
       <div className="md:w-64 space-y-5">
         {/* Account Section */}
         <div className="space-y-3">
-          <h4 className="px-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+          <h4 className="px-4 text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">
             {t("account")}
           </h4>
           
-          <div className="glass-card p-5 relative overflow-hidden group border-white/10">
+          <div className="glass-card bg-card p-5 relative overflow-hidden group border-border shadow-lg">
             {/* Mesh Gradient Background */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] -z-10 group-hover:bg-primary/20 transition-colors duration-500" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/5 blur-[40px] -z-10" />
 
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">
                   <User size={20} className="text-primary" />
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-white leading-tight">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-text-main leading-tight truncate">
                     {profileData.first_name} {profileData.last_name}
                   </p>
-                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-0.5">
+                  <p className="text-[10px] font-medium text-text-muted uppercase tracking-widest mt-0.5">
                     {profile?.is_admin ? t("administrator") : t("traderAccount")}
                   </p>
                 </div>
               </div>
               <div
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-tight ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-tight shadow-sm shrink-0 ${
                   profileData.kyc_status === "verified" 
-                    ? "bg-green-500/10 border-green-500/20 text-green-500" 
-                    : "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                    ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                    : "bg-amber-500/10 border-amber-500/20 text-amber-600"
                 }`}
               >
                 <ShieldCheck size={10} />
@@ -201,21 +201,21 @@ export const Settings: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-3 pt-3.5 border-t border-white/5">
+            <div className="space-y-3 pt-3.5 border-t border-border shadow-inner">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">{t("totalBalance")}</p>
-                  <p className="text-lg sm:text-xl font-black text-white tracking-tighter tabular-nums">
+                  <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-0.5">{t("totalBalance")}</p>
+                  <p className="text-lg sm:text-xl font-black text-text-main tracking-tighter tabular-nums">
                     ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 bg-white/5 pl-2 pr-1 py-1 rounded-lg border border-white/5 group/copy transition-colors hover:border-white/10">
+                <div className="flex items-center gap-1 bg-card-header/50 pl-2 pr-1 py-1 rounded-lg border border-border group/copy transition-colors hover:border-primary/30">
                   <span className="text-[11px] font-mono font-bold text-primary tracking-tight">
                     {profileData.code || "---"}
                   </span>
                   <button
                     onClick={() => handleCopyCode(profileData.code)}
-                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all text-slate-500 hover:text-white"
+                    className="p-1.5 hover:bg-card-header rounded-lg transition-all text-text-muted hover:text-text-main"
                   >
                     {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
                   </button>
@@ -227,10 +227,10 @@ export const Settings: React.FC = () => {
 
         {/* Navigation Section */}
         <div className="space-y-3">
-          <h4 className="px-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+          <h4 className="px-4 text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">
             {t("navigation")}
           </h4>
-          <div className="glass-card p-1.5 space-y-0.5 border-white/5">
+          <div className="glass-card bg-card p-1.5 space-y-0.5 border-border shadow-sm">
             <TabButton
               active={activeTab === "profile"}
               onClick={() => handleTabChange("profile")}
@@ -264,7 +264,7 @@ export const Settings: React.FC = () => {
             <TabButton
               active={activeTab === "language"}
               onClick={() => handleTabChange("language")}
-              icon={<div className="w-5 h-5 flex flex-col items-center justify-center leading-[0.7] text-[7px] font-black bg-white/10 rounded border border-white/10"><span>EN</span><div className="w-3 h-[1px] bg-white/20 my-0.5" /><span>TH</span></div>}
+              icon={<div className="w-5 h-5 flex flex-col items-center justify-center leading-[0.7] text-[7px] font-black bg-card-header rounded border border-border"><span>EN</span><div className="w-3 h-[1px] bg-border my-0.5" /><span>TH</span></div>}
               label={t("languageSettings")}
             />
             <TabButton
@@ -284,14 +284,14 @@ export const Settings: React.FC = () => {
 
         {/* App Tools Section */}
         <div className="space-y-2.5">
-          <h4 className="px-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+          <h4 className="px-4 text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">
             {t("appTools")}
           </h4>
           
           <div className="grid grid-cols-1 gap-1.5">
             <button
               onClick={handleCreateShortcut}
-              className="group flex items-center justify-between gap-3 px-4 py-2 sm:py-2.5 rounded-xl bg-white/[0.03] text-white hover:bg-white/[0.08] transition-all duration-300 border border-white/5 hover:border-primary/30"
+              className="group flex items-center justify-between gap-3 px-4 py-2 sm:py-2.5 rounded-xl bg-card text-text-main hover:bg-card-header/50 transition-all duration-300 border border-border hover:border-primary/30 shadow-sm"
             >
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -299,12 +299,12 @@ export const Settings: React.FC = () => {
                 </div>
                 <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{t("createShortcut")}</span>
               </div>
-              <ChevronRight size={12} className="text-slate-600 group-hover:text-primary transition-colors" />
+              <ChevronRight size={12} className="text-text-muted group-hover:text-primary transition-colors" />
             </button>
 
             <button
               onClick={handleShare}
-              className="group flex items-center justify-between gap-3 px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-background hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 border border-white/10"
+              className="group flex items-center justify-between gap-3 px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 border border-white/10"
             >
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
@@ -328,11 +328,11 @@ export const Settings: React.FC = () => {
         )}
 
         {/* Logout Section */}
-        <div className="pt-2 border-t border-white/5">
+        <div className="pt-2 border-t border-border">
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-red-500/60 hover:text-red-400 bg-red-500/5 hover:bg-red-500/10 transition-all duration-300 font-black uppercase tracking-widest text-[9px] disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-red-500/60 hover:text-red-500 bg-red-500/5 hover:bg-red-500/10 transition-all duration-300 font-black uppercase tracking-widest text-[9px] disabled:opacity-40 shadow-inner"
           >
             {loggingOut ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
             {loggingOut ? t("signingOut") : t("logout")}

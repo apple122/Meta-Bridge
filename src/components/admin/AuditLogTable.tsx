@@ -37,14 +37,14 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
   const getLogInfo = (type: string) => {
     switch (type) {
       case 'TOP_UP':          
-      case 'WALLET_DEPOSIT':    return { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: 'border-l-emerald-500', icon: <Wallet size={13} />,       label: t('logTopUp') };
-      case 'WALLET_WITHDRAW':   return { color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',          accent: 'border-l-rose-500',    icon: <Wallet size={13} />,       label: t('logWalletWithdraw') };
-      case 'TRADE_CONTROL_UPDATE': return { color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',    accent: 'border-l-indigo-500', icon: <SettingsIcon size={13} />, label: t('tradeControl') };
-      case 'EDIT_PROFILE':    return { color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',          accent: 'border-l-blue-500',    icon: <UserCog size={13} />,      label: t('logEditProfile') };
-      case 'TOGGLE_ROLE':     return { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       accent: 'border-l-amber-500',   icon: <Key size={13} />,          label: t('logToggleRole') };
-      case 'CREATE_USER':     return { color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',    accent: 'border-l-purple-500',  icon: <UserPlus size={13} />,     label: t('logCreateUser') };
-      case 'UPDATE_SETTINGS': return { color: 'text-pink-400 bg-pink-500/10 border-pink-500/20',          accent: 'border-l-pink-500',    icon: <SettingsIcon size={13} />, label: t('logUpdateSettings') };
-      default:                return { color: 'text-slate-400 bg-slate-500/10 border-slate-500/20',       accent: 'border-l-slate-500',   icon: <Shield size={13} />,       label: t('adminAction') };
+      case 'WALLET_DEPOSIT':    return { color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20', accent: 'border-l-emerald-500', icon: <Wallet size={13} />,       label: t('logTopUp') };
+      case 'WALLET_WITHDRAW':   return { color: 'text-rose-500 bg-rose-500/10 border-rose-500/20',          accent: 'border-l-rose-500',    icon: <Wallet size={13} />,       label: t('logWalletWithdraw') };
+      case 'TRADE_CONTROL_UPDATE': return { color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',    accent: 'border-l-indigo-500', icon: <SettingsIcon size={13} />, label: t('tradeControl') };
+      case 'EDIT_PROFILE':    return { color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',          accent: 'border-l-blue-500',    icon: <UserCog size={13} />,      label: t('logEditProfile') };
+      case 'TOGGLE_ROLE':     return { color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',       accent: 'border-l-amber-500',   icon: <Key size={13} />,          label: t('logToggleRole') };
+      case 'CREATE_USER':     return { color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',    accent: 'border-l-purple-500',  icon: <UserPlus size={13} />,     label: t('logCreateUser') };
+      case 'UPDATE_SETTINGS': return { color: 'text-pink-500 bg-pink-500/10 border-pink-500/20',          accent: 'border-l-pink-500',    icon: <SettingsIcon size={13} />, label: t('logUpdateSettings') };
+      default:                return { color: 'text-text-muted bg-card-header border-border',       accent: 'border-l-border',   icon: <Shield size={13} />,       label: t('adminAction') };
     }
   };
 
@@ -63,8 +63,8 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
     if (log.action_type === 'TOP_UP' || log.action_type === 'WALLET_DEPOSIT') {
       return (
         <div className="flex items-center justify-between bg-emerald-500/5 px-4 py-3 rounded-xl border border-emerald-500/10 max-w-sm">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t('topUpAmount')}</span>
-          <span className="text-emerald-400 font-black font-mono text-lg ml-6">
+          <span className="text-text-muted text-[10px] font-bold uppercase tracking-wider">{t('topUpAmount')}</span>
+          <span className="text-emerald-500 font-black font-mono text-lg ml-6">
             +${Number(log.details.amount).toLocaleString()}
           </span>
         </div>
@@ -73,8 +73,8 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
     if (log.action_type === 'WALLET_WITHDRAW') {
       return (
         <div className="flex items-center justify-between bg-rose-500/5 px-4 py-3 rounded-xl border border-rose-500/10 max-w-sm">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t('amount')}</span>
-          <span className="text-rose-400 font-black font-mono text-lg ml-6">
+          <span className="text-text-muted text-[10px] font-bold uppercase tracking-wider">{t('amount')}</span>
+          <span className="text-rose-500 font-black font-mono text-lg ml-6">
             -${Number(log.details.amount).toLocaleString()}
           </span>
         </div>
@@ -84,12 +84,12 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
       const fields = log.details.updated_fields;
       return (
         <div className="space-y-2">
-          <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">{t('updatedFields')}</span>
+          <span className="text-text-muted text-[10px] font-bold uppercase tracking-wider block">{t('updatedFields')}</span>
           <div className="flex flex-wrap gap-2">
             {Object.keys(fields).map(f => (
-              <div key={f} className="flex flex-col px-3 py-2 bg-white/5 rounded-lg border border-white/5 min-w-[100px]">
-                <span className="text-[9px] text-slate-500 uppercase font-bold mb-0.5">{f}</span>
-                <span className="text-xs text-blue-400 font-semibold truncate max-w-[160px]">{String(fields[f])}</span>
+              <div key={f} className="flex flex-col px-3 py-2 bg-card-header rounded-lg border border-border min-w-[100px]">
+                <span className="text-[9px] text-text-muted uppercase font-bold mb-0.5">{f}</span>
+                <span className="text-xs text-blue-500 font-semibold truncate max-w-[160px]">{String(fields[f])}</span>
               </div>
             ))}
           </div>
@@ -100,15 +100,15 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
       return (
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 bg-amber-500/5 rounded-xl border border-amber-500/10">
-            <span className="text-[9px] text-slate-500 uppercase font-bold block mb-0.5">{t('newRole')}</span>
-            <span className="text-sm text-amber-400 font-bold">{log.details.new_role}</span>
+            <span className="text-[9px] text-text-muted uppercase font-bold block mb-0.5">{t('newRole')}</span>
+            <span className="text-sm text-amber-500 font-bold">{log.details.new_role}</span>
           </div>
         </div>
       );
     }
     return (
-      <div className="bg-black/30 px-4 py-3 rounded-xl border border-white/5 max-w-lg">
-        <pre className="text-[10px] text-slate-500 font-mono overflow-x-auto">
+      <div className="bg-input-bg/30 px-4 py-3 rounded-xl border border-border max-w-lg shadow-inner">
+        <pre className="text-[10px] text-text-muted font-mono overflow-x-auto">
           {JSON.stringify(log.details, null, 2)}
         </pre>
       </div>
@@ -122,17 +122,17 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
         <div className="w-12 h-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
         <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
       </div>
-      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">{t('loading')}</p>
+      <p className="text-text-muted text-xs font-bold uppercase tracking-widest animate-pulse">{t('loading')}</p>
     </div>
   );
 
   /* ─── Empty ─── */
   if (logs.length === 0) return (
-    <div className="flex flex-col items-center justify-center py-20 bg-slate-900/40 rounded-3xl border-2 border-white/5 border-dashed">
-      <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mb-4 border border-white/5">
-        <Info className="text-slate-600" size={32} />
+    <div className="flex flex-col items-center justify-center py-20 bg-card rounded-3xl border-2 border-border border-dashed shadow-inner">
+      <div className="w-16 h-16 bg-card-header rounded-2xl flex items-center justify-center mb-4 border border-border">
+        <Info className="text-text-muted" size={32} />
       </div>
-      <p className="text-slate-400 text-sm font-medium">{t('noRecordsFound')}</p>
+      <p className="text-text-muted text-sm font-medium">{t('noRecordsFound')}</p>
     </div>
   );
 
@@ -141,29 +141,29 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
       {/* ═══════════════════════════════
           DESKTOP TABLE  (md and above)
       ═══════════════════════════════ */}
-      <div className="hidden md:block rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+      <div className="hidden md:block rounded-2xl overflow-hidden border border-border shadow-2xl bg-card">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-slate-900/95 border-b border-white/5">
-              <th className="text-left px-5 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[180px]">
+            <tr className="bg-card-header/50 border-b border-border">
+              <th className="text-left px-5 py-3.5 text-[10px] font-black text-text-muted uppercase tracking-widest w-[180px]">
                 {t('type')}
               </th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              <th className="text-left px-4 py-3.5 text-[10px] font-black text-text-muted uppercase tracking-widest">
                 {t('description')}
               </th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[190px]">
+              <th className="text-left px-4 py-3.5 text-[10px] font-black text-text-muted uppercase tracking-widest w-[190px]">
                 {t('administrator')}
               </th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[190px]">
+              <th className="text-left px-4 py-3.5 text-[10px] font-black text-text-muted uppercase tracking-widest w-[190px]">
                 {t('target')}
               </th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[120px]">
+              <th className="text-left px-4 py-3.5 text-[10px] font-black text-text-muted uppercase tracking-widest w-[120px]">
                 {t('time')}
               </th>
               <th className="w-10" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody className="divide-y divide-border">
             {logs.map((log, index) => {
               const info = getLogInfo(log.action_type);
               const isExpanded = expandedId === log.id;
@@ -175,7 +175,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
                     transition={{ delay: index * 0.012 }}
                     onClick={() => setExpandedId(isExpanded ? null : log.id)}
                     className={`cursor-pointer transition-all duration-150 group ${
-                      isExpanded ? 'bg-slate-800/70' : 'bg-slate-900/20 hover:bg-slate-800/40'
+                      isExpanded ? 'bg-card-header/40' : 'bg-transparent hover:bg-card-header/20'
                     }`}
                   >
                     <td className="px-5 py-3 align-middle">
@@ -187,14 +187,14 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
                       </div>
                     </td>
                     <td className="px-4 py-3 align-middle">
-                      <span className="text-white text-xs font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                      <span className="text-text-main text-xs font-semibold group-hover:text-primary transition-colors line-clamp-1">
                         {log.description}
                       </span>
                     </td>
                     <td className="px-4 py-3 align-middle">
                       <div className="flex items-center gap-2 min-w-0">
-                        <User size={11} className="text-slate-600 shrink-0" />
-                        <span className="text-slate-400 text-[11px] font-mono truncate">{log.admin_email}</span>
+                        <User size={11} className="text-text-muted shrink-0" />
+                        <span className="text-text-muted text-[11px] font-mono truncate">{log.admin_email}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 align-middle">
@@ -203,11 +203,11 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
                             <ArrowRight size={10} className="text-primary/30 shrink-0" />
                             <span className="text-primary/70 text-[11px] font-mono truncate">{log.target_user_email}</span>
                           </div>
-                        : <span className="text-slate-700 text-xs select-none">—</span>
+                        : <span className="text-text-muted/40 text-xs select-none">—</span>
                       }
                     </td>
                     <td className="px-4 py-3 align-middle">
-                      <div className="flex items-center gap-1.5 text-slate-500 text-[10px] whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-text-muted text-[10px] whitespace-nowrap">
                         <Clock size={10} className="shrink-0" />
                         {formatDate(log.created_at)}
                       </div>
@@ -215,12 +215,12 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
                     <td className="pr-4 py-3 align-middle text-center">
                       <ChevronDown
                         size={14}
-                        className={`text-slate-600 transition-transform duration-300 mx-auto ${isExpanded ? 'rotate-180 text-primary' : ''}`}
+                        className={`text-text-muted transition-transform duration-300 mx-auto ${isExpanded ? 'rotate-180 text-primary' : ''}`}
                       />
                     </td>
                   </motion.tr>
                   {isExpanded && (
-                    <tr className="bg-slate-900/60 border-b border-primary/10">
+                    <tr className="bg-card-header/30 border-b border-primary/10">
                       <td colSpan={6} className="px-6 py-4">
                         <motion.div
                           initial={{ opacity: 0, y: -4 }}
@@ -256,8 +256,8 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
               onClick={() => setExpandedId(isExpanded ? null : log.id)}
               className={`border-l-[3px] ${info.accent} rounded-r-xl cursor-pointer transition-all duration-200
                 ${isExpanded
-                  ? 'bg-slate-800/80 shadow-xl'
-                  : 'bg-slate-900/60 hover:bg-slate-800/50'}`}
+                  ? 'bg-card-header/60 shadow-xl'
+                  : 'bg-card hover:bg-card-header/30'}`}
             >
               <div className="px-3.5 py-3">
                 {/* Row 1: icon + badge + spacer + time + chevron — single line */}
@@ -269,25 +269,25 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
                     {info.label}
                   </span>
                   <div className="flex-1" />
-                  <span className="text-slate-600 text-[9px] font-mono whitespace-nowrap shrink-0 tabular-nums">
+                  <span className="text-text-muted text-[9px] font-mono whitespace-nowrap shrink-0 tabular-nums">
                     {formatDateCompact(log.created_at)}
                   </span>
                   <ChevronDown
                     size={12}
-                    className={`text-slate-600 transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 text-primary' : ''}`}
+                    className={`text-text-muted transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 text-primary' : ''}`}
                   />
                 </div>
 
                 {/* Row 2: Description */}
-                <p className="text-white text-[13px] font-semibold leading-snug mb-2">
+                <p className="text-text-main text-[13px] font-semibold leading-snug mb-2">
                   {log.description}
                 </p>
 
                 {/* Row 3: Emails — simple vertical list */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <User size={9} className="text-slate-600 shrink-0" />
-                    <span className="text-[10px] text-slate-500 font-mono truncate">{log.admin_email}</span>
+                    <User size={9} className="text-text-muted shrink-0" />
+                    <span className="text-[10px] text-text-muted font-mono truncate">{log.admin_email}</span>
                   </div>
                   {log.target_user_email && (
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -305,7 +305,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="overflow-hidden mt-3 pt-3 border-t border-white/5"
+                      className="overflow-hidden mt-3 pt-3 border-t border-border"
                     >
                       {renderDetails(log)}
                     </motion.div>

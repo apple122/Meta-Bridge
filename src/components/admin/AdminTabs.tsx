@@ -23,7 +23,7 @@ export const AdminTabs: React.FC<AdminTabsProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="hidden lg:flex bg-slate-900/80 p-1 rounded-2xl border border-white/5 w-full lg:w-auto gap-1 mb-10">
+    <div className="hidden lg:flex bg-card p-1 rounded-2xl border border-border w-full lg:w-auto gap-1 mb-10 shadow-lg">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -31,7 +31,7 @@ export const AdminTabs: React.FC<AdminTabsProps> = ({
           className={`flex-1 lg:flex-none lg:px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
             activeTab === tab.id
               ? "bg-primary text-white shadow-lg shadow-primary/20"
-              : "text-slate-500 hover:text-slate-300"
+              : "text-text-muted hover:text-text-main hover:bg-card-header/50"
           }`}
         >
           {tab.icon}

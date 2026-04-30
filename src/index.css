@@ -6,9 +6,12 @@
   --color-accent: #8b5cf6;
   --color-background: var(--background);
   --color-card: var(--card);
+  --color-card-header: var(--card-header);
   --color-border: var(--border);
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
   
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -16,19 +19,25 @@
 :root {
   --background: #020617;
   --card: #0f172a;
-  --border: #1e293b;
+  --card-header: #1e293b;
+  --border: rgba(255, 255, 255, 0.1);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
+  --input-bg: #020617;
+  --input-border: rgba(255, 255, 255, 0.1);
   --skeleton-bg: rgba(30, 41, 59, 0.5);
   --skeleton-shimmer: rgba(255, 255, 255, 0.05);
 }
 
 [data-theme='light'] {
-  --background: #f8fafc;
+  --background: #f1f5f9;
   --card: #ffffff;
-  --border: #e2e8f0;
+  --card-header: #f8fafc;
+  --border: rgba(0, 0, 0, 0.05);
   --text-main: #0f172a;
   --text-muted: #64748b;
+  --input-bg: #f8fafc;
+  --input-border: rgba(0, 0, 0, 0.1);
   --skeleton-bg: rgba(226, 232, 240, 0.8);
   --skeleton-shimmer: rgba(0, 0, 0, 0.03);
 }

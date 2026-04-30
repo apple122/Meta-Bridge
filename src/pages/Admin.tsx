@@ -197,7 +197,7 @@ export const Admin: React.FC = () => {
           {/* ACTIVITY */}
           {activeTab === "activity" && (
             <motion.div key="activity" {...fadeProps} className="space-y-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
                 <Activity size={20} className="text-primary" />
                 {t("userActivity")}
               </h2>
@@ -208,7 +208,7 @@ export const Admin: React.FC = () => {
           {/* AUDIT LOGS */}
           {activeTab === "logs" && (
             <motion.div key="logs" {...fadeProps} className="space-y-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
                 <History size={20} className="text-primary" />
                 {t("auditLogs")}
               </h2>
@@ -219,7 +219,7 @@ export const Admin: React.FC = () => {
           {/* ISSUES */}
           {activeTab === "issues" && (
             <motion.div key="issues" {...fadeProps} className="space-y-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
                 <MessageSquare size={20} className="text-primary" />
                 {t("userReports")}
               </h2>

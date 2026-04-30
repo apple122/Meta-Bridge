@@ -79,9 +79,6 @@ export const AdminInput: React.FC<AdminInputProps> = ({
       phonePrefix = match.code;
       phoneBody = value.substring(match.code.length);
       if (phoneBody.startsWith(" ")) phoneBody = phoneBody.substring(1);
-    } else if (value.startsWith("+")) {
-      // Unrecognized country code -> let's just make it all part of body and default prefix to +66
-      // or actually, don't split.
     }
   }
 
@@ -90,17 +87,16 @@ export const AdminInput: React.FC<AdminInputProps> = ({
   };
 
   const handlePhoneBodyChange = (newBody: string) => {
-    // Keep digits and spaces only ideally, but let user type
     onChange(`${phonePrefix}${newBody}`);
   };
 
   const inputId = React.useId();
 
   return (
-    <div className={`space-y-3 w-full p-5 rounded-2xl bg-slate-900/40 border border-white/5 transition-all hover:border-white/10 ${!enabled && onToggle !== undefined ? "opacity-60" : "opacity-100"}`}>
+    <div className={`space-y-3 w-full p-5 rounded-2xl bg-card border border-border transition-all hover:border-primary/20 shadow-sm ${!enabled && onToggle !== undefined ? "opacity-60" : "opacity-100"}`}>
       <div className="flex items-center justify-between px-1">
         {label && (
-          <label htmlFor={inputId} className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+          <label htmlFor={inputId} className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
             {label}
           </label>
         )}
@@ -108,11 +104,11 @@ export const AdminInput: React.FC<AdminInputProps> = ({
           <button
             onClick={onToggle}
             className={`shrink-0 w-10 h-5 rounded-full transition-all relative ${
-              enabled ? "bg-primary shadow-lg shadow-primary/20" : "bg-slate-700"
+              enabled ? "bg-primary shadow-lg shadow-primary/20" : "bg-card-header border border-border shadow-inner"
             }`}
           >
             <div
-              className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all shadow-sm ${
+              className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all shadow-md ${
                 enabled ? "left-6" : "left-1"
               }`}
             />
@@ -121,24 +117,24 @@ export const AdminInput: React.FC<AdminInputProps> = ({
       </div>
 
       <div
-        className={`relative group/input flex items-stretch overflow-hidden transition-all duration-300 bg-slate-950/50 border border-white/5 rounded-xl focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 shadow-inner ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-white/10"}`}
+        className={`relative group/input flex items-stretch overflow-hidden transition-all duration-300 bg-input-bg border border-input-border rounded-xl focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 shadow-inner ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary/20"}`}
       >
         {isPhone && (
-          <div className="relative flex items-center bg-white/[0.03] border-r border-white/5 hover:bg-white/[0.08] transition-colors shrink-0">
+          <div className="relative flex items-center bg-card-header/50 border-r border-border hover:bg-card-header transition-colors shrink-0">
             <select
               value={phonePrefix}
               onChange={(e) => handlePhonePrefixChange(e.target.value)}
               disabled={disabled}
-              className="w-full h-full bg-transparent border-none text-white text-xs pl-3 pr-7 py-2.5 focus:outline-none appearance-none cursor-pointer z-10 font-bold"
+              className="w-full h-full bg-transparent border-none text-text-main text-xs pl-3 pr-7 py-2.5 focus:outline-none appearance-none cursor-pointer z-10 font-bold"
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255, 255, 255, 0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(156, 163, 175, 1)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "right 0.4rem center",
                 backgroundSize: "0.8em",
               }}
             >
               {COUNTRY_CODES.map(c => (
-                <option key={c.code} value={c.code} className="bg-slate-800 text-white py-1">
+                <option key={c.code} value={c.code} className="bg-card text-text-main py-1">
                   {c.code}
                 </option>
               ))}
@@ -148,7 +144,7 @@ export const AdminInput: React.FC<AdminInputProps> = ({
 
         <div className="relative flex-1 flex items-center min-w-0">
           {icon && !isPhone && (
-            <div className={`absolute left-3.5 z-10 text-slate-500 pointer-events-none transition-colors group-focus-within/input:text-primary`}>
+            <div className={`absolute left-3.5 z-10 text-text-muted pointer-events-none transition-colors group-focus-within/input:text-primary`}>
               {icon}
             </div>
           )}
@@ -168,13 +164,13 @@ export const AdminInput: React.FC<AdminInputProps> = ({
             placeholder={placeholder}
             disabled={disabled}
             autoComplete="new-password"
-            className={`w-full h-full text-white text-xs focus:outline-none placeholder:text-slate-700 transition-all bg-transparent border-none py-3 ${icon && !isPhone ? "pl-10" : "pl-4"} ${isPassword ? "pr-10" : "pr-4"}`}
+            className={`w-full h-full text-text-main text-xs focus:outline-none placeholder:text-text-muted/40 transition-all bg-transparent border-none py-3 ${icon && !isPhone ? "pl-10" : "pl-4"} ${isPassword ? "pr-10" : "pr-4"}`}
           />
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 p-1.5 text-slate-500 hover:text-white transition-colors hover:bg-white/5 rounded-lg focus:outline-none"
+              className="absolute right-2 p-1.5 text-text-muted hover:text-text-main transition-colors hover:bg-card-header rounded-lg focus:outline-none"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>

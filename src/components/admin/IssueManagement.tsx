@@ -128,15 +128,15 @@ export const IssueManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex p-1 bg-slate-900 border border-white/5 rounded-xl">
+        <div className="flex p-1 bg-card border border-border rounded-xl shadow-lg">
           {(['all', 'pending', 'resolved'] as const).map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
               className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                 filterStatus === status 
-                  ? "bg-primary text-white" 
-                  : "text-slate-500 hover:text-slate-300"
+                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                  : "text-text-muted hover:text-text-main hover:bg-card-header/50"
               }`}
             >
               {status === 'all' ? (language === 'th' ? 'ทั้งหมด' : 'All') : 
@@ -149,14 +149,14 @@ export const IssueManagement: React.FC = () => {
           ))}
         </div>
 
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+        <div className="relative w-full sm:max-w-xs group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={14} />
           <input
             type="text"
             placeholder={language === 'th' ? "ค้นหาตั๋ว/หัวข้อ..." : "Search tickets..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900 border border-white/10 rounded-xl py-2.5 pl-9 pr-4 text-white text-xs focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+            className="w-full bg-input-bg border border-input-border rounded-xl py-2.5 pl-9 pr-4 text-text-main text-xs focus:ring-2 focus:ring-primary/40 outline-none transition-all shadow-md"
           />
         </div>
       </div>
@@ -166,7 +166,7 @@ export const IssueManagement: React.FC = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>
         ) : filteredReports.length === 0 ? (
-          <div className="glass-card py-20 text-center text-slate-500 text-[10px] font-black uppercase tracking-widest border-dashed">
+          <div className="glass-card py-20 text-center text-text-muted text-[10px] font-black uppercase tracking-widest border-dashed">
             {language === 'th' ? "ไม่พบรายการ" : "No reports found"}
           </div>
         ) : (
@@ -174,25 +174,25 @@ export const IssueManagement: React.FC = () => {
             <div
               key={report.id}
               onClick={() => setSelectedReport(report)}
-              className="glass-card p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 border-white/5 transition-colors group"
+              className="glass-card p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-card-header/30 border-border transition-all group shadow-md"
             >
               <div className="flex items-center gap-4 min-w-0">
                 <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-black shrink-0 ${
-                  report.status === 'resolved' ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
+                  report.status === 'resolved' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-orange-500/10 text-orange-500 border border-orange-500/20"
                 }`}>
                   <span className="text-xs">#{report.smart_id}</span>
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[8px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                    <span className="text-[8px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-primary/20">
                       {report.category}
                     </span>
-                    <h4 className="text-xs font-bold text-white truncate">{report.subject}</h4>
+                    <h4 className="text-xs font-bold text-text-main truncate">{report.subject}</h4>
                   </div>
-                  <p className="text-[9px] text-slate-500 font-bold">{report.profiles.username} • {new Date(report.created_at).toLocaleDateString()}</p>
+                  <p className="text-[9px] text-text-muted font-bold">{report.profiles.username} • {new Date(report.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
-              <ChevronRight size={14} className="text-slate-600 group-hover:text-primary transition-colors" />
+              <ChevronRight size={14} className="text-text-muted group-hover:text-primary transition-colors" />
             </div>
           ))
         )}
@@ -202,7 +202,7 @@ export const IssueManagement: React.FC = () => {
       <AnimatePresence>
         {selectedReport && (
           <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm cursor-pointer"
             onClick={() => { setSelectedReport(null); setResponse(""); }}
           >
             <motion.div
@@ -210,39 +210,39 @@ export const IssueManagement: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.15 }}
-              className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl cursor-default"
+              className="w-full max-w-xl bg-card border border-border rounded-3xl overflow-hidden shadow-2xl cursor-default"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+              <div className="p-5 border-b border-border flex items-center justify-between bg-card-header/50">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-black ${
-                    selectedReport.status === 'resolved' ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
+                    selectedReport.status === 'resolved' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-orange-500/10 text-orange-500 border border-orange-500/20"
                   }`}>
                     <span className="text-sm">#{selectedReport.smart_id}</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white leading-tight">{selectedReport.subject}</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{selectedReport.category} • {new Date(selectedReport.created_at).toLocaleString()}</p>
+                    <h3 className="text-sm font-black text-text-main leading-tight">{selectedReport.subject}</h3>
+                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-0.5">{selectedReport.category} • {new Date(selectedReport.created_at).toLocaleString()}</p>
                   </div>
                 </div>
-                <button onClick={() => { setSelectedReport(null); setResponse(""); }} className="p-2 hover:bg-white/5 rounded-lg text-slate-500"><X size={20} /></button>
+                <button onClick={() => { setSelectedReport(null); setResponse(""); }} className="p-2 hover:bg-card-header rounded-lg text-text-muted transition-colors"><X size={20} /></button>
               </div>
 
               {/* Content */}
               <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-card-header/30 border border-border">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-inner"><User size={18} /></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest truncate">{selectedReport.profiles.username}</p>
-                    <p className="text-[9px] text-slate-500 truncate">{selectedReport.profiles.email}</p>
+                    <p className="text-[10px] font-black text-text-main uppercase tracking-widest truncate">{selectedReport.profiles.username}</p>
+                    <p className="text-[9px] text-text-muted truncate">{selectedReport.profiles.email}</p>
                   </div>
                   <span className="text-[8px] font-black text-primary/50 uppercase border border-primary/20 px-2 py-0.5 rounded-lg">VERIFIED</span>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">{language === 'th' ? "ข้อความจากผู้ใช้" : "User Message"}</p>
-                  <div className="p-4 rounded-2xl bg-slate-950/40 border border-white/5 text-xs text-slate-300 leading-relaxed whitespace-pre-wrap shadow-inner">
+                  <p className="text-[9px] font-black text-text-muted uppercase tracking-widest px-1">{language === 'th' ? "ข้อความจากผู้ใช้" : "User Message"}</p>
+                  <div className="p-4 rounded-2xl bg-input-bg border border-border text-xs text-text-main leading-relaxed whitespace-pre-wrap shadow-inner">
                     {selectedReport.message}
                   </div>
                 </div>
@@ -254,7 +254,7 @@ export const IssueManagement: React.FC = () => {
                   </div>
                   
                   {selectedReport.status === 'resolved' ? (
-                    <div className="p-4 rounded-2xl bg-green-500/5 border border-green-500/10 text-xs text-green-200/80 italic shadow-inner">
+                    <div className="p-4 rounded-2xl bg-green-500/5 border border-green-500/10 text-xs text-green-600/80 italic shadow-inner">
                       "{selectedReport.admin_response}"
                     </div>
                   ) : (
@@ -263,7 +263,7 @@ export const IssueManagement: React.FC = () => {
                         value={response}
                         onChange={(e) => setResponse(e.target.value)}
                         placeholder="..."
-                        className="w-full bg-slate-950/40 border border-white/10 rounded-2xl p-4 text-xs text-white focus:border-primary/50 outline-none min-h-[120px] resize-none shadow-inner"
+                        className="w-full bg-input-bg border border-input-border rounded-2xl p-4 text-xs text-text-main focus:border-primary/50 outline-none min-h-[120px] resize-none shadow-inner"
                       />
                       <button
                         onClick={() => handleUpdateStatus(selectedReport.id, 'resolved', response)}

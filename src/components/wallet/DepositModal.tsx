@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Loader2,
   Construction,
+  UserX
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { depositMethods } from "../../data/depositMethods";
@@ -18,7 +19,6 @@ import { SupportContactList } from "./SupportContactList";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 import type { GlobalSettings } from "../../types";
-import { UserX } from "lucide-react";
 
 type DepositStep = "select" | "qr" | "submitted" | "kyc_required";
 
@@ -83,7 +83,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
   };
 
   const qrUrl = selected
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selected.qrData)}&bgcolor=0f172a&color=818cf8&margin=10`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selected.qrData)}&bgcolor=ffffff&color=818cf8&margin=10`
     : "";
 
   return (
@@ -97,14 +97,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
           exit={{ opacity: 0 }}
           className="flex flex-col"
         >
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
+            <h2 className="text-lg font-black text-text-main flex items-center gap-2">
                <UserX size={20} className="text-amber-500" />
                {language === 'th' ? "ต้องยืนยันตัวตน (KYC)" : "KYC Verification Required"}
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -112,26 +112,26 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
 
           <div className="p-6">
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
-                <AlertCircle size={32} className="text-amber-400" />
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 shadow-sm">
+                <AlertCircle size={32} className="text-amber-500" />
               </div>
-              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+              <p className="text-text-main text-sm leading-relaxed mb-4">
                 {language === 'th' 
                   ? (<>เพื่อความปลอดภัยของบัญชี กรุณายืนยันตัวตน{" "}
                       <button
                         onClick={() => { onClose(); sessionStorage.setItem("settings_active_tab", "profile"); navigate("/settings"); }}
-                        className="text-amber-400 underline underline-offset-2 hover:text-amber-300 font-bold transition-colors cursor-pointer"
+                        className="text-amber-600 underline underline-offset-2 hover:text-amber-700 font-bold transition-colors cursor-pointer"
                       >(KYC)</button>{" "}
                       ให้เสร็จสมบูรณ์ก่อนทำรายการฝาก-ถอนเงินครับ</>) 
                   : (<>For account security, please complete{" "}
                       <button
                         onClick={() => { onClose(); sessionStorage.setItem("settings_active_tab", "profile"); navigate("/settings"); }}
-                        className="text-amber-400 underline underline-offset-2 hover:text-amber-300 font-bold transition-colors cursor-pointer"
+                        className="text-amber-600 underline underline-offset-2 hover:text-amber-700 font-bold transition-colors cursor-pointer"
                       >KYC verification</button>{" "}
                       before depositing or withdrawing funds.</>)}
               </p>
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-400">{profile?.kyc_status?.toUpperCase() || 'UNVERIFIED'}</span>
+              <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest">
+                {language === 'th' ? "สถานะปัจจุบัน:" : "Current Status:"} <span className="text-amber-600">{profile?.kyc_status?.toUpperCase() || 'UNVERIFIED'}</span>
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
 
             <button
               onClick={onClose}
-              className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-sm transition-all"
+              className="w-full py-4 rounded-xl bg-card-header hover:bg-card-header/80 text-text-main font-black text-sm transition-all border border-border shadow-sm"
             >
               {t('closeLabel')}
             </button>
@@ -159,19 +159,19 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
           className="flex flex-col"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
             <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <h2 className="text-lg font-black text-text-main flex items-center gap-2">
                 <ArrowDownCircle size={20} className="text-green-500" />
                 {t('deposit')}
               </h2>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+              <p className="text-text-muted text-[10px] font-bold uppercase tracking-wider mt-0.5">
                 {t('selectDepositMethod')}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -186,18 +186,18 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
                   setSelected(m);
                   setStep("qr");
                 }}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-tr ${m.color} border ${m.border} hover:border-white/30 transition-all group`}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all group shadow-sm`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{m.flag}</span>
                   <div className="text-left">
-                    <p className="text-white font-bold text-sm">{m.label}</p>
-                    <p className="text-slate-400 text-xs">{m.bank}</p>
+                    <p className="text-text-main font-bold text-sm">{m.label}</p>
+                    <p className="text-text-muted text-xs">{m.bank}</p>
                   </div>
                 </div>
                 <ChevronRight
                   size={16}
-                  className="text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all"
+                  className="text-text-muted group-hover:text-primary group-hover:translate-x-1 transition-all"
                 />
               </button>
             ))}
@@ -214,16 +214,16 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
           className="flex flex-col"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
             <button
               onClick={() => setStep("select")}
-              className="text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1"
+              className="text-text-muted hover:text-text-main text-xs font-bold flex items-center gap-1 transition-colors"
             >
               <ChevronRight size={14} className="rotate-180" /> {t('back')}
             </button>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -233,15 +233,15 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
           <div className="p-6">
             <div className="text-center mb-6">
               <span className="text-3xl">{selected.flag}</span>
-              <h2 className="text-lg font-black text-white mt-1">
+              <h2 className="text-lg font-black text-text-main mt-1">
                 {selected.label}
               </h2>
-              <p className="text-slate-400 text-xs">{selected.bank}</p>
+              <p className="text-text-muted text-xs">{selected.bank}</p>
             </div>
 
             {/* QR Code */}
             <div className="flex justify-center mb-6">
-              <div className="w-44 h-44 bg-slate-900 rounded-2xl border border-white/10 overflow-hidden flex items-center justify-center p-2">
+              <div className="w-44 h-44 bg-white rounded-2xl border border-border overflow-hidden flex items-center justify-center p-2 shadow-inner">
                 <img
                   src={qrUrl}
                   alt="QR Code"
@@ -254,17 +254,17 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
             </div>
 
             {/* Account / Address */}
-            <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/5">
-              <p className="text-slate-500 text-[10px] uppercase tracking-widest mb-1 font-bold">
+            <div className="bg-card-header/30 rounded-xl p-4 mb-5 border border-border shadow-inner">
+              <p className="text-text-muted text-[10px] uppercase tracking-widest mb-1 font-bold">
                 {selected.id === "usdt" ? t('walletAddress') : t('accountNumberLabel')}
               </p>
               <div className="flex items-center justify-between gap-2">
-                <p className="text-white font-mono text-sm break-all">
+                <p className="text-text-main font-mono text-sm break-all">
                   {selected.account}
                 </p>
                 <button
                   onClick={copyAddress}
-                  className={`shrink-0 flex items-center gap-1 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/10 text-slate-400 hover:text-white"}`}
+                  className={`shrink-0 flex items-center gap-1 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg transition-all shadow-sm ${copied ? "bg-green-500/20 text-green-600 border border-green-500/30" : "bg-card-header text-text-muted hover:text-text-main border border-border"}`}
                 >
                   {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
                   {copied ? t('copiedLabel') : t('copyLabel')}
@@ -274,7 +274,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
 
             {/* Amount */}
             <div className="space-y-2 mb-6">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">
                 {t('amountToDeposit')}
               </label>
               <div className="relative">
@@ -284,19 +284,19 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl py-4 px-4 text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-slate-700"
+                  className="w-full bg-input-bg border border-input-border rounded-xl py-4 px-4 text-text-main font-bold focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/30 shadow-inner"
                 />
               </div>
             </div>
 
-            <div className="text-[10px] leading-relaxed text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 font-bold uppercase tracking-wide">
+            <div className="text-[10px] leading-relaxed text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 font-bold uppercase tracking-wide shadow-sm">
               {language === 'th' ? '⚠️ โอนเงินแล้วกด "แจ้งโอนเงิน" เพื่อให้ทีมงานตรวจสอบและเติมยอดเข้าบัญชี' : '⚠️ After transfer, tap "Confirm Transfer" to notify our team.'}
             </div>
 
             {/* Under Development Notice */}
             <div className="flex items-center gap-2 mb-3 px-1">
-              <Construction size={13} className="text-amber-400 shrink-0" />
-              <span className="text-[10px] font-bold text-amber-400/80 uppercase tracking-wide">
+              <Construction size={13} className="text-amber-500 shrink-0" />
+              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wide">
                 {t('underDevelopment') || 'อยู่ระหว่างพัฒนา — ระบบตรวจสอบอัตโนมัติ'}
               </span>
             </div>
@@ -327,14 +327,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
           className="flex flex-col"
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-slate-900/50">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
+          <div className="p-6 border-b border-border flex items-center justify-between relative bg-card-header/50">
+            <h2 className="text-lg font-black text-text-main flex items-center gap-2">
               <AlertCircle size={20} className="text-red-500" />
               {t('depositErrorTitle')}
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+              className="p-1 rounded-full hover:bg-card-header transition-colors text-text-muted hover:text-text-main"
             >
               <X size={18} />
             </button>
@@ -343,10 +343,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
           {/* Body */}
           <div className="p-6">
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
-                <AlertCircle size={32} className="text-red-400" />
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 shadow-sm">
+                <AlertCircle size={32} className="text-red-500" />
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">
+              <p className="text-text-main text-sm leading-relaxed whitespace-pre-line">
                 {t('depositErrorDesc')}
               </p>
             </div>
@@ -357,7 +357,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
 
             <button
               onClick={onClose}
-              className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black text-base transition-all"
+              className="w-full py-4 rounded-xl bg-card-header hover:bg-card-header/80 text-text-main font-black text-base transition-all border border-border"
             >
               {t('closeLabel')}
             </button>

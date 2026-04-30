@@ -63,7 +63,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
       if (registerError) throw registerError;
       
-      // Log the admin action
       if (currentAdmin && currentAdmin.id) {
         try {
           await auditService.logAction({
@@ -100,17 +99,17 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="glass-card w-full max-w-lg relative z-10 p-4 sm:p-6 max-h-[90vh] md:max-h-[95vh] overflow-y-auto scrollbar-hide mb-16 md:mb-0"
+        className="glass-card w-full max-w-lg relative z-10 p-4 sm:p-6 max-h-[90vh] md:max-h-[95vh] overflow-y-auto scrollbar-hide mb-16 md:mb-0 bg-card border-border shadow-2xl"
       >
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col">
-            <h3 className="text-lg font-bold text-white">
+            <h3 className="text-lg font-bold text-text-main">
               {t("registerNewUser")}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-500 hover:text-white transition-colors"
+            className="p-2 text-text-muted hover:text-text-main transition-colors"
           >
             <X size={24} />
           </button>
@@ -122,13 +121,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             <Shield size={18} className="animate-pulse" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-amber-500 uppercase tracking-wider">{t("maintenanceTitle")}</p>
-            <p className="text-[10px] text-amber-500/80 leading-tight">{t("maintenanceDesc")}</p>
+            <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">{t("maintenanceTitle")}</p>
+            <p className="text-[10px] text-amber-600/80 leading-tight">{t("maintenanceDesc")}</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] font-bold rounded-xl text-center">
+          <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 text-red-600 text-[11px] font-bold rounded-xl text-center">
             {error}
           </div>
         )}
@@ -174,8 +173,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             disabled={true}
           />
 
-          <div className="pt-3 flex gap-2.5 text-[10px] text-slate-500 leading-relaxed italic">
-            <Shield size={18} className="shrink-0 text-slate-700" />
+          <div className="pt-3 flex gap-2.5 text-[10px] text-text-muted leading-relaxed italic">
+            <Shield size={18} className="shrink-0 text-text-muted/40" />
             <p>
               {t("registerNewUserDesc") || "Creating a user through this form will save the information directly to the system and the user can log in immediately without OTP verification."}
             </p>
@@ -185,14 +184,14 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-5 py-2.5 rounded-xl bg-white/5 text-slate-400 font-bold hover:text-white transition-all text-xs pointer-events-auto"
+              className="flex-1 px-5 py-2.5 rounded-xl bg-card-header text-text-muted font-bold hover:text-text-main transition-all text-xs pointer-events-auto border border-border shadow-sm"
             >
               {t("cancel")}
             </button>
             <button
               type="button"
               disabled={true}
-              className="flex-[2] bg-slate-800 text-slate-500 flex items-center justify-center gap-2 text-xs font-bold rounded-xl py-2.5 cursor-not-allowed"
+              className="flex-[2] bg-card-header text-text-muted/50 flex items-center justify-center gap-2 text-xs font-bold rounded-xl py-2.5 cursor-not-allowed border border-border"
             >
               {t("systemTemporarilyClosed")}
             </button>

@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
       : displayName.slice(0, 2).toUpperCase();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 py-4 px-6 md:px-12 backdrop-blur-2xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass py-4 px-6 md:px-12 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* User avatar & name */}
         <div
@@ -34,14 +34,14 @@ export const Navbar: React.FC = () => {
           <motion.div
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-7 h-7 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[9px] font-black border border-white/20"
+            className="w-7 h-7 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[9px] font-black border border-white/20 text-white"
           >
             {initials}
           </motion.div>
           <motion.span
             initial={{ opacity: 0, x: 4 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-base font-bold text-slate-200 max-w-[100px] truncate"
+            className="text-base font-bold text-text-main max-w-[100px] truncate"
           >
             {displayName}
           </motion.span>
@@ -54,14 +54,14 @@ export const Navbar: React.FC = () => {
           onClick={() => navigate("/")}
           className="hidden md:flex items-center gap-2 group cursor-pointer"
         >
-          <div className="w-10 h-10 rounded-xl overflow-hidden group-hover:scale-110 transition-transform duration-300">
+          <div className="w-10 h-10 rounded-xl overflow-hidden group-hover:scale-110 transition-transform duration-300 shadow-lg">
             <img
               src={logoImg}
               alt="MetaBridge Logo"
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="text-2xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent tracking-tighter">
+          <span className="text-2xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent tracking-tighter">
             MetaBridge
           </span>
         </motion.div>
@@ -69,22 +69,22 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/news")}
-            className="flex items-center gap-2 glass px-3 py-1.5 rounded-full text-xs font-medium hover:bg-white/10 transition-colors border border-white/10 group"
+            className="flex items-center gap-2 glass px-3 py-1.5 rounded-full text-xs font-medium hover:bg-primary/10 transition-colors border-none group text-text-main"
           >
             <Newspaper
               size={14}
-              className="group-hover:rotate-180 transition-transform duration-700"
+              className="group-hover:rotate-180 transition-transform duration-700 text-primary"
             />
             <span className="hidden sm:inline">{t("news")}</span>
           </button>
 
           <button
             onClick={() => setLanguage(language === "th" ? "en" : "th")}
-            className="flex items-center gap-2 glass px-3 py-1.5 rounded-full text-xs font-medium hover:bg-white/10 transition-colors border border-white/10 group"
+            className="flex items-center gap-2 glass px-3 py-1.5 rounded-full text-xs font-medium hover:bg-primary/10 transition-colors border-none group text-text-main"
           >
             <Globe
               size={14}
-              className="group-hover:rotate-180 transition-transform duration-700"
+              className="group-hover:rotate-180 transition-transform duration-700 text-primary"
             />
             <span className="hidden sm:inline">{language === "th" ? "EN" : "ไทย"}</span>
             <span className="sm:hidden">{language === "th" ? "EN" : "TH"}</span>
@@ -95,14 +95,14 @@ export const Navbar: React.FC = () => {
             <motion.div
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[10px] font-black border-2 border-white/20"
+              className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-[10px] font-black border-2 border-white/20 text-white"
             >
               {initials}
             </motion.div>
             <motion.span
               initial={{ opacity: 0, x: 4 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-sm font-medium text-slate-300 max-w-[120px] truncate"
+              className="text-sm font-medium text-text-main max-w-[120px] truncate"
             >
               {displayName}
             </motion.span>

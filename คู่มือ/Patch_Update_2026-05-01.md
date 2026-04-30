@@ -29,6 +29,13 @@
 *   **Graceful Fallback**: ปรับปรุงระบบให้แสดงหน้าจอ `SystemLoader` พร้อมข้อความแจ้งเตือนเมื่อเกิดข้อผิดพลาดในการเชื่อมต่อกับ Supabase หรือกรณีลืมตั้งค่า Environment Variables
 *   **Safe Initialization**: ป้องกันแอปพลิเคชันค้าง (App Crash) หากการตั้งค่าความปลอดภัยเบื้องต้นยังไม่สมบูรณ์
 
+## 6. การจัดการธีม (Full Light/Dark Mode Parity)
+*   **Semantic CSS Variables**: ปรับปรุงหน้า Settings, History, และ Components ย่อย (เช่น TabButton, SettingsInput, InstallModal) ให้ใช้ Semantic Variables (`bg-card`, `text-text-main`, `border-border`) แทนการฮาร์ดโค้ดสี เพื่อให้รองรับ Light Mode และ Dark Mode ได้สมบูรณ์ 100%
+*   **Dynamic Trading Chart**: กราฟ TradingView ตอนนี้รองรับการเปลี่ยนธีมอัตโนมัติ (Dynamic Theme Switching) ตามการตั้งค่าของแพลตฟอร์ม
+
+## 7. การปรับปรุง Skeleton สำหรับหน้าจอมือถือ (Responsive Skeletons)
+*   **Trading Chart Skeleton**: ออกแบบหน้าโหลดกราฟใหม่ทั้งหมด ตัดเส้นกริดและข้อความที่ทับซ้อนกันบนมือถือออก เปลี่ยนเป็นการใช้พื้นหลังลายตารางคงที่ (40x40px) และตัวโหลดตรงกลาง (Elegant Centered Loader) ที่ปรับขนาดตามหน้าจอได้อย่างสมบูรณ์แบบ
+
 ---
 **Meta-Bridge Team**
 *สถานะระบบ: พร้อมใช้งาน 100% (Production Ready)*

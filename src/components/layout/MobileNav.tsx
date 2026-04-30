@@ -45,14 +45,14 @@ export const MobileNav: React.FC = () => {
               <motion.div
                 whileTap={{ scale: 0.8 }}
                 className={`transition-all duration-300 ${
-                  isActive ? "text-primary scale-110" : "text-slate-500 hover:text-slate-300"
+                  isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" : "text-text-muted hover:text-text-main"
                 }`}
               >
                 {item.icon}
               </motion.div>
               <span
                 className={`text-[10px] font-bold transition-all duration-300 ${
-                  isActive ? "text-primary" : "text-slate-600"
+                  isActive ? "text-primary" : "text-text-muted"
                 }`}
               >
                 {item.label}
