@@ -804,7 +804,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
             <div className="flex flex-col gap-6">
               {/* Bank/Crypto Toggle */}
-              <div className="flex p-1 bg-input-bg rounded-2xl border border-input-border w-full max-w-sm mx-auto shadow-inner">
+              <div className="flex p-1 bg-transparent rounded-2xl border border-border w-full max-w-sm mx-auto">
                 {(["bank", "crypto"] as const).map((type) => (
                   <button
                     key={type}
@@ -885,7 +885,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                             setTempBankNetwork(e.target.value);
                             setTempBankName("");
                           }}
-                          className="w-full appearance-none bg-input-bg border border-input-border rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-text-main font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer shadow-inner"
+                          className="w-full appearance-none bg-transparent border border-border rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-text-main font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
                         >
                           <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
                           {THAI_BANKS.map((bank) => (
@@ -933,7 +933,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                             onClick={() => setTempBankNetwork(net.id)}
                             className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all  ${tempBankNetwork === net.id
                               ? "bg-primary/10 border-primary/30 ring-1 ring-primary/10 shadow-md"
-                              : "bg-input-bg border-input-border hover:border-primary/30"
+                              : "bg-transparent border-border hover:border-primary/30"
                               }`}
                           >
                             <div
@@ -1409,11 +1409,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       setIsOtpFlow(false);
                       setOtpStep("request");
                     }}
-                    className="p-1 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-colors"
+                    className="p-1 hover:bg-card-header rounded-lg text-text-muted hover:text-text-main transition-colors"
                   >
                     <ArrowLeft size={20} />
                   </button>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">{t("resetPassword")}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-text-main">{t("resetPassword")}</h2>
                 </div>
 
                 {otpStep === "request" && (
@@ -1422,8 +1422,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                       <Mail size={32} />
                     </div>
                     <div className="space-y-2">
-                      <p className="text-white font-bold">{t("requestPasswordReset")}</p>
-                      <p className="text-sm text-slate-400 px-8">
+                      <p className="text-text-main font-bold">{t("requestPasswordReset")}</p>
+                      <p className="text-sm text-text-muted px-8">
                         {t("sendCodeToEmail")}
                         <span className="text-primary block mt-1 font-bold">{maskEmail(profileData.email)}</span>
                       </p>
@@ -1441,8 +1441,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 {otpStep === "verify" && (
                   <form onSubmit={(e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-6">
                     <div className="text-center space-y-2">
-                      <p className="text-white font-bold">{t("enterVerificationCode")}</p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-text-main font-bold">{t("enterVerificationCode")}</p>
+                      <p className="text-sm text-text-muted">
                         {t("checkInboxCode")} <span className="text-primary font-bold">{maskEmail(profileData.email)}</span>
                       </p>
                     </div>
@@ -1849,7 +1849,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                         className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border shadow-sm ${
                           reportForm.category === cat 
                             ? "bg-primary/20 border-primary/40 text-primary" 
-                            : "bg-input-bg border-border text-text-muted hover:bg-card-header/50"
+                            : "bg-transparent border-border text-text-muted hover:bg-card-header/50"
                         }`}
                       >
                         {cat}
@@ -1873,7 +1873,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                     value={reportForm.message}
                     onChange={(e) => setReportForm(prev => ({ ...prev, message: e.target.value }))}
                     placeholder={language === 'th' ? "อธิบายรายละเอียดปัญหาที่คุณพบ..." : "Describe the problem in detail..."}
-                    className="w-full bg-input-bg border border-input-border rounded-2xl p-4 text-xs text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all min-h-[120px] resize-none shadow-inner"
+                    className="w-full bg-transparent border border-border rounded-2xl p-4 text-xs text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all min-h-[120px] resize-none"
                   />
                 </div>
 

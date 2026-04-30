@@ -483,7 +483,7 @@ export const UserActivityLog: React.FC = () => {
             </label>
             <input type="date" value={startDate} max={endDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full bg-input-bg border border-input-border rounded-xl px-3 py-2 text-text-main text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden" />
+              className="w-full bg-transparent border border-border rounded-xl px-3 py-2 text-text-main text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden" />
           </div>
           <div className="space-y-1.5 min-w-0">
             <label className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center gap-1.5">
@@ -491,7 +491,7 @@ export const UserActivityLog: React.FC = () => {
             </label>
             <input type="date" value={endDate} min={startDate} max={today}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full bg-input-bg border border-input-border rounded-xl px-3 py-2 text-text-main text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden" />
+              className="w-full bg-transparent border border-border rounded-xl px-3 py-2 text-text-main text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 overflow-hidden" />
           </div>
         </div>
 
@@ -507,7 +507,7 @@ export const UserActivityLog: React.FC = () => {
                 onChange={e => { setCodeInput(e.target.value.toUpperCase()); setCodeStatus('idle'); if (!e.target.value) clearCode(); }}
                 placeholder={isth ? 'เช่น ABC123...' : 'e.g. ABC123...'}
                 maxLength={8}
-                className="w-full bg-input-bg border border-input-border rounded-xl px-3 py-2 text-text-main text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40 uppercase"
+                className="w-full bg-transparent border border-border rounded-xl px-3 py-2 text-text-main text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40 uppercase"
               />
               {codeUser && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">

@@ -22,7 +22,7 @@ export const NewsHeader: React.FC<NewsHeaderProps> = ({
       <Newspaper size={14} />
       {badgeText}
     </div>
-    <h1 className="text-5xl font-black text-white tracking-tight">{title}</h1>
-    <p className="text-slate-400">{subtitle}</p>
+    <h1 className="text-5xl font-black text-text-main tracking-tight">{title}</h1>
+    <p className="text-text-muted font-medium">{subtitle}</p>
   </motion.div>
 );

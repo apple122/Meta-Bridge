@@ -284,7 +284,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ onClose }) => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-input-bg border border-input-border rounded-xl py-4 px-4 text-text-main font-bold focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/30 shadow-inner"
+                  className="w-full bg-transparent border border-border rounded-xl py-4 px-4 text-text-main font-bold focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/30"
                 />
               </div>
             </div>

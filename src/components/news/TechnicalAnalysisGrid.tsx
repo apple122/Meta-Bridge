@@ -14,11 +14,11 @@ export const TechnicalAnalysisGrid: React.FC = () => {
         transition={{ delay: 0.2 }}
         className="glass-card"
       >
-        <h3 className="text-xl font-black text-cyan-400 mb-4 flex items-center gap-2">
+        <h3 className="text-xl font-black text-primary mb-4 flex items-center gap-2">
           <TrendingUp size={20} />
           {t("technicalAnalysis")}
         </h3>
-        <p className="text-sm text-slate-400 leading-relaxed">
+        <p className="text-sm text-text-muted leading-relaxed">
           {t("technicalAnalysisDesc")}
         </p>
       </motion.div>
@@ -29,11 +29,11 @@ export const TechnicalAnalysisGrid: React.FC = () => {
         transition={{ delay: 0.2 }}
         className="glass-card border-slate-700/50"
       >
-        <h3 className="text-xl font-black text-cyan-400 mb-4 flex items-center gap-2">
+        <h3 className="text-xl font-black text-primary mb-4 flex items-center gap-2">
           <Info size={20} />
           {t("investmentAdvice")}
         </h3>
-        <p className="text-sm text-slate-400 leading-relaxed">
+        <p className="text-sm text-text-muted leading-relaxed">
           {t("investmentAdviceDesc")}
         </p>
       </motion.div>

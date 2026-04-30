@@ -52,7 +52,7 @@ export const MarketTable: React.FC<MarketTableProps> = ({ stocks, t }) => {
         <div className="relative w-full sm:w-auto" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 px-5 py-2.5 bg-input-bg border border-input-border rounded-xl text-xs font-black text-text-main uppercase tracking-widest hover:border-primary/50 transition-all shadow-xl active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 px-5 py-2.5 bg-transparent border border-border rounded-xl text-xs font-black text-text-main uppercase tracking-widest hover:border-primary/50 transition-all shadow-sm active:scale-95"
           >
             <div className="flex items-center gap-2">
               <Filter size={14} className="text-primary" />

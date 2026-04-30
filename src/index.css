@@ -114,6 +114,10 @@
   background-size: 200% 100%;
   animation: skeleton-shimmer 2s infinite linear;
 }
+@utility clip-path-chart {
+  clip-path: polygon(0 70%, 15% 50%, 30% 65%, 45% 35%, 60% 55%, 75% 25%, 90% 45%, 100% 30%, 100% 100%, 0 100%);
+}
+
 @keyframes chartLine {
   to {
     stroke-dashoffset: 0;

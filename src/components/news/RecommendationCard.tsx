@@ -18,7 +18,7 @@ export const RecommendationCard: React.FC = () => {
         {t("recommendation")}
       </h3>
       <div className="space-y-4">
-        <p className="text-white font-medium leading-relaxed">
+        <p className="text-text-main font-medium leading-relaxed">
           {t("recommendationTitle")}
         </p>
         <div className="flex flex-col md:flex-row gap-4 py-4 border-y border-white/5">
@@ -26,22 +26,22 @@ export const RecommendationCard: React.FC = () => {
             <p className="text-[10px] uppercase font-black text-green-500 tracking-widest mb-1">
               {t("takeProfitZone")}
             </p>
-            <p className="text-xl font-black text-white">
+            <p className="text-xl font-black text-text-main">
               2,500 - 2,493{" "}
-              <span className="text-xs text-slate-500 font-normal">USD</span>
+              <span className="text-xs text-text-muted font-normal">USD</span>
             </p>
           </div>
           <div className="flex-1 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
             <p className="text-[10px] uppercase font-black text-red-500 tracking-widest mb-1">
               {t("stopLoss")}
             </p>
-            <p className="text-xl font-black text-white">
+            <p className="text-xl font-black text-text-main">
               &gt; 2,532{" "}
-              <span className="text-xs text-slate-500 font-normal">USD</span>
+              <span className="text-xs text-text-muted font-normal">USD</span>
             </p>
           </div>
         </div>
-        <p className="text-slate-400 text-sm">
+        <p className="text-text-muted text-sm">
           {t("recommendationFootnote")}
         </p>
       </div>

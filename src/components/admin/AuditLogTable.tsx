@@ -107,7 +107,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, loading }) =
       );
     }
     return (
-      <div className="bg-input-bg/30 px-4 py-3 rounded-xl border border-border max-w-lg shadow-inner">
+      <div className="bg-transparent px-4 py-3 rounded-xl border border-border max-w-lg">
         <pre className="text-[10px] text-text-muted font-mono overflow-x-auto">
           {JSON.stringify(log.details, null, 2)}
         </pre>

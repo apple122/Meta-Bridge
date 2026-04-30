@@ -245,7 +245,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
             placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-input-bg backdrop-blur-md border border-input-border rounded-2xl py-3.5 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm shadow-xl"
+            className="w-full bg-transparent backdrop-blur-md border border-border rounded-2xl py-3.5 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm"
           />
         </div>
         <div className="flex gap-3">
@@ -350,20 +350,20 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("firstNameLabel")}</label>
-                  <input type="text" value={editingProfile.first_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, first_name: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
+                  <input type="text" value={editingProfile.first_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, first_name: e.target.value })} className="w-full bg-transparent border border-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("lastNameLabel")}</label>
-                  <input type="text" value={editingProfile.last_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, last_name: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
+                  <input type="text" value={editingProfile.last_name || ""} onChange={(e) => setEditingProfile({ ...editingProfile, last_name: e.target.value })} className="w-full bg-transparent border border-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("emailAddressLabel")}</label>
-                <input type="email" value={editingProfile.email} onChange={(e) => setEditingProfile({ ...editingProfile, email: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
+                <input type="email" value={editingProfile.email} onChange={(e) => setEditingProfile({ ...editingProfile, email: e.target.value })} className="w-full bg-transparent border border-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("newPasswordOptional")}</label>
-                <input type="password" placeholder="Leave blank to keep current" onChange={(e) => setEditingProfile({ ...editingProfile, password: e.target.value })} className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
+                <input type="password" placeholder="Leave blank to keep current" onChange={(e) => setEditingProfile({ ...editingProfile, password: e.target.value })} className="w-full bg-transparent border border-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <button onClick={() => handleUpdateProfile(editingProfile)} disabled={isSaving} className="w-full py-4 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50">
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {t("saveChanges")}
@@ -399,11 +399,11 @@ export const UsersTab: React.FC<UsersTabProps> = ({ fadeProps, logAdminAction })
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">{t("amount")} (USD)</label>
-                <input type="number" value={walletAmount} onChange={(e) => setWalletAmount(e.target.value)} placeholder="0.00" className="w-full bg-input-bg border border-input-border rounded-xl p-4 text-xl font-black text-text-main focus:border-primary/50 outline-none transition-all" />
+                <input type="number" value={walletAmount} onChange={(e) => setWalletAmount(e.target.value)} placeholder="0.00" className="w-full bg-transparent border border-border rounded-xl p-4 text-xl font-black text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">{t("reason")} / Memo</label>
-                <input type="text" value={walletReason} onChange={(e) => setWalletReason(e.target.value)} placeholder="..." className="w-full bg-input-bg border border-input-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
+                <input type="text" value={walletReason} onChange={(e) => setWalletReason(e.target.value)} placeholder="..." className="w-full bg-transparent border border-border rounded-xl p-3 text-sm text-text-main focus:border-primary/50 outline-none transition-all" />
               </div>
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <button onClick={() => handleUpdateWallet('withdraw')} disabled={isSaving || !walletAmount} className="py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-30 flex items-center justify-center gap-2">

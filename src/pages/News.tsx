@@ -1,21 +1,22 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useWallet } from "../contexts/WalletContext";
+import { NewsSkeleton } from "../components/shared/PageSkeletons";
 import { NewsHeader } from "../components/news/NewsHeader";
 import { NewsAnalysis } from "../components/news/NewsAnalysis";
 import { TechnicalAnalysisGrid } from "../components/news/TechnicalAnalysisGrid";
 import { RecommendationCard } from "../components/news/RecommendationCard";
 import { KeyFactors } from "../components/news/KeyFactors";
-import { useAuth } from "../contexts/AuthContext";
-import { NewsSkeleton } from "../components/shared/PageSkeletons";
 
 export const News: React.FC = () => {
   const { t } = useLanguage();
-  const { loading } = useAuth();
+  const { loading } = useWallet();
 
   if (loading) {
     return <NewsSkeleton />;
   }
+
 
   return (
     <div className="pt-24 pb-32 px-6 max-w-4xl mx-auto space-y-8">
@@ -40,10 +41,10 @@ export const News: React.FC = () => {
         transition={{ delay: 0.5 }}
         className="pt-12 text-center"
       >
-        <p className="text-cyan-500 font-black text-sm tracking-widest mb-1 italic">
+        <p className="text-primary font-black text-sm tracking-widest mb-1 italic">
           {t("thankYouReading")}
         </p>
-        <p className="text-cyan-900 font-black text-xs tracking-widest uppercase">
+        <p className="text-text-muted font-black text-[10px] tracking-widest uppercase">
           MetaBridge
         </p>
       </motion.div>

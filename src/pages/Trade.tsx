@@ -241,7 +241,7 @@ export const Trade: React.FC = () => {
                             <input
                               type="text"
                               placeholder={t('searchAssets') + "..."}
-                              className="w-full bg-input-bg border border-input-border rounded-xl py-2 pl-9 pr-4 text-sm text-text-main font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-inner"
+                              className="w-full bg-transparent border border-border rounded-xl py-2 pl-9 pr-4 text-sm text-text-main font-medium focus:outline-none focus:ring-2 focus:ring-primary/40"
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
                             />

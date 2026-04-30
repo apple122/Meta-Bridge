@@ -117,7 +117,7 @@ export const AdminInput: React.FC<AdminInputProps> = ({
       </div>
 
       <div
-        className={`relative group/input flex items-stretch overflow-hidden transition-all duration-300 bg-input-bg border border-input-border rounded-xl focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 shadow-inner ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary/20"}`}
+        className={`relative group/input flex items-stretch overflow-hidden transition-all duration-300 bg-transparent border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary/20"}`}
       >
         {isPhone && (
           <div className="relative flex items-center bg-card-header/50 border-r border-border hover:bg-card-header transition-colors shrink-0">

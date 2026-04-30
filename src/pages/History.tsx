@@ -40,7 +40,6 @@ export const History: React.FC = () => {
 
   const [view, setView] = useState<'trading' | 'security'>('trading');
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [loadingActivities, setLoadingActivities] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -54,10 +53,8 @@ export const History: React.FC = () => {
   // Fetch Login History / Security Activities
   React.useEffect(() => {
     if (view === 'security' && user?.id) {
-      setLoadingActivities(true);
       activityService.fetchActivities({ userId: user.id, type: 'login' })
-        .then(setActivities)
-        .finally(() => setLoadingActivities(false));
+        .then(setActivities);
     }
   }, [view, user?.id]);
 
@@ -159,10 +156,11 @@ export const History: React.FC = () => {
   ];
 
   const dayNames = [t("sun"), t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat")];
-
+  
   if (loading) {
     return <HistorySkeleton />;
   }
+
 
   return (
     <div className="pt-24 pb-32 px-6 max-w-4xl mx-auto space-y-8">
@@ -301,19 +299,19 @@ export const History: React.FC = () => {
       <div className="flex p-1 bg-card-header/50 border border-border rounded-2xl mb-6 shadow-inner">
         <button
           onClick={() => setView('trading')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-text-muted hover:text-text-main"
+          className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-3 rounded-xl text-[10px] sm:text-xs font-bold sm:font-black uppercase tracking-wider sm:tracking-widest transition-all ${view === 'trading' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-text-muted hover:text-text-main"
             }`}
         >
-          <ClipboardList size={16} />
-          {t("tradingActivity")}
+          <ClipboardList size={16} className="sm:w-[18px] sm:h-[18px]" />
+          <span className="text-center leading-tight whitespace-nowrap sm:whitespace-normal">{t("tradingActivity")}</span>
         </button>
         <button
           onClick={() => setView('security')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-text-muted hover:text-text-main"
+          className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-3 rounded-xl text-[10px] sm:text-xs font-bold sm:font-black uppercase tracking-wider sm:tracking-widest transition-all ${view === 'security' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-text-muted hover:text-text-main"
             }`}
         >
-          <ShieldCheck size={16} />
-          {isth ? 'ความปลอดภัย' : 'Security'}
+          <ShieldCheck size={16} className="sm:w-[18px] sm:h-[18px]" />
+          <span className="text-center leading-tight whitespace-nowrap sm:whitespace-normal">{isth ? 'ความปลอดภัย' : 'Security'}</span>
         </button>
       </div>
 
@@ -339,28 +337,28 @@ export const History: React.FC = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t("searchHistory") === "searchHistory" ? "ค้นหา Order ID, สินทรัพย์..." : t("searchHistory")}
-                    className="w-full bg-input-bg border border-input-border rounded-2xl py-2.5 pl-11 pr-4 text-text-main font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-text-muted/30 shadow-inner"
+                    className="w-full bg-transparent border border-border rounded-2xl py-2.5 pl-11 pr-4 text-text-main font-bold text-xs outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-text-muted/30"
                   />
                 </div>
 
-                <div className="flex items-center gap-1 p-1 bg-input-bg border border-input-border rounded-2xl flex-shrink-0 shadow-inner">
+                <div className="flex items-center gap-1 p-1 bg-transparent border border-border rounded-2xl flex-shrink-0">
                   <button
                     onClick={() => setStatusFilter('all')}
-                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all' ? "bg-card text-text-main shadow-md border border-border" : "text-text-muted hover:text-text-main"}`}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all' ? "bg-card-header text-text-main shadow-sm border border-border" : "text-text-muted hover:text-text-main"}`}
                   >
                     <LayoutGrid size={12} />
                     {t("all") || "All"}
                   </button>
                   <button
                     onClick={() => setStatusFilter('win')}
-                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win' ? "bg-green-500/20 text-green-600 shadow-md border border-green-500/20" : "text-text-muted hover:text-text-main"}`}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'win' ? "bg-green-500/20 text-green-600 shadow-sm border border-green-500/20" : "text-text-muted hover:text-text-main"}`}
                   >
                     <CheckCircle2 size={12} />
                     {t("win") || "Win"}
                   </button>
                   <button
                     onClick={() => setStatusFilter('loss')}
-                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss' ? "bg-red-500/20 text-red-600 shadow-md border border-red-500/20" : "text-text-muted hover:text-text-main"}`}
+                    className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === 'loss' ? "bg-red-500/20 text-red-600 shadow-sm border border-red-500/20" : "text-text-muted hover:text-text-main"}`}
                   >
                     <XCircle size={12} />
                     {t("loss") || "Loss"}
@@ -374,11 +372,11 @@ export const History: React.FC = () => {
                   <select
                     value={selectedAsset}
                     onChange={(e) => setSelectedAsset(e.target.value)}
-                    className="w-full bg-input-bg border border-input-border rounded-2xl py-2.5 pl-10 pr-4 text-[10px] font-black text-text-main outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all shadow-inner"
+                    className="w-full bg-transparent border border-border rounded-2xl py-2.5 pl-10 pr-10 text-xs font-bold text-text-main outline-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer transition-all"
                   >
-                    <option value="all"> {t("allAssets") || "All Assets"} </option>
+                    <option value="all" className="bg-card text-text-main"> {t("allAssets") || "All Assets"} </option>
                     {uniqueAssets.map((asset) => (
-                      <option key={asset} value={asset}>{asset}</option>
+                      <option key={asset} value={asset} className="bg-card text-text-main">{asset}</option>
                     ))}
                   </select>
                   <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
@@ -389,7 +387,6 @@ export const History: React.FC = () => {
             </div>
 
 
-            {/* Trading List */}
             {filteredTransactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-card-header/30 rounded-3xl border border-border border-dashed">
                 <div className="w-16 h-16 rounded-full bg-card-header flex items-center justify-center text-text-muted shadow-inner">
@@ -514,11 +511,7 @@ export const History: React.FC = () => {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            {loadingActivities ? (
-              <div className="flex justify-center py-10">
-                <div className="w-8 h-8 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
-              </div>
-            ) : activities.length === 0 ? (
+            {activities.length === 0 ? (
               <div className="text-center py-20 bg-card-header/40 rounded-3xl border border-border border-dashed shadow-inner">
                 <p className="text-text-muted text-sm font-medium">No history found.</p>
               </div>

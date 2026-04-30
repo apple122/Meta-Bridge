@@ -51,19 +51,19 @@ export const GlobalActiveTrades: React.FC = () => {
       {/* Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 glass px-3 py-2 rounded-full border border-primary/20 shadow-lg shadow-primary/10 hover:bg-white/5 transition-all outline-none"
+        className="flex items-center gap-2 bg-card px-3 py-2 rounded-full border border-border shadow-sm hover:bg-card-header transition-all outline-none"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         <Clock size={16} className="text-primary animate-pulse" />
-        <span className="text-xs font-bold text-white tracking-widest">
+        <span className="text-xs font-bold text-text-main tracking-widest">
           {activeBinaryTrades.length} {activeBinaryTrades.some(t_tr => Math.max(0, Math.floor((t_tr.expiryTime - Date.now()) / 1000)) === 0) ? (t("settling") || "SETTLING") : t("active")}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 90 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronRight size={14} className="text-slate-400" />
+          <ChevronRight size={14} className="text-text-muted" />
         </motion.div>
       </motion.button>
 
@@ -85,10 +85,10 @@ export const GlobalActiveTrades: React.FC = () => {
               stiffness: 400,
               opacity: { duration: 0.2 },
             }}
-            className="mt-2 glass-card border border-white/10 shadow-2xl w-64 overflow-hidden flex flex-col mr-1 custom-scrollbar max-h-[60vh] overflow-y-auto"
+            className="mt-2 bg-card border border-border rounded-2xl shadow-2xl w-64 overflow-hidden flex flex-col mr-1 custom-scrollbar max-h-[60vh] overflow-y-auto p-2"
           >
             <div className="space-y-2">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 px-1">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-1 px-1">
                 {t("activeBinaryTrades")}
               </h3>
               {activeBinaryTrades.map((trade) => {
@@ -105,7 +105,7 @@ export const GlobalActiveTrades: React.FC = () => {
                 return (
                   <div
                     key={trade.id}
-                    className="p-2 bg-slate-900/40 rounded-lg border border-white/5 flex items-center justify-between"
+                    className="p-2 bg-card-header rounded-lg border border-border flex items-center justify-between"
                   >
                     <div className="flex items-center gap-2">
                       <div
@@ -118,19 +118,19 @@ export const GlobalActiveTrades: React.FC = () => {
                         )}
                       </div>
                       <div>
-                        <p className="text-[11px] font-bold text-white uppercase leading-none mb-0.5">
+                        <p className="text-[11px] font-bold text-text-main uppercase leading-none mb-0.5">
                           {trade.assetSymbol}
                         </p>
-                        <p className="text-[9px] text-slate-500 font-medium">
+                        <p className="text-[9px] text-text-muted font-medium">
                           Entry: ${trade.entryPrice.toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right flex flex-col items-end">
-                      <p className="text-xs font-black text-white tabular-nums tracking-wider leading-none mb-0.5">
+                      <p className="text-xs font-black text-text-main tabular-nums tracking-wider leading-none mb-0.5">
                         {timeString}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold">
+                      <p className="text-[9px] text-text-muted font-bold">
                         ${trade.amount.toLocaleString()}{" "}
                         <span className="text-green-500">
                           +{trade.payoutPercent}%

@@ -8,7 +8,7 @@ interface SystemLoaderProps {
 
 export const SystemLoader: React.FC<SystemLoaderProps> = ({ message }) => {
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center p-6 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center p-6 overflow-hidden transition-colors duration-500">
       {/* Dynamic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />

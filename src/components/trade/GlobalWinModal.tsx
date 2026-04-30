@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Sparkles } from "lucide-react";
 import { formatCurrency } from "../../utils/format";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import { playSuccessSound } from "../../utils/audio";
 import { sendWinnerNotification } from "../../utils/notifications";
 
@@ -40,6 +41,7 @@ const Particles = () => {
 
 export const GlobalWinModal: React.FC = () => {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const [winModalData, setWinModalData] = useState<{
     assetSymbol: string;
     amount: number;
@@ -68,7 +70,7 @@ export const GlobalWinModal: React.FC = () => {
     };
     window.addEventListener("binary-trade-result", handler);
     return () => window.removeEventListener("binary-trade-result", handler);
-  }, []);
+  }, [t]);
 
   // Close on ESC key
   useEffect(() => {
@@ -81,6 +83,8 @@ export const GlobalWinModal: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [winModalData]);
 
+  const isLight = theme === 'light';
+
   return (
     <AnimatePresence>
       {winModalData && (
@@ -88,7 +92,7 @@ export const GlobalWinModal: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 md:p-6"
+          className="fixed inset-0 z-[200] bg-black/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-6"
           onClick={() => setWinModalData(null)}
         >
           <motion.div
@@ -96,42 +100,64 @@ export const GlobalWinModal: React.FC = () => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 50 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="relative w-full max-w-sm rounded-[2rem] overflow-hidden bg-gradient-to-b from-green-500/20 to-slate-900 border border-green-500/30 p-4 sm:p-8 text-center shadow-2xl shadow-green-500/20 mb-16 md:mb-0"
+            className={`relative w-full max-w-sm rounded-[2.5rem] overflow-hidden border p-6 sm:p-10 text-center shadow-2xl transition-colors duration-500 mb-16 md:mb-0 ${
+              isLight 
+                ? "bg-white border-green-100 shadow-green-500/10" 
+                : "bg-slate-900 border-green-500/30 shadow-green-500/20"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Background Accent */}
+            <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b opacity-20 pointer-events-none ${
+              isLight ? "from-green-500/40" : "from-green-500/30"
+            } to-transparent`} />
+            
             <Particles />
 
-            <div className="mx-auto w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/30 relative">
-              <Trophy size={40} className="text-green-400 drop-shadow-lg" />
+            <div className={`mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-8 relative transition-colors ${
+              isLight ? "bg-green-50 text-green-500 shadow-inner" : "bg-green-500/20 text-green-400 shadow-lg shadow-green-500/30"
+            }`}>
+              <Trophy size={48} className="drop-shadow-lg" />
               <Sparkles
-                size={24}
-                className="text-yellow-400 absolute -top-2 -right-2 animate-pulse"
+                size={28}
+                className="text-yellow-400 absolute -top-1 -right-1 animate-pulse"
               />
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight">
+            <h2 className={`text-3xl font-black mb-3 tracking-tight transition-colors ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
               {t("congratulations")}
             </h2>
-            <p className="text-sm font-bold text-slate-400 mb-6">
+            <p className={`text-sm font-bold mb-8 transition-colors ${
+              isLight ? "text-slate-500" : "text-slate-400"
+            }`}>
               {t("predictionCorrect")}{" "}
-              <span className="text-white uppercase font-black">
+              <span className={`uppercase font-black ${isLight ? "text-primary" : "text-white"}`}>
                 {winModalData.assetSymbol}
               </span>{" "}
               {t("wasCorrect")}
             </p>
 
-            <div className="bg-slate-900/50 rounded-2xl p-3 sm:p-6 border border-white/5 mb-8 overflow-hidden">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 sm:mb-2">
+            <div className={`rounded-3xl p-5 sm:p-7 border mb-10 overflow-hidden transition-all ${
+              isLight 
+                ? "bg-slate-50 border-slate-100 shadow-inner" 
+                : "bg-slate-950/50 border-white/5 shadow-inner"
+            }`}>
+              <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${
+                isLight ? "text-slate-400" : "text-slate-500"
+              }`}>
                 {t("totalPayout")}
               </p>
               <p
-                className={`font-black text-green-400 tabular-nums drop-shadow-md break-all leading-tight transition-all duration-300 ${
+                className={`font-black tabular-nums drop-shadow-sm break-all leading-tight transition-all duration-300 ${
+                  isLight ? "text-green-600" : "text-green-400"
+                } ${
                   (() => {
                     const len = `+${formatCurrency(winModalData.payout)}`.length;
-                    if (len > 15) return "text-lg sm:text-2xl md:text-5xl";
-                    if (len > 12) return "text-xl sm:text-3xl md:text-5xl";
-                    if (len > 10) return "text-2xl sm:text-4xl md:text-5xl";
-                    return "text-3xl sm:text-4xl md:text-5xl";
+                    if (len > 15) return "text-2xl sm:text-3xl md:text-5xl";
+                    if (len > 12) return "text-2xl sm:text-4xl md:text-5xl";
+                    return "text-3xl sm:text-5xl md:text-6xl";
                   })()
                 }`}
               >
@@ -141,7 +167,11 @@ export const GlobalWinModal: React.FC = () => {
 
             <button
               onClick={() => setWinModalData(null)}
-              className="w-full py-4 rounded-full bg-green-500 text-slate-900 font-black text-lg hover:bg-green-400 transition-all active:scale-95 shadow-lg shadow-green-500/30"
+              className={`w-full py-5 rounded-2xl font-black text-xl transition-all active:scale-95 shadow-xl ${
+                isLight 
+                  ? "bg-primary text-white hover:bg-primary/90 shadow-primary/20" 
+                  : "bg-green-500 text-slate-950 hover:bg-green-400 shadow-green-500/30"
+              }`}
             >
               {t("collectProfit")}
             </button>

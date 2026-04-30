@@ -92,13 +92,13 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [profile]);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!user) {
       setLoading(false);
       return;
     }
 
-    setLoading(true);
+    if (!silent) setLoading(true);
     
     try {
       // Load transactions (limit to 100 for better history)
@@ -426,7 +426,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
   }, [user, profile, language]);
 
   const refreshWallet = useCallback(async () => {
-    await loadData();
+    await loadData(true);
   }, [loadData]);
 
   // --- Realtime Subscription for Trade Results ---
@@ -497,7 +497,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
             setActiveBinaryTrades(prev => prev.filter(t => t.id !== updatedTrade.id));
             
             // Refresh transactions list
-            loadData();
+            loadData(true);
           }
         }
       )
@@ -815,7 +815,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({
 
       // Success: Refresh all local data from the source of truth
       await refreshProfile();
-      await loadData();
+      await loadData(true);
       
       // Re-fetch active trades to ensure local state is in sync
       const { data: activeData } = await supabase

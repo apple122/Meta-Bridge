@@ -156,7 +156,7 @@ export const IssueManagement: React.FC = () => {
             placeholder={language === 'th' ? "ค้นหาตั๋ว/หัวข้อ..." : "Search tickets..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-input-bg border border-input-border rounded-xl py-2.5 pl-9 pr-4 text-text-main text-xs focus:ring-2 focus:ring-primary/40 outline-none transition-all shadow-md"
+            className="w-full bg-transparent border border-border rounded-xl py-2.5 pl-9 pr-4 text-text-main text-xs focus:ring-2 focus:ring-primary/40 outline-none transition-all"
           />
         </div>
       </div>
@@ -242,7 +242,7 @@ export const IssueManagement: React.FC = () => {
 
                 <div className="space-y-2">
                   <p className="text-[9px] font-black text-text-muted uppercase tracking-widest px-1">{language === 'th' ? "ข้อความจากผู้ใช้" : "User Message"}</p>
-                  <div className="p-4 rounded-2xl bg-input-bg border border-border text-xs text-text-main leading-relaxed whitespace-pre-wrap shadow-inner">
+                  <div className="p-4 rounded-2xl bg-transparent border border-border text-xs text-text-main leading-relaxed whitespace-pre-wrap">
                     {selectedReport.message}
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export const IssueManagement: React.FC = () => {
                         value={response}
                         onChange={(e) => setResponse(e.target.value)}
                         placeholder="..."
-                        className="w-full bg-input-bg border border-input-border rounded-2xl p-4 text-xs text-text-main focus:border-primary/50 outline-none min-h-[120px] resize-none shadow-inner"
+                        className="w-full bg-transparent border border-border rounded-2xl p-4 text-xs text-text-main focus:border-primary/50 outline-none min-h-[120px] resize-none"
                       />
                       <button
                         onClick={() => handleUpdateStatus(selectedReport.id, 'resolved', response)}

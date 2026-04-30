@@ -176,7 +176,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
           <div className="pt-4 border-t border-border space-y-4">
             <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">Email Service Test</h4>
-            <div className="p-6 rounded-2xl bg-input-bg border border-border space-y-4 shadow-inner">
+            <div className="p-6 rounded-2xl bg-transparent border border-border space-y-4">
               <div className="flex items-center gap-3 text-text-muted">
                 <Mail size={18} />
                 <span className="text-xs font-bold">Admin Email: <span className="text-text-main">{currentAdmin?.email}</span></span>

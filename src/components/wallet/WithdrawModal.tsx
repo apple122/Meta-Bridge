@@ -299,7 +299,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                       }
                     }}
                     placeholder="0.00"
-                    className="w-full bg-input-bg border border-input-border rounded-xl py-4 pl-8 pr-20 text-xl font-black text-text-main focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-text-muted/30 shadow-inner"
+                    className="w-full bg-transparent border border-border rounded-xl py-4 pl-8 pr-20 text-xl font-black text-text-main focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-text-muted/30"
                   />
                   <button
                     onClick={() => setAmount(balance.toFixed(2))}

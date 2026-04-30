@@ -165,7 +165,7 @@ export const TopUpModal: React.FC<TopUpModalProps> = ({ onClose, onSuccess }) =>
                   value={userCode}
                   onChange={(e) => setUserCode(e.target.value)}
                   placeholder="USERCODE123"
-                  className="flex-1 bg-input-bg border border-input-border rounded-xl py-2 px-4 text-text-main font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/40 uppercase shadow-inner"
+                  className="flex-1 bg-transparent border border-border rounded-xl py-2 px-4 text-text-main font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/40 uppercase"
                 />
               <button
                 type="button"

@@ -15,10 +15,13 @@ import {
   Globe,
   Activity,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  Sun,
+  Moon
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth, type Profile } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
@@ -39,6 +42,7 @@ const MARKET_DATA = [
 export const AuthForms: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const [mode, setMode] = useState<"login" | "register" | "forgot" | "verify" | "reset">(() => {
     return sessionStorage.getItem("auth_mode") as any || "login";
@@ -303,33 +307,38 @@ export const AuthForms: React.FC = () => {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden font-sans text-slate-100">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden font-sans text-text-main transition-colors duration-500">
       {/* Background Ambience */}
       <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[150px] animate-pulse pointer-events-none" />
       <div className="fixed bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-accent/20 rounded-full blur-[150px] animate-pulse pointer-events-none" style={{ animationDelay: '2s' }} />
 
       {/* Header Navbar */}
-      <header className="relative z-50 w-full px-8 py-6 flex items-center justify-between border-b border-white/5 bg-background/50 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-primary/30">
+      <header className="relative z-50 w-full px-4 sm:px-8 py-6 flex items-center justify-between border-b border-white/5 bg-background/50 backdrop-blur-xl">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-lg shadow-primary/30">
             <img src={logoImg} alt="MetaBridge Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">MetaBridge</span>
+          <span className="text-lg sm:text-xl font-black tracking-tight text-text-main">MetaBridge</span>
         </div>
-        <div className="flex flex-row gap-4">
-          {/* <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-400">
-            <span onClick={() => navigate("/market")} className="hover:text-white cursor-pointer transition-colors">{t("markets") || "Markets"}</span>
-            <span onClick={() => navigate("/trade")} className="hover:text-white cursor-pointer transition-colors">{t("trade") || "Trade"}</span>
-            <span onClick={() => navigate("/platform")} className="hover:text-white cursor-pointer transition-colors">{t("platform") || "Platform"}</span>
-          </div> */}
+        <div className="flex flex-row gap-2 sm:gap-3">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-card-header/50 border border-border text-text-muted hover:bg-card-header hover:text-text-main transition-all active:scale-95 group shadow-sm"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun size={18} className="group-hover:rotate-90 transition-transform duration-500" />
+            ) : (
+              <Moon size={18} className="group-hover:-rotate-12 transition-transform duration-500" />
+            )}
+          </button>
           <button
             onClick={() => setLanguage(language === "th" ? "en" : "th")}
-            className="flex items-center gap-2 justify-center px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-colors group"
+            className="flex items-center gap-1.5 sm:gap-2 justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-card-header/50 border border-border text-text-muted hover:bg-card-header hover:text-text-main transition-all active:scale-95 shadow-sm group"
           >
             <Globe size={16} className="group-hover:rotate-180 transition-transform duration-700" />
-            <span className="text-xs font-medium">{language === "th" ? "EN" : "ไทย"}</span>
+            <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase">{language === "th" ? "EN" : "ไทย"}</span>
           </button>
         </div>
       </header>
@@ -346,18 +355,18 @@ export const AuthForms: React.FC = () => {
             transition={{ type: "spring", damping: 25, stiffness: 120 }}
             className="w-full max-w-md relative"
           >
-            <div className="glass-card shadow-2xl shadow-primary/10 border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-8 rounded-3xl relative overflow-hidden">
+            <div className="glass-card shadow-2xl border border-border bg-card p-8 rounded-3xl relative overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-accent" />
 
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-black text-white mb-2 tracking-tight">
+                <h1 className="text-3xl font-black text-text-main mb-2 tracking-tight">
                   {mode === "login" && (t("login") || "Welcome Back")}
                   {mode === "register" && (t("register") || "Create Account")}
                   {mode === "forgot" && (t("forgotPassword") || "Reset Password")}
                   {mode === "verify" && (t("verificationCode") || "Verification Code")}
                   {mode === "reset" && (t("resetPassword") || "New Password")}
                 </h1>
-                <p className="text-slate-400 text-sm font-medium">
+                <p className="text-text-muted text-sm font-medium">
                   {mode === "login" && "Enter your credentials to access the terminal"}
                   {mode === "register" && "Join the next generation of professional trading"}
                   {mode === "forgot" && (t("checkEmailForCode") || "Enter your email to receive a reset code")}
@@ -487,7 +496,7 @@ export const AuthForms: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main transition-colors"
                         style={{ height: '100%', alignContent: 'center', backgroundColor: 'transparent' }}
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -508,7 +517,7 @@ export const AuthForms: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main transition-colors"
                         style={{ height: '100%', alignContent: 'center', backgroundColor: 'transparent' }}
                       >
                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -521,7 +530,7 @@ export const AuthForms: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => { setMode("forgot"); setErrorMsg(""); setSuccessMsg(""); }}
-                        className="text-xs font-bold text-slate-500 hover:text-primary transition-colors"
+                        className="text-xs font-bold text-text-muted hover:text-primary transition-colors"
                       >
                         {t("forgotPassword") || "Forgot Password?"}
                       </button>
@@ -551,9 +560,9 @@ export const AuthForms: React.FC = () => {
                 </div>
               </form>
 
-              <div className="mt-8 text-center border-t border-white/5 pt-6">
+              <div className="mt-8 text-center border-t border-border pt-6">
                 {mode === "login" ? (
-                  <p className="text-slate-400 text-sm font-medium">
+                  <p className="text-text-muted text-sm font-medium">
                     Don't have an account?{" "}
                     <button
                       onClick={() => { setMode("register"); setErrorMsg(""); setSuccessMsg(""); }}
@@ -565,7 +574,7 @@ export const AuthForms: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }}
-                    className="flex items-center justify-center gap-2 mx-auto text-slate-400 text-sm font-bold hover:text-white transition-all shadow-none bg-transparent"
+                    className="flex items-center justify-center gap-2 mx-auto text-text-muted text-sm font-bold hover:text-text-main transition-all shadow-none bg-transparent"
                   >
                     <ArrowLeft size={16} />
                     Back to Login
@@ -585,17 +594,17 @@ export const AuthForms: React.FC = () => {
             className="w-full max-w-lg mx-auto"
           >
             <div className="hidden sm:block mb-10 text-center lg:text-left">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-text-main mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-text-main to-text-muted">
                 {t("tradeWithPrecision") || "Trade with"}<br className="sm:block" />{t("unprecedentedPrecision") || "unprecedented precision."}
               </h2>
-              <p className="text-slate-400 text-sm sm:text-base lg:text-lg max-w-md mx-auto lg:mx-0">
+              <p className="text-text-muted text-sm sm:text-base lg:text-lg max-w-md mx-auto lg:mx-0">
                 {t("experienceLowestLatency") || "Experience lowest latency execution, advanced charting tools, and high-frequency capabilities."}
               </p>
             </div>
 
             {/* Simulated Live Market Cards */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-widest px-4 mb-2">
+              <div className="flex items-center justify-between text-xs font-bold text-text-muted uppercase tracking-widest px-4 mb-2">
                 <span>{t("trendingMarkets") || "Trending Markets"}</span>
                 <span className="flex items-center gap-1 text-green-500"><Activity size={14} /> {t("live") || "Live"}</span>
               </div>
@@ -606,15 +615,15 @@ export const AuthForms: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + (idx * 0.1) }}
-                  className="glass-card bg-slate-900/40 border border-white/5 p-4 rounded-2xl flex items-center justify-between hover:bg-slate-900/60 transition-colors cursor-default"
+                  className="glass-card bg-card border border-border p-4 rounded-2xl flex items-center justify-between hover:bg-card-header transition-colors cursor-default"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-white ${market.isUp ? 'bg-green-500/20' : 'bg-red-500/20'} overflow-hidden p-1.5`}>
                       <img src={market.icon} alt={market.symbol} className="w-full h-full object-contain" />
                     </div>
                     <div>
-                      <p className="text-white font-black">{market.symbol}</p>
-                      <p className="text-xs text-slate-400 font-semibold">{t(market.name.toLowerCase()) || market.name}</p>
+                      <p className="text-text-main font-black">{market.symbol}</p>
+                      <p className="text-xs text-text-muted font-semibold">{t(market.name.toLowerCase()) || market.name}</p>
                     </div>
                   </div>
 
@@ -636,7 +645,7 @@ export const AuthForms: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <p className="text-white font-mono font-bold">${market.price}</p>
+                    <p className="text-text-main font-mono font-bold">${market.price}</p>
                     <p className={`text-xs font-black flex items-center justify-end gap-1 ${market.isUp ? 'text-green-500' : 'text-red-500'}`}>
                       {market.isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                       {market.change}
@@ -646,7 +655,7 @@ export const AuthForms: React.FC = () => {
               ))}
             </div>
 
-            <div className="mt-8 flex gap-2 sm:gap-3 text-[10px] sm:text-xs md:text-sm font-bold text-slate-500 justify-center w-full flex-wrap max-w-lg mx-auto">
+            <div className="mt-8 flex gap-2 sm:gap-3 text-[10px] sm:text-xs md:text-sm font-bold text-text-muted justify-center w-full flex-wrap max-w-lg mx-auto">
               <span className="flex items-center gap-1 sm:gap-1.5"><ShieldCheck size={14} className="text-primary" /> {t("secure") || "Secure"}</span>
               <span className="hidden sm:inline">•</span>
               <span>{t("fastExecution") || "Fast Execution"}</span>
@@ -671,7 +680,7 @@ const AuthInput: React.FC<{
   maxLength?: number;
 }> = ({ icon, placeholder, type, value, onChange, required, maxLength }) => (
   <div className="relative group w-full">
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none z-10">
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors pointer-events-none z-10">
       {icon}
     </div>
     <input
@@ -681,7 +690,7 @@ const AuthInput: React.FC<{
       onChange={onChange}
       required={required}
       maxLength={maxLength}
-      className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3.5 pl-12 pr-12 text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all placeholder:text-slate-600 hover:border-white/20 hover:bg-slate-900/60"
+      className="w-full bg-transparent border border-border rounded-xl py-3.5 pl-12 pr-12 text-text-main text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-text-muted/50 hover:border-primary/20 hover:bg-card-header/50"
     />
   </div>
 );

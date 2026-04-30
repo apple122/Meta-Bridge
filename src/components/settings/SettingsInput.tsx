@@ -36,7 +36,7 @@ interface SettingsInputProps {
           placeholder={placeholder}
           maxLength={maxLength}
           disabled={disabled}
-          className="w-full bg-input-bg border border-input-border rounded-xl py-2.5 px-4 text-text-main text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/30 pr-12 disabled:opacity-50 disabled:cursor-not-allowed group-hover:border-primary/30 shadow-inner"
+          className="w-full bg-transparent border border-border rounded-xl py-2.5 px-4 text-text-main text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-text-muted/30 pr-12 disabled:opacity-50 disabled:cursor-not-allowed group-hover:border-primary/30"
         />
         {isPassword && (
           <button

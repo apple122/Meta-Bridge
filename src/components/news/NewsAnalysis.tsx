@@ -17,27 +17,27 @@ export const NewsAnalysis: React.FC = () => {
         <Star size={24} fill="currentColor" />
         {t("newsAnalysisTitle")}
       </h2>
-      <p className="text-slate-300 leading-relaxed">
+      <p className="text-text-muted leading-relaxed">
         {t("newsAnalysisDesc")}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-cyan-400 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary" />
             {t("marketOverviewNews")}
           </h3>
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-text-muted leading-relaxed">
             {t("marketOverviewDesc")}
           </p>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-cyan-400 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary" />
             {t("goldFactors")}
           </h3>
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-text-muted leading-relaxed">
             {t("goldFactorsDesc")}
           </p>
         </div>

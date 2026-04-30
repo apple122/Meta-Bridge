@@ -132,17 +132,20 @@ export const Wallet: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="relative group min-w-[140px]">
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="bg-input-bg border border-input-border text-text-main text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                  className="w-full bg-transparent border border-border text-text-main text-xs font-bold rounded-xl pl-4 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer appearance-none"
                 >
-                  <option value="all">{t("allAssets")}</option>
-                  <option value="crypto">{t("crypto")}</option>
-                  <option value="commodity">{t("commodity")}</option>
-                  <option value="stock">{t("stock")}</option>
+                  <option value="all" className="bg-card text-text-main">{t("allAssets")}</option>
+                  <option value="crypto" className="bg-card text-text-main">{t("crypto")}</option>
+                  <option value="commodity" className="bg-card text-text-main">{t("commodity")}</option>
+                  <option value="stock" className="bg-card text-text-main">{t("stock")}</option>
                 </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none group-focus-within:text-primary transition-colors">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
               </div>
             </div>
           </div>
