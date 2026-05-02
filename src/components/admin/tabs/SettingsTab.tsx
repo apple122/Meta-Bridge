@@ -14,9 +14,6 @@ import {
   ShieldAlert, 
   Loader2, 
   Save,
-  Key,
-  Activity,
-  Trophy,
   Plus,
   Trash2,
   CheckCircle2,
@@ -25,7 +22,7 @@ import {
 } from "lucide-react";
 import { AdminInput } from "../AdminInput";
 import { emailService } from "../../../services/emailService";
-import type { GlobalSettings } from "../../../types";
+import type { GlobalSettings, EmailProvider } from "../../../types";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -175,54 +172,6 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isGlobalDirty, isEmailDirty]);
-
-  const handleUpdateEmailConfig = async () => {
-    setIsEmailSaving(true);
-    try {
-      // Only update email fields
-      const emailUpdates = emailFields.reduce((acc, field) => {
-        acc[field] = globalSettings[field];
-        return acc;
-      }, {} as any);
-
-      const { error } = await supabase
-        .from("global_settings")
-        .update(emailUpdates)
-        .eq("id", "main");
-
-      if (error) throw error;
-      
-      // Update local initial settings only for email fields to reset isEmailDirty
-      setInitialSettings(prev => {
-        const next = { ...prev };
-        emailFields.forEach(field => {
-          (next as any)[field] = (globalSettings as any)[field];
-        });
-        return next;
-      });
-      
-      await logAdminAction(
-        "UPDATE_SETTINGS", 
-        "Updated EmailJS Configuration", 
-        { 
-          public_key: globalSettings.emailjs_public_key,
-          service_id: globalSettings.emailjs_service_id 
-        }
-      );
-      
-      if (onSaveSuccess) onSaveSuccess(globalSettings);
-      alert("Email configuration updated successfully!");
-    } catch (error: any) {
-      console.error("Error updating email config:", error);
-      alert("Error updating email config: " + error.message);
-    } finally {
-      setIsEmailSaving(false);
-    }
-  };
-
-  const handleEmailChange = (field: keyof GlobalSettings, value: any) => {
-    setGlobalSettings(prev => ({ ...prev, [field]: value }));
-  };
 
   const handleUpdateSettings = async () => {
     setIsSaving(true);
@@ -473,7 +422,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <input
                       type="text"
                       value={newProvider.name}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => setNewProvider((prev: Partial<EmailProvider>) => ({ ...prev, name: e.target.value }))}
                       placeholder="e.g. Backup Account 1"
                       className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
                     />
@@ -483,7 +432,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <input
                       type="text"
                       value={newProvider.public_key}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, public_key: e.target.value }))}
+                      onChange={(e) => setNewProvider((prev: Partial<EmailProvider>) => ({ ...prev, public_key: e.target.value }))}
                       placeholder="EmailJS Public Key"
                       className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
                     />
@@ -493,7 +442,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <input
                       type="text"
                       value={newProvider.service_id}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, service_id: e.target.value }))}
+                      onChange={(e) => setNewProvider((prev: Partial<EmailProvider>) => ({ ...prev, service_id: e.target.value }))}
                       placeholder="EmailJS Service ID"
                       className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
                     />
@@ -503,7 +452,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <input
                       type="number"
                       value={newProvider.priority}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, priority: parseInt(e.target.value) || 0 }))}
+                      onChange={(e) => setNewProvider((prev: Partial<EmailProvider>) => ({ ...prev, priority: parseInt(e.target.value) || 0 }))}
                       className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
@@ -512,7 +461,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <input
                       type="text"
                       value={newProvider.template_otp}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, template_otp: e.target.value }))}
+                      onChange={(e) => setNewProvider((prev: Partial<EmailProvider>) => ({ ...prev, template_otp: e.target.value }))}
                       className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
@@ -521,7 +470,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <input
                       type="text"
                       value={newProvider.template_win}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, template_win: e.target.value }))}
+                      onChange={(e) => setNewProvider((prev: Partial<EmailProvider>) => ({ ...prev, template_win: e.target.value }))}
                       className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
