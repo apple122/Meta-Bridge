@@ -44,6 +44,10 @@ export interface GlobalSettings {
   change_password_otp_enabled: boolean;
   recovery_otp_enabled: boolean;
   winner_email_enabled: boolean;
+  emailjs_public_key?: string;
+  emailjs_service_id?: string;
+  emailjs_template_otp?: string;
+  emailjs_template_win?: string;
 }
 
 export type TransactionType = "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss";

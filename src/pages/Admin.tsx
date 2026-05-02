@@ -63,6 +63,10 @@ export const Admin: React.FC = () => {
     change_password_otp_enabled: true,
     recovery_otp_enabled: true,
     winner_email_enabled: true,
+    emailjs_public_key: "",
+    emailjs_service_id: "",
+    emailjs_template_otp: "",
+    emailjs_template_win: "",
   });
 
   const initialSettings = React.useRef<GlobalSettings>(globalSettings);
@@ -108,6 +112,10 @@ export const Admin: React.FC = () => {
         change_password_otp_enabled: data.change_password_otp_enabled ?? true,
         recovery_otp_enabled: data.recovery_otp_enabled ?? true,
         winner_email_enabled: data.winner_email_enabled ?? true,
+        emailjs_public_key: data.emailjs_public_key || "",
+        emailjs_service_id: data.emailjs_service_id || "",
+        emailjs_template_otp: data.emailjs_template_otp || "",
+        emailjs_template_win: data.emailjs_template_win || "",
       };
       setGlobalSettings(fetched);
       initialSettings.current = fetched;

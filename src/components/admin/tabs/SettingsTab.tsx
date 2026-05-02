@@ -13,7 +13,10 @@ import {
   Shield, 
   ShieldAlert, 
   Loader2, 
-  Save 
+  Save,
+  Key,
+  Activity,
+  Trophy
 } from "lucide-react";
 import { AdminInput } from "../AdminInput";
 import { emailService } from "../../../services/emailService";
@@ -253,6 +256,64 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 {t("saveAllSettings")}
               </button>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border space-y-4">
+            <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">EmailJS Configuration</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 rounded-2xl bg-card-header/20 border border-border">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Public Key</label>
+                <div className="relative group">
+                  <Key size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    value={globalSettings.emailjs_public_key}
+                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_public_key: e.target.value }))}
+                    placeholder="Enter Public Key"
+                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Service ID</label>
+                <div className="relative group">
+                  <Activity size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    value={globalSettings.emailjs_service_id}
+                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_service_id: e.target.value }))}
+                    placeholder="Enter Service ID"
+                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">OTP Template ID</label>
+                <div className="relative group">
+                  <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    value={globalSettings.emailjs_template_otp}
+                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_template_otp: e.target.value }))}
+                    placeholder="Enter Template ID"
+                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Win Template ID</label>
+                <div className="relative group">
+                  <Trophy size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    value={globalSettings.emailjs_template_win}
+                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_template_win: e.target.value }))}
+                    placeholder="Enter Template ID"
+                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

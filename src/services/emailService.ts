@@ -1,14 +1,17 @@
 import emailjs from '@emailjs/browser';
+import { supabase } from '../lib/supabase';
 
 /**
  * SERVICE: Email Service
  * Handles sending OTPs and Win notifications via EmailJS.
+ * Now supports dynamic configuration from Supabase database.
  */
 
-const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_svw562h';
-const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'ZAVZJUcl_O9sey-Da';
-const TEMPLATE_WIN = import.meta.env.VITE_EMAILJS_TEMPLATE_WIN || 'template_dmuhb44';
-const TEMPLATE_OTP = import.meta.env.VITE_EMAILJS_TEMPLATE_OTP || 'template_k27navk';
+// Fallbacks from .env
+const FB_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_svw562h';
+const FB_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'ZAVZJUcl_O9sey-Da';
+const FB_TEMPLATE_WIN = import.meta.env.VITE_EMAILJS_TEMPLATE_WIN || 'template_dmuhb44';
+const FB_TEMPLATE_OTP = import.meta.env.VITE_EMAILJS_TEMPLATE_OTP || 'template_k27navk';
 
 interface SendOptions {
   email: string;
@@ -16,20 +19,6 @@ interface SendOptions {
   userName?: string;
   lang?: "th" | "en";
   type?: 'verification' | 'reset' | 'change_email';
-}
-
-interface NotifyDepositOptions {
-  email: string;
-  userName: string;
-  amount: number;
-  lang?: "th" | "en";
-}
-
-interface NotifyWithdrawOptions {
-  email: string;
-  userName: string;
-  amount: number;
-  lang?: "th" | "en";
 }
 
 interface NotifyWinOptions {
@@ -45,18 +34,47 @@ interface NotifyWinOptions {
   lang?: "th" | "en";
 }
 
+/**
+ * Helper to fetch latest EmailJS settings from Supabase
+ */
+const getEmailSettings = async () => {
+  try {
+    const { data } = await supabase
+      .from('global_settings')
+      .select('emailjs_public_key, emailjs_service_id, emailjs_template_otp, emailjs_template_win')
+      .eq('id', 'main')
+      .single();
+    
+    return {
+      publicKey: data?.emailjs_public_key || FB_PUBLIC_KEY,
+      serviceId: data?.emailjs_service_id || FB_SERVICE_ID,
+      templateOtp: data?.emailjs_template_otp || FB_TEMPLATE_OTP,
+      templateWin: data?.emailjs_template_win || FB_TEMPLATE_WIN
+    };
+  } catch (err) {
+    console.warn('[EmailService] Failed to fetch DB settings, using fallbacks:', err);
+    return {
+      publicKey: FB_PUBLIC_KEY,
+      serviceId: FB_SERVICE_ID,
+      templateOtp: FB_TEMPLATE_OTP,
+      templateWin: FB_TEMPLATE_WIN
+    };
+  }
+};
+
 export const emailService = {
   /**
    * Sends a 6-digit OTP using EmailJS.
    */
   sendOTP: async ({ email, code, lang = "en", userName }: SendOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
     try {
+      const settings = await getEmailSettings();
       console.log(`[EmailService] Sending EmailJS OTP for ${email}`);
       const isTh = lang === 'th';
       
       const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_OTP,
+        settings.serviceId,
+        settings.templateOtp,
         {
           to_email: email,
           to_name: userName || email.split('@')[0],
@@ -76,7 +94,7 @@ export const emailService = {
           email_footer_brand: "Meta Bridge",
           email_footer_auto: isTh ? "ข้อความอัตโนมัติ กรุณาอย่าตอบกลับ" : "Automated message, please do not reply."
         },
-        PUBLIC_KEY
+        settings.publicKey
       );
       return { success: true, data: result };
     } catch (err: any) {
@@ -88,15 +106,16 @@ export const emailService = {
   /**
    * Sends a win celebration notification email using EmailJS.
    */
-  sendWinNotification: async (options: NotifyWinOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
+  sendWinNotification: async (options: NotifyWinNotificationOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
     const { email, userName, payout, assetSymbol, lang = "en" } = options;
     try {
+      const settings = await getEmailSettings();
       console.log(`[EmailService] Sending EmailJS Win Notification for ${email}`);
       const isTh = lang === 'th';
       
       const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_WIN,
+        settings.serviceId,
+        settings.templateWin,
         {
           to_email: email,
           to_name: userName,
@@ -117,7 +136,7 @@ export const emailService = {
           email_footer_brand: "Meta Bridge",
           email_footer_auto: isTh ? "ข้อความอัตโนมัติ กรุณาอย่าตอบกลับ" : "Automated message, please do not reply."
         },
-        PUBLIC_KEY
+        settings.publicKey
       );
       return { success: true, data: result };
     } catch (err: any) {
@@ -126,9 +145,8 @@ export const emailService = {
     }
   },
 
-  /**
-   * Placeholder for Deposit/Withdraw if needed later
-   */
-  sendDepositNotification: async (_options: NotifyDepositOptions) => ({ success: false, error: "Not implemented" }),
-  sendWithdrawNotification: async (_options: NotifyWithdrawOptions) => ({ success: false, error: "Not implemented" })
+  sendDepositNotification: async () => ({ success: false, error: "Not implemented" }),
+  sendWithdrawNotification: async () => ({ success: false, error: "Not implemented" })
 };
+
+type NotifyWinNotificationOptions = NotifyWinOptions;
