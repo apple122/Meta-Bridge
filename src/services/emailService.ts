@@ -49,18 +49,32 @@ export const emailService = {
   /**
    * Sends a 6-digit OTP using EmailJS.
    */
-  sendOTP: async ({ email, code, lang = "en", type = "verification", userName }: SendOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
+  sendOTP: async ({ email, code, lang = "en", userName }: SendOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
     try {
       console.log(`[EmailService] Sending EmailJS OTP for ${email}`);
+      const isTh = lang === 'th';
+      
       const result = await emailjs.send(
         SERVICE_ID,
         TEMPLATE_OTP,
         {
           to_email: email,
-          user_name: userName || email.split('@')[0],
-          otp_code: code,
-          type: type,
-          lang: lang
+          to_name: userName || email.split('@')[0],
+          passcode: code,
+          email_title: isTh ? "รหัสยืนยันตัวตน" : "Verification Code",
+          email_subject: isTh ? "ยืนยันบัญชีของคุณ" : "Verify your account",
+          email_greeting: isTh ? "สวัสดี" : "Hi",
+          email_body: isTh 
+            ? "กรุณาใช้รหัสต่อไปนี้เพื่อยืนยันตัวตนในระบบ Meta Bridge" 
+            : "Please use the following code to verify your identity on Meta Bridge.",
+          email_otp_label: isTh ? "รหัสยืนยัน (OTP)" : "Verification Code",
+          email_expiry: isTh ? "มีอายุการใช้งาน" : "Valid for",
+          time: isTh ? "10 นาที" : "10 minutes",
+          email_warning: isTh 
+            ? "หากคุณไม่ได้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้" 
+            : "If you didn't request this, please ignore this email.",
+          email_footer_brand: "Meta Bridge",
+          email_footer_auto: isTh ? "ข้อความอัตโนมัติ กรุณาอย่าตอบกลับ" : "Automated message, please do not reply."
         },
         PUBLIC_KEY
       );
@@ -75,19 +89,33 @@ export const emailService = {
    * Sends a win celebration notification email using EmailJS.
    */
   sendWinNotification: async (options: NotifyWinOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
-    const { email, userName, amount, payout, assetSymbol, lang = "en" } = options;
+    const { email, userName, payout, assetSymbol, lang = "en" } = options;
     try {
       console.log(`[EmailService] Sending EmailJS Win Notification for ${email}`);
+      const isTh = lang === 'th';
+      
       const result = await emailjs.send(
         SERVICE_ID,
         TEMPLATE_WIN,
         {
           to_email: email,
-          user_name: userName,
-          amount: amount.toLocaleString(),
-          payout: payout.toLocaleString(),
-          asset_symbol: assetSymbol,
-          lang: lang
+          to_name: userName,
+          passcode: payout.toLocaleString(),
+          email_title: isTh ? "คุณชนะแล้ว!" : "YOU WON!",
+          email_subject: isTh ? "ยินดีด้วยกับกำไรของคุณ!" : "Congratulations on your profit!",
+          email_greeting: isTh ? "ขอแสดงความยินดี" : "Congratulations",
+          email_body: isTh 
+            ? `การเทรด ${assetSymbol} ของคุณประสบความสำเร็จ!` 
+            : `Your trade for ${assetSymbol} was successful!`,
+          email_otp_label: isTh ? "กำไรที่ได้รับ" : "PROFIT EARNED",
+          email_credited: isTh ? "เติมเข้ากระเป๋าเงินแล้ว" : "Credited to your balance",
+          email_expiry: isTh ? "สินทรัพย์ที่เทรด" : "Asset Traded",
+          time: assetSymbol,
+          email_warning: isTh 
+            ? "คุณสามารถเริ่มเทรดต่อได้ทันทีเพื่อรับกำไรที่มากขึ้น" 
+            : "You can start trading again now to earn more profits.",
+          email_footer_brand: "Meta Bridge",
+          email_footer_auto: isTh ? "ข้อความอัตโนมัติ กรุณาอย่าตอบกลับ" : "Automated message, please do not reply."
         },
         PUBLIC_KEY
       );
@@ -99,18 +127,8 @@ export const emailService = {
   },
 
   /**
-   * Sends a deposit confirmation (Placeholder if template not provided).
+   * Placeholder for Deposit/Withdraw if needed later
    */
-  sendDepositNotification: async (_options: NotifyDepositOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
-    console.warn(`[EmailService] Deposit notification not yet implemented for EmailJS. Missing template.`);
-    return { success: false, error: "Deposit template not configured" };
-  },
-
-  /**
-   * Sends a withdrawal confirmation (Placeholder if template not provided).
-   */
-  sendWithdrawNotification: async (_options: NotifyWithdrawOptions): Promise<{ success: boolean; error?: string; data?: any }> => {
-    console.warn(`[EmailService] Withdrawal notification not yet implemented for EmailJS. Missing template.`);
-    return { success: false, error: "Withdrawal template not configured" };
-  }
+  sendDepositNotification: async (_options: NotifyDepositOptions) => ({ success: false, error: "Not implemented" }),
+  sendWithdrawNotification: async (_options: NotifyWithdrawOptions) => ({ success: false, error: "Not implemented" })
 };
