@@ -50,6 +50,20 @@ export interface GlobalSettings {
   emailjs_template_win?: string;
 }
 
+export interface EmailProvider {
+  id: string;
+  name: string;
+  public_key: string;
+  service_id: string;
+  template_otp: string;
+  template_win: string;
+  is_active: boolean;
+  error_count: number;
+  priority: number;
+  last_used_at: string;
+  created_at: string;
+}
+
 export type TransactionType = "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss";
 
 export interface Transaction {

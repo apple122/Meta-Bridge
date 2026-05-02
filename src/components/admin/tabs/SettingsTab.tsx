@@ -16,7 +16,12 @@ import {
   Save,
   Key,
   Activity,
-  Trophy
+  Trophy,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  RefreshCw
 } from "lucide-react";
 import { AdminInput } from "../AdminInput";
 import { emailService } from "../../../services/emailService";
@@ -45,6 +50,100 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; msg: string } | null>(null);
   const [isEmailSaving, setIsEmailSaving] = useState(false);
+  const [providers, setProviders] = useState<EmailProvider[]>([]);
+  const [isFetchingProviders, setIsFetchingProviders] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newProvider, setNewProvider] = useState<Partial<EmailProvider>>({
+    name: '',
+    public_key: '',
+    service_id: '',
+    template_otp: '',
+    template_win: '',
+    is_active: true,
+    priority: 0
+  });
+
+  useEffect(() => {
+    fetchProviders();
+  }, []);
+
+  const fetchProviders = async () => {
+    setIsFetchingProviders(true);
+    try {
+      const { data, error } = await supabase
+        .from('email_providers')
+        .select('*')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setProviders(data || []);
+    } catch (err) {
+      console.error('Error fetching providers:', err);
+    } finally {
+      setIsFetchingProviders(false);
+    }
+  };
+
+  const handleAddProvider = async () => {
+    if (!newProvider.public_key || !newProvider.service_id) {
+      alert("Please fill in Public Key and Service ID");
+      return;
+    }
+    setIsEmailSaving(true);
+    try {
+      const { error } = await supabase
+        .from('email_providers')
+        .insert([{ ...newProvider, name: newProvider.name || 'EmailJS Provider' }]);
+      
+      if (error) throw error;
+      setShowAddForm(false);
+      setNewProvider({
+        name: '',
+        public_key: '',
+        service_id: '',
+        template_otp: '',
+        template_win: '',
+        is_active: true,
+        priority: 0
+      });
+      fetchProviders();
+      alert("Provider added successfully!");
+    } catch (err: any) {
+      alert("Error adding provider: " + err.message);
+    } finally {
+      setIsEmailSaving(false);
+    }
+  };
+
+  const handleDeleteProvider = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this provider?")) return;
+    try {
+      const { error } = await supabase
+        .from('email_providers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      fetchProviders();
+    } catch (err: any) {
+      alert("Error deleting provider: " + err.message);
+    }
+  };
+
+  const handleToggleProvider = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('email_providers')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+      
+      if (error) throw error;
+      fetchProviders();
+    } catch (err: any) {
+      alert("Error toggling provider: " + err.message);
+    }
+  };
   // Field groups
   const emailFields: (keyof GlobalSettings)[] = [
     'emailjs_public_key', 
@@ -346,89 +445,162 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
           <div className="pt-4 border-t border-border space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">EmailJS Configuration</h4>
-              {isEmailDirty && (
-                <motion.div 
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-2 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20"
-                >
-                  <ShieldAlert size={12} />
-                  {language === 'th' ? 'ระวัง: การแก้ไขอาจทำให้ระบบอีเมลขัดข้อง' : 'Warning: Changes may break email service'}
-                </motion.div>
-              )}
+              <div className="flex items-center gap-3">
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">Email Provider Library (Pooling)</h4>
+                <div className="flex items-center gap-2 text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  <RefreshCw size={10} className="animate-pulse" />
+                  Auto-Failover Enabled
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all text-[10px] font-black uppercase tracking-widest"
+              >
+                {showAddForm ? <XCircle size={14} /> : <Plus size={14} />}
+                {showAddForm ? (language === 'th' ? 'ยกเลิก' : 'CANCEL') : (language === 'th' ? 'เพิ่ม Provider' : 'ADD PROVIDER')}
+              </button>
             </div>
-            
-            <div className="p-6 rounded-2xl bg-card-header/20 border border-border space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Public Key</label>
-                  <div className="relative group">
-                    <Key size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="text"
-                      value={globalSettings.emailjs_public_key}
-                      onChange={(e) => handleEmailChange('emailjs_public_key', e.target.value)}
-                      placeholder="Enter Public Key"
-                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Service ID</label>
-                  <div className="relative group">
-                    <Activity size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="text"
-                      value={globalSettings.emailjs_service_id}
-                      onChange={(e) => handleEmailChange('emailjs_service_id', e.target.value)}
-                      placeholder="Enter Service ID"
-                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">OTP Template ID</label>
-                  <div className="relative group">
-                    <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="text"
-                      value={globalSettings.emailjs_template_otp}
-                      onChange={(e) => handleEmailChange('emailjs_template_otp', e.target.value)}
-                      placeholder="Enter Template ID"
-                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Win Template ID</label>
-                  <div className="relative group">
-                    <Trophy size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="text"
-                      value={globalSettings.emailjs_template_win}
-                      onChange={(e) => handleEmailChange('emailjs_template_win', e.target.value)}
-                      placeholder="Enter Template ID"
-                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={handleUpdateEmailConfig}
-                  disabled={isEmailSaving || !isEmailDirty}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                    isEmailSaving || !isEmailDirty
-                      ? "bg-card-header text-text-muted cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 active:scale-95"
-                  }`}
-                >
-                  {isEmailSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                  {language === 'th' ? 'บันทึก Email Config' : 'SAVE EMAIL CONFIG'}
-                </button>
-              </div>
+            {showAddForm && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-6 rounded-2xl bg-primary/5 border border-primary/20 space-y-6"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Display Name</label>
+                    <input
+                      type="text"
+                      value={newProvider.name}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g. Backup Account 1"
+                      className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Public Key</label>
+                    <input
+                      type="text"
+                      value={newProvider.public_key}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, public_key: e.target.value }))}
+                      placeholder="EmailJS Public Key"
+                      className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Service ID</label>
+                    <input
+                      type="text"
+                      value={newProvider.service_id}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, service_id: e.target.value }))}
+                      placeholder="EmailJS Service ID"
+                      className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Priority (Higher = First)</label>
+                    <input
+                      type="number"
+                      value={newProvider.priority}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, priority: parseInt(e.target.value) || 0 }))}
+                      className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">OTP Template ID</label>
+                    <input
+                      type="text"
+                      value={newProvider.template_otp}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, template_otp: e.target.value }))}
+                      className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Win Template ID</label>
+                    <input
+                      type="text"
+                      value={newProvider.template_win}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, template_win: e.target.value }))}
+                      className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleAddProvider}
+                    disabled={isEmailSaving}
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest hover:bg-primary-hover transition-all active:scale-95"
+                  >
+                    {isEmailSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                    {language === 'th' ? 'ยืนยันการเพิ่ม' : 'CONFIRM ADD'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+            
+            <div className="space-y-3">
+              {isFetchingProviders ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3 text-text-muted">
+                  <Loader2 size={32} className="animate-spin text-primary/40" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Fetching Provider Pool...</span>
+                </div>
+              ) : providers.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl bg-card-header/10 border border-dashed border-border">
+                  <p className="text-xs font-bold text-text-muted">No providers in library. Please add your first EmailJS account.</p>
+                </div>
+              ) : (
+                providers.map((p) => (
+                  <div 
+                    key={p.id}
+                    className={`p-5 rounded-2xl border transition-all ${
+                      p.is_active 
+                        ? "bg-card-header/20 border-border hover:border-primary/30" 
+                        : "bg-card-header/5 border-border/50 grayscale opacity-60"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${p.is_active ? "bg-primary/10 text-primary" : "bg-text-muted/10 text-text-muted"}`}>
+                          <Mail size={20} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-text-main">{p.name}</span>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-card-header border border-border text-text-muted">
+                              P: {p.priority}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-text-muted font-bold mt-0.5">
+                            Service: <span className="text-text-main">{p.service_id}</span> • 
+                            Errors: <span className={p.error_count > 0 ? "text-red-500" : "text-green-500"}>{p.error_count}</span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => handleToggleProvider(p.id, p.is_active)}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                            p.is_active 
+                              ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" 
+                              : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                          }`}
+                        >
+                          {p.is_active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          {p.is_active ? (language === 'th' ? 'เปิดใช้งาน' : 'ACTIVE') : (language === 'th' ? 'ปิดใช้งาน' : 'INACTIVE')}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProvider(p.id)}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
