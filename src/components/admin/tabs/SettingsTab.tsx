@@ -14,6 +14,8 @@ import {
   ShieldAlert, 
   Loader2, 
   Save,
+  Activity,
+  Trophy,
   Plus,
   Trash2,
   CheckCircle2,
@@ -49,6 +51,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [isEmailSaving, setIsEmailSaving] = useState(false);
   const [providers, setProviders] = useState<EmailProvider[]>([]);
   const [isFetchingProviders, setIsFetchingProviders] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newProvider, setNewProvider] = useState<Partial<EmailProvider>>({
     name: '',
@@ -57,8 +60,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
     template_otp: '',
     template_win: '',
     is_active: true,
-    priority: 0
+    priority: 0,
+    sent_count: 0
   });
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   useEffect(() => {
     fetchProviders();
@@ -68,6 +74,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
     setIsFetchingProviders(true);
     console.log('[SettingsTab] Fetching email providers...');
     try {
+      setFetchError(null);
       const { data, error } = await supabase
         .from('email_providers')
         .select('*')
@@ -76,13 +83,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       
       if (error) {
         console.error('[SettingsTab] Supabase Error:', error);
+        setFetchError(error.message);
         throw error;
       }
       console.log('[SettingsTab] Providers found:', data?.length);
       setProviders(data || []);
     } catch (err: any) {
       console.error('[SettingsTab] Fetch Error:', err);
-      // alert("Error fetching providers: " + err.message);
+      setFetchError(err.message || 'Unknown error fetching providers');
     } finally {
       setIsFetchingProviders(false);
     }
@@ -108,7 +116,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         template_otp: '',
         template_win: '',
         is_active: true,
-        priority: 0
+        priority: 0,
+        sent_count: 0
       });
       fetchProviders();
       alert("Provider added successfully!");
@@ -120,7 +129,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   };
 
   const handleDeleteProvider = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this provider?")) return;
+    if (deleteConfirmText !== "confirm") {
+      alert("Please type 'confirm' to delete.");
+      return;
+    }
     try {
       const { error } = await supabase
         .from('email_providers')
@@ -128,6 +140,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         .eq('id', id);
       
       if (error) throw error;
+      setDeleteConfirmId(null);
+      setDeleteConfirmText("");
       fetchProviders();
     } catch (err: any) {
       alert("Error deleting provider: " + err.message);
@@ -399,24 +413,29 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           </div>
 
           <div className="pt-4 border-t border-border space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-3">
-                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">Email Provider Library (Pooling)</h4>
-                <div className="flex items-center gap-2 text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                  <RefreshCw size={10} className="animate-pulse" />
-                  Auto-Failover Enabled
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+              <div className="space-y-1">
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">Email Provider Library</h4>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
+                    <RefreshCw size={10} className="animate-spin-slow" />
+                    Auto-Failover Active
+                  </div>
+                  <div className="text-[9px] font-bold text-text-muted bg-card-header/50 px-2 py-0.5 rounded-full border border-border">
+                    Pool Size: {providers.length}
+                  </div>
                 </div>
               </div>
               <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowAddForm(!showAddForm);
-                }}
-                className="relative z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all text-[10px] font-black uppercase tracking-widest cursor-pointer border border-primary/20"
+                onClick={() => setShowAddForm(!showAddForm)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${
+                  showAddForm 
+                    ? "bg-card-header text-text-main border border-border" 
+                    : "bg-primary text-white hover:bg-primary-hover shadow-primary/20"
+                }`}
               >
                 {showAddForm ? <XCircle size={14} /> : <Plus size={14} />}
-                {showAddForm ? (language === 'th' ? 'ยกเลิก' : 'CANCEL') : (language === 'th' ? 'เพิ่ม Provider' : 'ADD PROVIDER')}
+                {showAddForm ? (language === 'th' ? 'ปิดฟอร์ม' : 'CLOSE FORM') : (language === 'th' ? 'เพิ่ม API ใหม่' : 'ADD NEW API')}
               </button>
             </div>
 
@@ -498,63 +517,131 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               </motion.div>
             )}
             
-            <div className="space-y-3">
+            <div className="space-y-3 min-h-[100px]">
               {isFetchingProviders ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3 text-text-muted">
                   <Loader2 size={32} className="animate-spin text-primary/40" />
                   <span className="text-[10px] font-black uppercase tracking-widest">Fetching Provider Pool...</span>
+                </div>
+              ) : fetchError ? (
+                <div className="p-8 text-center rounded-2xl bg-red-500/5 border border-red-500/20">
+                  <ShieldAlert size={24} className="mx-auto mb-2 text-red-500/50" />
+                  <p className="text-xs font-bold text-red-500">Error: {fetchError}</p>
+                  <button onClick={fetchProviders} className="mt-3 text-[10px] font-black text-primary uppercase underline underline-offset-4">Try Again</button>
                 </div>
               ) : providers.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl bg-card-header/10 border border-dashed border-border">
                   <p className="text-xs font-bold text-text-muted">No providers in library. Please add your first EmailJS account.</p>
                 </div>
               ) : (
-                providers.map((p) => (
+                providers.map((p, index) => (
                   <div 
                     key={p.id}
-                    className={`p-5 rounded-2xl border transition-all ${
+                    className={`group relative overflow-hidden p-5 rounded-2xl border transition-all duration-300 ${
                       p.is_active 
-                        ? "bg-card-header/20 border-border hover:border-primary/30" 
+                        ? "bg-card-header/10 border-border hover:border-primary/40 hover:bg-card-header/20 shadow-sm" 
                         : "bg-card-header/5 border-border/50 grayscale opacity-60"
                     }`}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    {/* Priority Badge Background Decor */}
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${p.is_active ? "bg-primary/10 text-primary" : "bg-text-muted/10 text-text-muted"}`}>
-                          <Mail size={20} />
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                          p.is_active 
+                            ? "bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-inner" 
+                            : "bg-text-muted/10 text-text-muted"
+                        }`}>
+                          <Mail size={24} className={p.is_active ? "animate-pulse-slow" : ""} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-black text-text-main">{p.name}</span>
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-card-header border border-border text-text-muted">
-                              P: {p.priority}
-                            </span>
+                            <span className="text-sm font-black text-text-main group-hover:text-primary transition-colors">{p.name}</span>
+                            {index === 0 && p.is_active && (
+                              <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-primary text-white uppercase tracking-tighter">
+                                Primary
+                              </span>
+                            )}
                           </div>
-                          <p className="text-[10px] text-text-muted font-bold mt-0.5">
-                            Service: <span className="text-text-main">{p.service_id}</span> • 
-                            Errors: <span className={p.error_count > 0 ? "text-red-500" : "text-green-500"}>{p.error_count}</span>
-                          </p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1">
+                            <div className="flex items-center gap-1 text-[10px] text-text-muted font-bold whitespace-nowrap">
+                              <Activity size={10} className="text-primary/60" />
+                              ID: <span className="text-text-main/80">{p.service_id}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-text-muted font-bold whitespace-nowrap sm:border-l sm:border-border sm:pl-3">
+                              <Send size={10} className="text-blue-500/60" />
+                              Sent: <span className="text-text-main/80">{p.sent_count || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-text-muted font-bold whitespace-nowrap sm:border-l sm:border-border sm:pl-3">
+                              <ShieldAlert size={10} className={p.error_count > 0 ? "text-red-500" : "text-green-500"} />
+                              Errors: <span className={p.error_count > 0 ? "text-red-500" : "text-green-500"}>{p.error_count}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-text-muted font-bold whitespace-nowrap sm:border-l sm:border-border sm:pl-3">
+                              <Trophy size={10} className="text-amber-500/60" />
+                              Priority: <span className="text-text-main/80">{p.priority}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => handleToggleProvider(p.id, p.is_active)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                            p.is_active 
-                              ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" 
-                              : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                          }`}
-                        >
-                          {p.is_active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                          {p.is_active ? (language === 'th' ? 'เปิดใช้งาน' : 'ACTIVE') : (language === 'th' ? 'ปิดใช้งาน' : 'INACTIVE')}
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteProvider(p.id)}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      <div className="flex items-center gap-2">
+                        {deleteConfirmId === p.id ? (
+                          <motion.div 
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 'auto', opacity: 1 }}
+                            className="flex items-center gap-2 bg-red-500/5 border border-red-500/20 p-1 rounded-xl"
+                          >
+                            <input 
+                              autoFocus
+                              type="text"
+                              value={deleteConfirmText}
+                              onChange={(e) => setDeleteConfirmText(e.target.value)}
+                              placeholder="Type 'confirm'"
+                              className="bg-transparent border-none outline-none text-[10px] font-bold text-red-500 px-2 w-24 placeholder:text-red-500/30"
+                            />
+                            <button 
+                              onClick={() => handleDeleteProvider(p.id)}
+                              disabled={deleteConfirmText !== 'confirm'}
+                              className={`p-1.5 rounded-lg transition-all ${deleteConfirmText === 'confirm' ? "bg-red-500 text-white" : "bg-red-500/20 text-red-500/40 cursor-not-allowed"}`}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setDeleteConfirmId(null);
+                                setDeleteConfirmText("");
+                              }}
+                              className="p-1.5 rounded-lg bg-card-header text-text-muted hover:text-text-main"
+                            >
+                              <XCircle size={14} />
+                            </button>
+                          </motion.div>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={() => handleToggleProvider(p.id, p.is_active)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                p.is_active 
+                                  ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border border-green-500/20" 
+                                  : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+                              }`}
+                            >
+                              {p.is_active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                              {p.is_active ? (language === 'th' ? 'เปิดใช้งาน' : 'ACTIVE') : (language === 'th' ? 'ปิดใช้งาน' : 'INACTIVE')}
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setDeleteConfirmId(p.id);
+                                setDeleteConfirmText("");
+                              }}
+                              className="p-2.5 rounded-xl bg-card-header border border-border text-text-muted hover:text-red-500 hover:border-red-500/30 hover:bg-red-500/5 transition-all shadow-sm"
+                              title="Delete Provider"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

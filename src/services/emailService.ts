@@ -36,9 +36,46 @@ interface NotifyWinOptions {
 }
 
 /**
+ * Resets all provider sent counts if a new month has started.
+ */
+const checkMonthlyReset = async () => {
+  try {
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    
+    const { data: settings, error: fetchError } = await supabase
+      .from('global_settings')
+      .select('last_email_reset_month')
+      .eq('id', 'main')
+      .single();
+
+    if (fetchError || !settings) return;
+
+    if (settings.last_email_reset_month !== currentMonth) {
+      console.log(`[EmailService] New month detected (${currentMonth}). Resetting sent counts...`);
+      
+      // Reset all providers
+      const { error: resetError } = await supabase
+        .from('email_providers')
+        .update({ sent_count: 0 });
+
+      if (resetError) throw resetError;
+
+      // Update last reset month
+      await supabase
+        .from('global_settings')
+        .update({ last_email_reset_month: currentMonth })
+        .eq('id', 'main');
+    }
+  } catch (err) {
+    console.error('[EmailService] Monthly reset check failed:', err);
+  }
+};
+
+/**
  * Fetch active providers from the pool, sorted by priority and last usage.
  */
 const getActiveProviders = async (): Promise<Partial<EmailProvider>[]> => {
+  await checkMonthlyReset();
   try {
     const { data, error } = await supabase
       .from('email_providers')
@@ -75,11 +112,20 @@ const updateProviderStats = async (id: string | undefined, success: boolean) => 
   if (!id) return;
   try {
     const updates: any = { last_used_at: new Date().toISOString() };
+    
+    // Fetch current stats to increment
+    const { data: current } = await supabase
+      .from('email_providers')
+      .select('error_count, sent_count')
+      .eq('id', id)
+      .single();
+
     if (!success) {
-      // Increment error count (simple increment in client-side for now, or just send current+1)
-      const { data: current } = await supabase.from('email_providers').select('error_count').eq('id', id).single();
       updates.error_count = (current?.error_count || 0) + 1;
+    } else {
+      updates.sent_count = (current?.sent_count || 0) + 1;
     }
+    
     await supabase.from('email_providers').update(updates).eq('id', id);
   } catch (err) {
     console.warn('[EmailService] Failed to update provider stats:', err);

@@ -4,13 +4,15 @@ import { TrendingUp, TrendingDown, ChevronDown, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { getAssetCategory } from "../../utils/trade";
+import { Skeleton } from "../shared/Skeleton";
 
 interface MarketTableProps {
   stocks: any[];
   t: (key: string) => string;
+  loading?: boolean;
 }
 
-export const MarketTable: React.FC<MarketTableProps> = ({ stocks, t }) => {
+export const MarketTable: React.FC<MarketTableProps> = ({ stocks, t, loading }) => {
   const [activeCategory, setActiveCategory] = React.useState<string>("all");
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -113,62 +115,94 @@ export const MarketTable: React.FC<MarketTableProps> = ({ stocks, t }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filteredStocks.map((stock) => (
-              <tr
-                key={stock.id}
-                onClick={() =>
-                  navigate("/trade", { state: { symbol: stock.symbol } })
-                }
-                className="hover:bg-card-header/30 transition-colors group cursor-pointer"
-              >
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-card border border-border shadow-sm">
-                      {stock.icon}
+            {stocks.length === 0 && loading ? (
+              [1, 2, 3, 4, 5].map((i) => (
+                <tr key={i} className="border-b border-border">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <Skeleton variant="circle" width={40} height={40} />
+                      <div className="space-y-2">
+                        <Skeleton variant="text" width={100} height={14} />
+                        <Skeleton variant="text" width={60} height={10} />
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-text-main font-bold group-hover:text-primary transition-colors">
-                        {stock.name}
-                      </p>
-                      <p className="text-text-muted text-xs">{stock.symbol}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-5 text-right font-mono font-bold text-text-main">
-                  $
-                  {stock.price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </td>
-                <td
-                  className={`px-6 py-5 text-right font-bold text-sm ${stock.change >= 0 ? "text-green-500" : "text-red-500"}`}
-                >
-                  <span className="flex items-center justify-end gap-1">
-                    {stock.change >= 0 ? (
-                      <TrendingUp size={14} />
-                    ) : (
-                      <TrendingDown size={14} />
-                    )}
-                    {Math.abs(stock.change).toFixed(2)}%
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-right font-mono text-xs text-text-muted hidden md:table-cell">
-                  ${(Math.random() * 500 + 10).toFixed(1)}B
-                </td>
-                <td className="px-6 py-5 text-right font-mono text-xs text-text-muted hidden lg:table-cell">
-                  ${(Math.random() * 50 + 1).toFixed(1)}M
-                </td>
-                <td className="px-6 py-5 text-right">
-                  <button className="px-4 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-white transition-all">
-                    TRADE
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <Skeleton variant="text" width={80} height={16} className="ml-auto" />
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <Skeleton variant="text" width={60} height={16} className="ml-auto" />
+                  </td>
+                  <td className="px-6 py-5 text-right hidden md:table-cell">
+                    <Skeleton variant="text" width={60} height={12} className="ml-auto" />
+                  </td>
+                  <td className="px-6 py-5 text-right hidden lg:table-cell">
+                    <Skeleton variant="text" width={60} height={12} className="ml-auto" />
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <Skeleton variant="rect" width={70} height={32} className="rounded-lg ml-auto" />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              filteredStocks.map((stock) => (
+                <MarketTableRow key={stock.id} stock={stock} navigate={navigate} />
+              ))
+            )}
           </tbody>
         </table>
       </div>
     </motion.div>
   );
 };
+
+// Optimized Row Component
+const MarketTableRow: React.FC<{ stock: any; navigate: any }> = React.memo(({ stock, navigate }) => {
+  // Use stable dummy values instead of Math.random() in render
+  const marketCap = React.useMemo(() => (10 + (stock.id % 500)).toFixed(1), [stock.id]);
+  const volume = React.useMemo(() => (1 + (stock.id % 50)).toFixed(1), [stock.id]);
+
+  return (
+    <tr
+      onClick={() => navigate("/trade", { state: { symbol: stock.symbol } })}
+      className="hover:bg-card-header/30 transition-colors group cursor-pointer"
+    >
+      <td className="px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-card border border-border shadow-sm">
+            {stock.icon}
+          </div>
+          <div>
+            <p className="text-text-main font-bold group-hover:text-primary transition-colors">
+              {stock.name}
+            </p>
+            <p className="text-text-muted text-xs">{stock.symbol}</p>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-5 text-right font-mono font-bold text-text-main whitespace-nowrap">
+        ${stock.price.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
+      </td>
+      <td className={`px-6 py-5 text-right font-bold text-sm ${stock.change >= 0 ? "text-green-500" : "text-red-500"} whitespace-nowrap`}>
+        <span className="flex items-center justify-end gap-1">
+          {stock.change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+          {Math.abs(stock.change).toFixed(2)}%
+        </span>
+      </td>
+      <td className="px-6 py-5 text-right font-mono text-xs text-text-muted hidden md:table-cell whitespace-nowrap">
+        ${marketCap}B
+      </td>
+      <td className="px-6 py-5 text-right font-mono text-xs text-text-muted hidden lg:table-cell whitespace-nowrap">
+        ${volume}M
+      </td>
+      <td className="px-6 py-5 text-right">
+        <button className="px-4 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-black hover:bg-primary hover:text-white transition-all uppercase tracking-tight">
+          TRADE
+        </button>
+      </td>
+    </tr>
+  );
+});

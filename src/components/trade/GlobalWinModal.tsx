@@ -183,14 +183,15 @@ export const GlobalWinModal: React.FC = () => {
                 {t("totalPayout")}
               </p>
               <p
-                className={`font-black tabular-nums drop-shadow-sm break-all leading-tight transition-all duration-300 ${
+                className={`font-black tabular-nums drop-shadow-sm whitespace-nowrap leading-none transition-all duration-300 ${
                   isLight ? "text-green-600" : isLiquid ? "text-green-300" : "text-green-400"
                 } ${
                   (() => {
                     const len = `+${formatCurrency(winModalData.payout)}`.length;
-                    if (len > 15) return "text-2xl sm:text-3xl md:text-5xl";
-                    if (len > 12) return "text-2xl sm:text-4xl md:text-5xl";
-                    return "text-3xl sm:text-5xl md:text-6xl";
+                    if (len > 15) return "text-xl sm:text-2xl md:text-4xl";
+                    if (len > 12) return "text-2xl sm:text-3xl md:text-5xl";
+                    if (len > 10) return "text-3xl sm:text-4xl md:text-5xl";
+                    return "text-4xl sm:text-5xl md:text-6xl";
                   })()
                 }`}
               >

@@ -50,6 +50,7 @@ create table public.profiles (
   bank_name text,
   avatar_url text,
   language text default 'en',
+  is_admin boolean default false,
   updated_at timestamp with time zone default now(),
   created_at timestamp with time zone default now(),
   
@@ -66,7 +67,7 @@ create table public.binary_trades (
   entry_price decimal(20, 8) not null,
   payout_percent integer not null,
   expiry_time bigint not null,
-  status text default 'pending', -- 'pending', 'won', 'lost', 'refunded'
+  status text default 'pending' check (status in ('pending', 'won', 'lost', 'refunded')),
   result_price decimal(20, 8),
   created_at timestamptz default now(),
   settled_at timestamptz
@@ -118,10 +119,31 @@ create table public.global_settings (
   email_enabled boolean default true,
   discord_enabled boolean default true,
   registration_otp_enabled boolean default true,
+  change_email_otp_enabled boolean default true,
+  change_password_otp_enabled boolean default true,
+  recovery_otp_enabled boolean default true,
+  winner_email_enabled boolean default true,
+  last_email_reset_month text,
   updated_at timestamp with time zone default now()
 );
 
--- 6. User Login History: Security logs
+-- 6. Email Providers: Pool for Auto-Failover
+create table public.email_providers (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  public_key text not null,
+  service_id text not null,
+  template_otp text not null,
+  template_win text not null,
+  is_active boolean default true,
+  error_count integer default 0,
+  sent_count integer default 0,
+  priority integer default 0,
+  last_used_at timestamp with time zone,
+  created_at timestamp with time zone default now()
+);
+
+-- 7. User Login History: Security logs
 create table public.user_login_history (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -136,7 +158,22 @@ create table public.user_login_history (
   created_at timestamp with time zone default now()
 );
 
--- 7. Push Subscriptions
+-- 8. Issue Reports: Customer Support
+create sequence if not exists issue_report_smart_id_seq start with 1001;
+create table public.issue_reports (
+    id uuid default uuid_generate_v4() primary key,
+    user_id uuid references public.profiles(id) on delete cascade not null,
+    smart_id bigint default nextval('issue_report_smart_id_seq'),
+    category text not null,
+    subject text not null,
+    message text not null,
+    admin_response text,
+    status text not null default 'pending' check (status in ('pending', 'resolved')),
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+-- 9. Push Subscriptions
 create table public.push_subscriptions (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -145,20 +182,20 @@ create table public.push_subscriptions (
   unique(user_id, subscription_json)
 );
 
--- 8. Admin Audit Logs
+-- 10. Admin Audit Logs: Track admin actions
 create table public.admin_audit_logs (
   id uuid default uuid_generate_v4() primary key,
-  admin_id uuid references public.profiles(id),
-  admin_username text,
-  action_type text not null, -- 'TOP_UP', 'EDIT_PROFILE', 'TOGGLE_ROLE', etc.
-  description text,
-  target_user_id uuid references public.profiles(id),
+  admin_id uuid references public.profiles(id) on delete set null,
+  admin_email text,
+  target_user_id uuid references public.profiles(id) on delete set null,
   target_user_email text,
+  action_type text not null,
+  description text,
   details jsonb,
   created_at timestamp with time zone default now()
 );
 
--- 9. User Sessions (Server-side tracking)
+-- 11. User Sessions (Server-side tracking)
 create table public.user_sessions (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -173,9 +210,6 @@ create table public.user_sessions (
 -- ============================================================
 -- STEP 4: RPC FUNCTIONS & TRIGGERS
 -- ============================================================
-
--- Function to handle profile updates with audit logging
--- (Can be expanded if needed)
 
 -- Function to safely resolve binary trades (Transactional)
 create or replace function public.resolve_binary_trade(
@@ -239,7 +273,7 @@ begin
   end if;
 
   -- E. Log the transaction
-  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_type, binary_result, binary_trade_id)
+  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_type, binary_result, binary_trade_id, description)
   values (
     v_user_id, 
     case when v_final_status = 'won' then 'win' else 'loss' end, 
@@ -250,7 +284,8 @@ begin
     'success', 
     v_binary_type, 
     v_final_status, 
-    p_trade_id
+    p_trade_id,
+    'Trade Result: ' || v_asset_symbol || ' (' || v_binary_type || ')'
   );
 
   return jsonb_build_object(
@@ -262,31 +297,19 @@ begin
 end;
 $$ language plpgsql;
 
--- Function to handle manual trade refund
-create or replace function public.refund_binary_trade(p_trade_id uuid)
-returns jsonb as $$
-declare
-  v_user_id uuid;
-  v_status text;
-  v_trade_amount decimal;
-  v_asset_symbol text;
+-- Trigger for updated_at on issue_reports
+create or replace function update_updated_at_column()
+returns trigger as $$
 begin
-  select user_id, status, amount, asset_symbol into v_user_id, v_status, v_trade_amount, v_asset_symbol
-  from binary_trades where id = p_trade_id;
-
-  if v_status != 'pending' then
-    return jsonb_build_object('success', false, 'message', 'Only pending trades can be refunded');
-  end if;
-
-  update binary_trades set status = 'refunded', settled_at = now() where id = p_trade_id;
-  update profiles set balance = balance + v_trade_amount where id = v_user_id;
-
-  insert into transactions (user_id, type, asset_symbol, amount, price, total, status, binary_trade_id)
-  values (v_user_id, 'deposit', v_asset_symbol, 0, 0, v_trade_amount, 'success', p_trade_id);
-
-  return jsonb_build_object('success', true, 'message', 'Trade refunded successfully');
+    new.updated_at = now();
+    return new;
 end;
-$$ language plpgsql;
+$$ language 'plpgsql';
+
+create trigger update_issue_reports_updated_at
+    before update on public.issue_reports
+    for each row
+    execute function update_updated_at_column();
 
 -- ============================================================
 -- STEP 5: RLS & GRANTS
@@ -297,10 +320,12 @@ alter table public.binary_trades disable row level security;
 alter table public.transactions disable row level security;
 alter table public.portfolio disable row level security;
 alter table public.global_settings disable row level security;
+alter table public.email_providers disable row level security;
 alter table public.user_login_history disable row level security;
 alter table public.push_subscriptions disable row level security;
 alter table public.admin_audit_logs disable row level security;
 alter table public.user_sessions disable row level security;
+alter table public.issue_reports disable row level security;
 
 grant all on all tables in schema public to anon;
 grant all on all tables in schema public to authenticated;
@@ -328,3 +353,5 @@ create index if not exists idx_audit_logs_admin_id on public.admin_audit_logs(ad
 create index if not exists idx_audit_logs_created_at on public.admin_audit_logs(created_at desc);
 create index if not exists idx_user_sessions_user_id on public.user_sessions(user_id);
 create index if not exists idx_user_sessions_last_active on public.user_sessions(last_active desc);
+create index if not exists idx_issue_reports_user_id on public.issue_reports(user_id);
+create index if not exists idx_email_providers_priority on public.email_providers(priority desc);

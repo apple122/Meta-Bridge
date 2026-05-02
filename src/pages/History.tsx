@@ -29,6 +29,7 @@ import {
   formatDate,
   formatTime,
 } from "../utils/date";
+import { Skeleton } from "../components/shared/Skeleton";
 import { formatCurrency, formatUnits } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import { activityService, type ActivityItem } from "../services/activityService";
@@ -157,7 +158,15 @@ export const History: React.FC = () => {
 
   const dayNames = [t("sun"), t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat")];
   
-  if (loading) {
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+  React.useEffect(() => {
+    if (!loading && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, hasLoadedOnce]);
+
+  if (loading && !hasLoadedOnce) {
     return <HistorySkeleton />;
   }
 
@@ -320,9 +329,9 @@ export const History: React.FC = () => {
         {view === 'trading' ? (
           <motion.div
             key="trading-view"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="space-y-6"
           >
             {/* Advanced Filter Panel */}
@@ -388,20 +397,35 @@ export const History: React.FC = () => {
 
 
             {filteredTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-card-header/30 rounded-3xl border border-border border-dashed">
-                <div className="w-16 h-16 rounded-full bg-card-header flex items-center justify-center text-text-muted shadow-inner">
-                  <ClipboardList size={32} />
+              loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="glass-card bg-card border border-border p-4 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Skeleton variant="rect" width={48} height={48} className="rounded-2xl" />
+                        <div className="space-y-2">
+                          <Skeleton variant="text" width={120} height={16} />
+                          <Skeleton variant="text" width={80} height={10} />
+                        </div>
+                      </div>
+                      <div className="text-right space-y-2">
+                        <Skeleton variant="text" width={80} height={20} className="ml-auto" />
+                        <Skeleton variant="text" width={40} height={10} className="ml-auto" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-text-muted font-medium tracking-wide text-sm">No trading activity found.</p>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center glass-card bg-card-header/30 rounded-3xl border border-border border-dashed">
+                  <div className="w-16 h-16 rounded-full bg-card-header flex items-center justify-center text-text-muted shadow-inner">
+                    <ClipboardList size={32} />
+                  </div>
+                  <p className="text-text-muted font-medium tracking-wide text-sm">No trading activity found.</p>
+                </div>
+              )
             ) : (
               <div className="space-y-2.5">
                 {filteredTransactions.map((tx, index) => {
-                  const isExpanded = expandedId === tx.id;
-                  const isWin = tx.binary_result?.toLowerCase() === "win" || !!tx.is_win;
-                  const isDeposit = tx.type === 'deposit';
-                  const isPositive = isWin || isDeposit;
-                  const isBinaryBet = !!tx.binary_type && !tx.binary_result;
                   const txDateStr = new Date(tx.timestamp).toLocaleDateString();
                   const prevTxDateStr = index > 0 ? new Date(filteredTransactions[index - 1].timestamp).toLocaleDateString() : null;
                   const showDateHeader = txDateStr !== prevTxDateStr;
@@ -426,61 +450,12 @@ export const History: React.FC = () => {
                           </div>
                         </div>
                       )}
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-                        className={`glass-card bg-card border border-border hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden shadow-sm ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl" : ""}`}
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className="relative flex-shrink-0">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 shadow-sm ${isPositive ? "bg-green-500/10 text-green-600 border-green-500/20" : isBinaryBet ? "bg-primary/10 text-primary border-primary/20" : "bg-red-500/10 text-red-600 border-red-500/20"}`}>
-                                {isWin ? <Trophy size={20} /> : isDeposit ? <TrendingUp size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
-                              </div>
-                              <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-card-header border border-border text-[8px] font-black text-text-muted tabular-nums uppercase shadow-md z-10">
-                                #{tx.smart_id || tx.id.slice(-4)}
-                              </span>
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-text-main text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
-                                {tx.binary_type && (
-                                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter shadow-sm ${tx.binary_type === 'up'
-                                    ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                                    : 'bg-red-500/10 text-red-600 border border-red-500/20'
-                                    }`}>
-                                    {tx.binary_type === 'up' ? '▲ UP' : '▼ DOWN'}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-text-muted font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
-                                {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap shadow-sm ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className={`text-base font-black tabular-nums ${isPositive ? "text-green-600" : isBinaryBet ? "text-primary" : "text-red-600"}`}>{isPositive ? "+" : "-"}{formatCurrency(tx.total)}</p>
-                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
-                          </div>
-                        </div>
-
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-border grid grid-cols-2 gap-4 overflow-hidden">
-                              <div>
-                                <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">{t("transactionId")}</p>
-                                <p className="text-[9px] text-text-main font-mono break-all leading-tight mt-1">#{tx.id}</p>
-                              </div>
-                              <div>
-                                <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">{t("dateTime")}</p>
-                                <p className="text-[10px] text-text-main font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
+                      <TransactionItem 
+                        tx={tx} 
+                        t={t} 
+                        isExpanded={expandedId === tx.id} 
+                        onToggle={() => setExpandedId(expandedId === tx.id ? null : tx.id)} 
+                      />
                     </React.Fragment>
                   );
                 })}
@@ -499,9 +474,9 @@ export const History: React.FC = () => {
         ) : (
           <motion.div
             key="security-view"
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="space-y-4"
           >
             <div className="flex items-center gap-2">
@@ -522,8 +497,6 @@ export const History: React.FC = () => {
                   return (
                     <motion.div
                       key={act.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
                       className={`bg-card border border-border rounded-2xl p-4 flex items-center justify-between group relative overflow-hidden shadow-sm transition-all ${isCurrent ? 'ring-1 ring-primary/40 shadow-lg' : 'hover:border-primary/20'}`}
                     >
                       <div className="flex items-center gap-4 min-w-0">
@@ -578,3 +551,66 @@ export const History: React.FC = () => {
     </div>
   );
 };
+
+const TransactionItem: React.FC<{ tx: any; t: any; isExpanded: boolean; onToggle: () => void }> = React.memo(({ tx, t, isExpanded, onToggle }) => {
+  const isWin = tx.binary_result?.toLowerCase() === "win" || !!tx.is_win;
+  const isDeposit = tx.type === 'deposit';
+  const isPositive = isWin || isDeposit;
+  const isBinaryBet = !!tx.binary_type && !tx.binary_result;
+
+  return (
+    <div
+      onClick={onToggle}
+      className={`glass-card bg-card border border-border hover:border-primary/30 transition-all flex flex-col p-4 rounded-2xl cursor-pointer relative overflow-hidden shadow-sm ${isExpanded ? "border-primary/40 ring-1 ring-primary/20 shadow-xl" : ""}`}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="relative flex-shrink-0">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 shadow-sm ${isPositive ? "bg-green-500/10 text-green-600 border-green-500/20" : isBinaryBet ? "bg-primary/10 text-primary border-primary/20" : "bg-red-500/10 text-red-600 border-red-500/20"}`}>
+              {isWin ? <Trophy size={20} /> : isDeposit ? <TrendingUp size={20} /> : isBinaryBet ? <Zap size={20} /> : <TrendingDown size={20} />}
+            </div>
+            <span className="absolute -top-1.5 -left-1.5 min-w-[20px] h-[18px] flex items-center justify-center px-1.5 rounded-full bg-card-header border border-border text-[8px] font-black text-text-muted tabular-nums uppercase shadow-md z-10">
+              #{tx.smart_id || tx.id.slice(-4)}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-text-main text-sm uppercase truncate">{tx.asset || t("transaction")}</h3>
+              {tx.binary_type && (
+                <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter shadow-sm ${tx.binary_type === 'up'
+                  ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                  : 'bg-red-500/10 text-red-600 border border-red-500/20'
+                  }`}>
+                  {tx.binary_type === 'up' ? '▲ UP' : '▼ DOWN'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-text-muted font-bold whitespace-nowrap">{formatTime(tx.timestamp)}</span>
+              {tx.binary_result && <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap shadow-sm ${isWin ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>{tx.binary_result}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="text-right shrink-0">
+          <p className={`text-base font-black tabular-nums ${isPositive ? "text-green-600" : isBinaryBet ? "text-primary" : "text-red-600"}`}>{isPositive ? "+" : "-"}{formatCurrency(tx.total)}</p>
+          <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1 whitespace-nowrap">{tx.amount && formatUnits(tx.amount)} {tx.asset}</p>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-4 mt-4 border-t border-border grid grid-cols-2 gap-4 overflow-hidden">
+            <div>
+              <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">{t("transactionId")}</p>
+              <p className="text-[9px] text-text-main font-mono break-all leading-tight mt-1">#{tx.id}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">{t("dateTime")}</p>
+              <p className="text-[10px] text-text-main font-bold mt-1">{new Date(tx.timestamp).toLocaleString()}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});

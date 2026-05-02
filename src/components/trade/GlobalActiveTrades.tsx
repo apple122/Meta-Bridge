@@ -8,7 +8,6 @@ export const GlobalActiveTrades: React.FC = () => {
   const { activeBinaryTrades } = useWallet();
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [, setTick] = useState(0);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Close when clicking outside
@@ -33,12 +32,7 @@ export const GlobalActiveTrades: React.FC = () => {
     };
   }, [isOpen]);
 
-  // Make sure the timer always counts down smoothly
-  useEffect(() => {
-    if (activeBinaryTrades.length === 0) return;
-    const timer = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(timer);
-  }, [activeBinaryTrades.length]);
+  // Timer logic is now moved to individual items to prevent global re-renders
 
   // If there are no active trades, we don't need to show it at all
   if (activeBinaryTrades.length === 0) return null;
@@ -91,55 +85,9 @@ export const GlobalActiveTrades: React.FC = () => {
               <h3 className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-1 px-1">
                 {t("activeBinaryTrades")}
               </h3>
-              {activeBinaryTrades.map((trade) => {
-                const now = Date.now();
-                const remainingSecs = Math.max(
-                  0,
-                  Math.floor((trade.expiryTime - now) / 1000),
-                );
-                const isSettling = remainingSecs === 0;
-                const m = Math.floor(remainingSecs / 60);
-                const s = remainingSecs % 60;
-                const timeString = isSettling ? (t("settling") || "Settling...") : `${m}:${s.toString().padStart(2, "0")}`;
-
-                return (
-                  <div
-                    key={trade.id}
-                    className="p-2 bg-card-header rounded-lg border border-border flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-7 h-7 rounded flex items-center justify-center shadow-sm ${trade.type === "up" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}
-                      >
-                        {trade.type === "up" ? (
-                          <ArrowUpRight size={14} />
-                        ) : (
-                          <ArrowDownLeft size={14} />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-bold text-text-main uppercase leading-none mb-0.5">
-                          {trade.assetSymbol}
-                        </p>
-                        <p className="text-[9px] text-text-muted font-medium">
-                          Entry: ${trade.entryPrice.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right flex flex-col items-end">
-                      <p className="text-xs font-black text-text-main tabular-nums tracking-wider leading-none mb-0.5">
-                        {timeString}
-                      </p>
-                      <p className="text-[9px] text-text-muted font-bold">
-                        ${trade.amount.toLocaleString()}{" "}
-                        <span className="text-green-500">
-                          +{trade.payoutPercent}%
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+              {activeBinaryTrades.map((trade) => (
+                <GlobalTradeItem key={trade.id} trade={trade} t={t} />
+              ))}
             </div>
           </motion.div>
         )}
@@ -147,3 +95,58 @@ export const GlobalActiveTrades: React.FC = () => {
     </div>
   );
 };
+
+const GlobalTradeItem: React.FC<{ trade: any; t: any }> = React.memo(({ trade, t }) => {
+  const [now, setNow] = React.useState(Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const remainingSecs = Math.max(
+    0,
+    Math.floor((trade.expiryTime - now) / 1000),
+  );
+  const isSettling = remainingSecs === 0;
+  const m = Math.floor(remainingSecs / 60);
+  const s = remainingSecs % 60;
+  const timeString = isSettling ? (t("settling") || "Settling...") : `${m}:${s.toString().padStart(2, "0")}`;
+
+  return (
+    <div
+      className="p-2 bg-card-header rounded-lg border border-border flex items-center justify-between"
+    >
+      <div className="flex items-center gap-2">
+        <div
+          className={`w-7 h-7 rounded flex items-center justify-center shadow-sm ${trade.type === "up" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}
+        >
+          {trade.type === "up" ? (
+            <ArrowUpRight size={14} />
+          ) : (
+            <ArrowDownLeft size={14} />
+          )}
+        </div>
+        <div>
+          <p className="text-[11px] font-bold text-text-main uppercase leading-none mb-0.5">
+            {trade.assetSymbol}
+          </p>
+          <p className="text-[9px] text-text-muted font-medium">
+            Entry: ${trade.entryPrice.toLocaleString()}
+          </p>
+        </div>
+      </div>
+      <div className="text-right flex flex-col items-end">
+        <p className="text-xs font-black text-text-main tabular-nums tracking-wider leading-none mb-0.5">
+          {timeString}
+        </p>
+        <p className="text-[9px] text-text-muted font-bold">
+          ${trade.amount.toLocaleString()}{" "}
+          <span className="text-green-500">
+            +{trade.payoutPercent}%
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+});

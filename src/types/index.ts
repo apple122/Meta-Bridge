@@ -48,6 +48,7 @@ export interface GlobalSettings {
   emailjs_service_id?: string;
   emailjs_template_otp?: string;
   emailjs_template_win?: string;
+  last_email_reset_month?: string;
 }
 
 export interface EmailProvider {
@@ -59,6 +60,7 @@ export interface EmailProvider {
   template_win: string;
   is_active: boolean;
   error_count: number;
+  sent_count: number;
   priority: number;
   last_used_at: string;
   created_at: string;

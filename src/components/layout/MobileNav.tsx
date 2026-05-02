@@ -59,10 +59,8 @@ export const MobileNav: React.FC = () => {
               </span>
               
               {isActive && (
-                <motion.div
-                  layoutId="userActiveTab"
-                  className="absolute bottom-0 w-8 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                <div
+                  className="absolute bottom-0 w-8 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)] transition-all duration-300"
                 />
               )}
             </NavLink>

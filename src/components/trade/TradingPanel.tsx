@@ -17,6 +17,7 @@ import { TIMEFRAMES } from "../../constants/trade";
 import type { Transaction } from "../../types";
 import type { BinaryTrade } from "../../contexts/WalletContext";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { Skeleton } from "../shared/Skeleton";
 
 interface TradingPanelProps {
   balance: number;
@@ -35,6 +36,7 @@ interface TradingPanelProps {
     payout: number;
   }) => void;
   activeBinaryTrades: BinaryTrade[];
+  loading: boolean;
 }
 
 export const TradingPanel: React.FC<TradingPanelProps> = ({
@@ -50,6 +52,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
   timeframe,
   setTimeframe,
   activeBinaryTrades,
+  loading,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -57,12 +60,6 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
   const [showAmountModal, setShowAmountModal] = useState(false);
   const [tempAmount, setTempAmount] = useState(amount);
   const [timeLeftAmount, setTimeLeftAmount] = useState(120);
-  const [, setTick] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Timer logic for Amount Modal
   useEffect(() => {
@@ -90,6 +87,11 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
     setAmount(amt);
     setShowAmountModal(false);
   };
+
+  // Memoize filtered transactions to prevent re-filtering on every render
+  const filteredTransactions = React.useMemo(() => {
+    return transactions.filter((t_tx) => t_tx.asset === selectedAsset.symbol);
+  }, [transactions, selectedAsset.symbol]);
 
   return (
     <div className="space-y-4">
@@ -217,72 +219,23 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
           </h3>
           <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
             {tradeLoading && (
-              <div className="p-3 bg-card-header/30 rounded-xl border border-border/50 flex items-center justify-between animate-pulse">
+              <div className="p-3 bg-card-header/30 rounded-xl border border-border/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-card-header flex items-center justify-center">
-                    <div className="w-4 h-4 rounded bg-text-muted/20" />
-                  </div>
+                  <Skeleton variant="rect" width={32} height={32} className="rounded-lg shrink-0" />
                   <div className="space-y-1.5">
-                    <div className="w-16 h-3 bg-text-muted/20 rounded" />
-                    <div className="w-20 h-2 bg-text-muted/10 rounded" />
+                    <Skeleton variant="text" width={60} height={12} className="rounded" />
+                    <Skeleton variant="text" width={40} height={8} className="rounded" />
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end space-y-1.5">
-                  <div className="w-12 h-4 bg-text-muted/20 rounded" />
-                  <div className="w-16 h-2 bg-text-muted/10 rounded" />
+                  <Skeleton variant="text" width={40} height={14} className="rounded" />
+                  <Skeleton variant="text" width={30} height={8} className="rounded" />
                 </div>
               </div>
             )}
-            {activeBinaryTrades.map((trade) => {
-              const now = Date.now();
-              const remainingSecs = Math.max(
-                0,
-                Math.floor((trade.expiryTime - now) / 1000),
-              );
-              
-              const isSettling = remainingSecs === 0;
-              const m = Math.floor(remainingSecs / 60);
-              const s = remainingSecs % 60;
-              const timeString = isSettling ? t("settling") || "Settling..." : `${m}:${s.toString().padStart(2, "0")}`;
-
-              return (
-                <div
-                  key={trade.id}
-                  className="p-3 bg-card-header/50 rounded-xl border border-border flex items-center justify-between shadow-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm ${trade.type === "up" ? "bg-green-500/10 text-green-600 border border-green-500/20" : "bg-red-500/10 text-red-600 border border-red-500/20"}`}
-                    >
-                      {trade.type === "up" ? (
-                        <ArrowUpRight size={16} />
-                      ) : (
-                        <ArrowDownLeft size={16} />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-text-main uppercase">
-                        {trade.assetSymbol}
-                      </p>
-                      <p className="text-[10px] text-text-muted font-medium">
-                        Entry: {formatCurrency(trade.entryPrice)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right flex flex-col items-end">
-                    <p className="text-sm font-black text-text-main tabular-nums tracking-wider">
-                      {timeString}
-                    </p>
-                    <p className="text-[10px] text-text-muted font-bold">
-                      {formatCurrency(trade.amount)}{" "}
-                      <span className="text-green-500">
-                        +{trade.payoutPercent}%
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+            {activeBinaryTrades.map((trade) => (
+              <ActiveTradeItem key={trade.id} trade={trade} t={t} />
+            ))}
           </div>
         </div>
       )}
@@ -301,9 +254,26 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
           </button>
         </div>
         <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
-          {transactions
-            .filter((t_tx) => t_tx.asset === selectedAsset.symbol)
-            .map((tx) => {
+          {(loading || transactions.length === 0) && filteredTransactions.length === 0 ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rect" width={36} height={36} className="rounded-xl" />
+                    <div className="space-y-2">
+                      <Skeleton variant="text" width={80} height={12} />
+                      <Skeleton variant="text" width={40} height={8} />
+                    </div>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Skeleton variant="text" width={50} height={14} className="ml-auto" />
+                    <Skeleton variant="text" width={30} height={8} className="ml-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            filteredTransactions.map((tx) => {
               const resLower = tx.binary_result?.toLowerCase();
               const isWin = resLower === "win" || resLower === "won";
               const isPositive =
@@ -384,7 +354,8 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
                   </div>
                 </div>
               );
-            })}
+            })
+          )}
         </div>
       </div>
 
@@ -516,3 +487,60 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
     </div>
   );
 };
+
+// Sub-component to handle its own timer to prevent parent re-renders
+const ActiveTradeItem: React.FC<{ trade: BinaryTrade; t: any }> = React.memo(({ trade, t }) => {
+  const [now, setNow] = React.useState(Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const remainingSecs = Math.max(
+    0,
+    Math.floor((trade.expiryTime - now) / 1000),
+  );
+  
+  const isSettling = remainingSecs === 0;
+  const m = Math.floor(remainingSecs / 60);
+  const s = remainingSecs % 60;
+  const timeString = isSettling ? t("settling") || "Settling..." : `${m}:${s.toString().padStart(2, "0")}`;
+
+  return (
+    <div
+      className="p-3 bg-card-header/50 rounded-xl border border-border flex items-center justify-between shadow-sm"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm ${trade.type === "up" ? "bg-green-500/10 text-green-600 border border-green-500/20" : "bg-red-500/10 text-red-600 border border-red-500/20"}`}
+        >
+          {trade.type === "up" ? (
+            <ArrowUpRight size={16} />
+          ) : (
+            <ArrowDownLeft size={16} />
+          )}
+        </div>
+        <div>
+          <p className="text-xs font-bold text-text-main uppercase">
+            {trade.assetSymbol}
+          </p>
+          <p className="text-[10px] text-text-muted font-medium">
+            Entry: {formatCurrency(trade.entryPrice)}
+          </p>
+        </div>
+      </div>
+      <div className="text-right flex flex-col items-end">
+        <p className="text-sm font-black text-text-main tabular-nums tracking-wider">
+          {timeString}
+        </p>
+        <p className="text-[10px] text-text-muted font-bold">
+          {formatCurrency(trade.amount)}{" "}
+          <span className="text-green-500">
+            +{trade.payoutPercent}%
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+});

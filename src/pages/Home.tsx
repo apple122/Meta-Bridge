@@ -43,7 +43,15 @@ export const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, hasLoadedOnce]);
+
+  if (loading && !hasLoadedOnce) {
     return <HomeSkeleton />;
   }
 
@@ -227,7 +235,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Global Market Table */}
-      <MarketTable stocks={stocks} t={t} />
+      <MarketTable stocks={stocks} t={t} loading={loading} />
     </div>
   );
 };

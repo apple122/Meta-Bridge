@@ -136,13 +136,24 @@ export const Trade: React.FC = () => {
     if (showSearch) setShowSearch(false);
   });
 
-  const filteredAssets = assets.filter(
-    (a) =>
-      a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredAssets = React.useMemo(() => {
+    return assets.filter(
+      (a) =>
+        a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [searchTerm]);
 
-  if (loading) {
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, hasLoadedOnce]);
+
+  // Only show full page skeleton on the very first visit
+  if (loading && !hasLoadedOnce) {
     return <TradeSkeleton />;
   }
 
@@ -154,8 +165,8 @@ export const Trade: React.FC = () => {
       <div className="lg:col-span-2 space-y-4 w-full">
         <div className="w-full relative z-30">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="glass-card relative w-full bg-card border-border shadow-xl"
           >
             {/* Background Accent Gradient */}
@@ -429,6 +440,7 @@ export const Trade: React.FC = () => {
           timeframe={timeframe}
           setTimeframe={setTimeframe}
           activeBinaryTrades={activeBinaryTrades}
+          loading={loading}
         />
       </div>
       {/* Market Details Modal */}

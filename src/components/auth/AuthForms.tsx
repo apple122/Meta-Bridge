@@ -68,6 +68,8 @@ export const AuthForms: React.FC = () => {
   const [verificationType, setVerificationType] = useState<"login" | "register" | "forgot">(() => {
     return sessionStorage.getItem("auth_verification_type") as any || "login";
   });
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [tempEmail, setTempEmail] = useState("");
 
   useEffect(() => {
     setIsClient(true);
@@ -355,6 +357,67 @@ export const AuthForms: React.FC = () => {
       setLoading(false);
     }
   };
+  
+  const handleUpdateEmail = async () => {
+    if (!tempEmail || tempEmail === email) {
+      setIsEditingEmail(false);
+      return;
+    }
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    try {
+      // Check if new email already exists
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", tempEmail)
+        .single();
+
+      if (existing) {
+        throw new Error(language === "th" ? "อีเมลนี้ถูกใช้งานแล้ว" : "Email already registered");
+      }
+
+      // Update email in database
+      const { error } = await supabase
+        .from("profiles")
+        .update({ email: tempEmail })
+        .eq("email", email)
+        .eq("is_verified", false);
+
+      if (error) throw error;
+
+      setEmail(tempEmail);
+      setIsEditingEmail(false);
+      
+      // Resend OTP to new email
+      const newOtp = generateOTP();
+      await supabase
+        .from("profiles")
+        .update({
+          otp_code: newOtp,
+          otp_expires_at: new Date(Date.now() + 10 * 60000).toISOString()
+        })
+        .eq("email", tempEmail);
+
+      await emailService.sendOTP({
+        email: tempEmail,
+        code: newOtp,
+        userName: firstName || "User",
+        lang: language,
+        type: verificationType === 'forgot' ? 'reset' : 'verification'
+      });
+
+      setSuccessMsg(language === "th" ? "อัปเดตอีเมลและส่งรหัสใหม่แล้ว" : "Email updated and new code sent!");
+      setResendCountdown(60);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to update email.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden font-sans text-text-main transition-colors duration-500">
       {/* Background Ambience */}
@@ -516,17 +579,62 @@ export const AuthForms: React.FC = () => {
                         onChange={(e) => setOtp(e.target.value)}
                         required
                       />
-                      <div className="flex justify-center mt-2">
-                        <button
-                          type="button"
-                          onClick={handleResendOTP}
-                          disabled={resendCountdown > 0 || loading}
-                          className="text-xs font-bold text-primary hover:text-accent transition-colors disabled:text-slate-600 flex items-center gap-2"
-                        >
-                          {resendCountdown > 0
-                            ? `${t("resendIn") || "Resend in"} ${resendCountdown}s`
-                            : (t("resendCode") || "Didn't receive code? Resend")}
-                        </button>
+                      <div className="flex flex-col items-center gap-3 mt-2">
+                        {!isEditingEmail ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={handleResendOTP}
+                              disabled={resendCountdown > 0 || loading}
+                              className="text-xs font-bold text-primary hover:text-accent transition-colors disabled:text-slate-600 flex items-center gap-2"
+                            >
+                              {resendCountdown > 0
+                                ? `${t("resendIn") || "Resend in"} ${resendCountdown}s`
+                                : (t("resendCode") || "Didn't receive code? Resend")}
+                            </button>
+                            {verificationType !== 'forgot' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsEditingEmail(true);
+                                  setTempEmail(email);
+                                }}
+                                className="text-[10px] font-bold text-text-muted hover:text-primary transition-colors underline underline-offset-4"
+                              >
+                                {language === 'th' ? 'กรอกอีเมลผิด? แก้ไขที่นี่' : 'Wrong email? Edit here'}
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <div className="w-full space-y-3 p-4 rounded-2xl bg-card-header/30 border border-border">
+                            <p className="text-[10px] font-black uppercase text-text-muted tracking-widest">{language === 'th' ? 'แก้ไขอีเมลของคุณ' : 'Edit your email'}</p>
+                            <AuthInput
+                              icon={<Mail size={16} />}
+                              placeholder={t("email") || "Email"}
+                              type="email"
+                              value={tempEmail}
+                              onChange={(e) => setTempEmail(e.target.value)}
+                              required
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingEmail(false)}
+                                className="flex-1 py-2 rounded-lg bg-card-header text-text-main text-xs font-bold hover:bg-border transition-all"
+                              >
+                                {language === 'th' ? 'ยกเลิก' : 'Cancel'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleUpdateEmail}
+                                disabled={loading}
+                                className="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                              >
+                                {language === 'th' ? 'อัปเดตและส่งใหม่' : 'Update & Resend'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
