@@ -45,42 +45,62 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; msg: string } | null>(null);
   const [isEmailSaving, setIsEmailSaving] = useState(false);
-  const [isEmailDirty, setIsEmailDirty] = useState(false);
+  // Field groups
+  const emailFields: (keyof GlobalSettings)[] = [
+    'emailjs_public_key', 
+    'emailjs_service_id', 
+    'emailjs_template_otp', 
+    'emailjs_template_win'
+  ];
 
   // Track original settings to detect changes
   const [initialSettings, setInitialSettings] = useState<GlobalSettings>(globalSettings);
-  const isDirty = JSON.stringify(initialSettings) !== JSON.stringify(globalSettings);
+  
+  // Check if global (non-email) fields are dirty
+  const isGlobalDirty = Object.keys(globalSettings).some(key => {
+    const k = key as keyof GlobalSettings;
+    return !emailFields.includes(k) && initialSettings[k] !== globalSettings[k];
+  });
+
+  // Check if email fields are dirty
+  const isEmailDirty = emailFields.some(k => initialSettings[k] !== globalSettings[k]);
 
   // Alert before refresh/leave
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
+      if (isGlobalDirty || isEmailDirty) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
+  }, [isGlobalDirty, isEmailDirty]);
 
   const handleUpdateEmailConfig = async () => {
     setIsEmailSaving(true);
     try {
+      // Only update email fields
+      const emailUpdates = emailFields.reduce((acc, field) => {
+        acc[field] = globalSettings[field];
+        return acc;
+      }, {} as any);
+
       const { error } = await supabase
         .from("global_settings")
-        .update({
-          emailjs_public_key: globalSettings.emailjs_public_key,
-          emailjs_service_id: globalSettings.emailjs_service_id,
-          emailjs_template_otp: globalSettings.emailjs_template_otp,
-          emailjs_template_win: globalSettings.emailjs_template_win,
-        })
+        .update(emailUpdates)
         .eq("id", "main");
 
       if (error) throw error;
       
-      // Update local state to reflect saved status
-      setInitialSettings({ ...globalSettings });
-      setIsEmailDirty(false);
+      // Update local initial settings only for email fields to reset isEmailDirty
+      setInitialSettings(prev => {
+        const next = { ...prev };
+        emailFields.forEach(field => {
+          (next as any)[field] = (globalSettings as any)[field];
+        });
+        return next;
+      });
       
       await logAdminAction(
         "UPDATE_SETTINGS", 
@@ -103,27 +123,47 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
   const handleEmailChange = (field: keyof GlobalSettings, value: any) => {
     setGlobalSettings(prev => ({ ...prev, [field]: value }));
-    setIsEmailDirty(true);
   };
 
   const handleUpdateSettings = async () => {
     setIsSaving(true);
-    const { error } = await supabase
-      .from("global_settings")
-      .update(globalSettings)
-      .eq("id", "main");
+    try {
+      // Exclude email fields from global update
+      const globalUpdates = { ...globalSettings };
+      emailFields.forEach(field => delete globalUpdates[field]);
 
-    if (!error) {
-      alert(t("settingsUpdated"));
+      const { error } = await supabase
+        .from("global_settings")
+        .update(globalUpdates)
+        .eq("id", "main");
+
+      if (error) throw error;
+      
+      // Update local initial settings for non-email fields to reset isGlobalDirty
+      setInitialSettings(prev => {
+        const next = { ...prev };
+        (Object.keys(globalSettings) as (keyof GlobalSettings)[]).forEach(k => {
+          if (!emailFields.includes(k)) {
+            (next as any)[k] = globalSettings[k];
+          }
+        });
+        return next;
+      });
+
       await logAdminAction(
-        "UPDATE_SETTINGS",
-        "Updated global system settings (contacts)",
-        { settings: globalSettings }
+        "UPDATE_SETTINGS", 
+        "Updated Global System Settings", 
+        globalUpdates
       );
-      setInitialSettings(globalSettings);
+      
       if (onSaveSuccess) onSaveSuccess(globalSettings);
+      alert(t("settingsUpdated") || "Settings updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating settings:", error);
+      alert("Error updating settings: " + error.message);
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   const handleTestEmail = async () => {
@@ -180,9 +220,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           
           <button
             onClick={handleUpdateSettings}
-            disabled={isSaving || !isDirty}
+            disabled={isSaving || !isGlobalDirty}
             className={`shrink-0 flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all ${
-              isSaving || !isDirty
+              isSaving || !isGlobalDirty
                 ? "bg-card-header text-text-muted cursor-not-allowed"
                 : "bg-green-500 hover:bg-green-400 text-white shadow-[0_8px_20px_-4px_rgba(34,197,94,0.3)] active:scale-95"
             }`}
@@ -291,15 +331,15 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             <div className="flex justify-end pt-4">
               <button
                 onClick={handleUpdateSettings}
-                disabled={isSaving || !isDirty}
+                disabled={isSaving || !isGlobalDirty}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                  isSaving || !isDirty
+                  isSaving || !isGlobalDirty
                     ? "bg-card-header text-text-muted cursor-not-allowed"
                     : "bg-green-500 hover:bg-green-400 text-white shadow-lg shadow-green-500/20 active:scale-95"
                 }`}
               >
                 {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                {t("saveAllSettings")}
+                {language === 'th' ? 'บันทึกการตั้งค่าความปลอดภัย' : 'SAVE SECURITY SETTINGS'}
               </button>
             </div>
           </div>
