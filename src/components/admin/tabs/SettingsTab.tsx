@@ -167,7 +167,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   </div>
                   <div>
                     <span className="text-sm font-bold text-text-main block">{t("registrationOtp")}</span>
-                    <p className="text-[10px] text-text-muted font-bold">{t("otpDescription")}</p>
+                    <p className="text-[10px] text-text-muted font-bold">{t("registrationOtpDesc")}</p>
                   </div>
                 </div>
                 <button onClick={() => setGlobalSettings(prev => ({ ...prev, registration_otp_enabled: !prev.registration_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.registration_otp_enabled ? "bg-primary" : "bg-card-header shadow-inner border border-border"}`}>
@@ -182,8 +182,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <Mail size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-text-main block">Change Email OTP</span>
-                    <p className="text-[10px] text-text-muted font-bold">Require OTP when changing email</p>
+                    <span className="text-sm font-bold text-text-main block">{t("changeEmailOtp")}</span>
+                    <p className="text-[10px] text-text-muted font-bold">{t("changeEmailOtpDesc")}</p>
                   </div>
                 </div>
                 <button onClick={() => setGlobalSettings(prev => ({ ...prev, change_email_otp_enabled: !prev.change_email_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.change_email_otp_enabled ? "bg-blue-500" : "bg-card-header shadow-inner border border-border"}`}>
@@ -198,8 +198,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <ShieldAlert size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-text-main block">Change Password OTP</span>
-                    <p className="text-[10px] text-text-muted font-bold">Require OTP when changing password</p>
+                    <span className="text-sm font-bold text-text-main block">{t("changePasswordOtp")}</span>
+                    <p className="text-[10px] text-text-muted font-bold">{t("changePasswordOtpDesc")}</p>
                   </div>
                 </div>
                 <button onClick={() => setGlobalSettings(prev => ({ ...prev, change_password_otp_enabled: !prev.change_password_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.change_password_otp_enabled ? "bg-amber-500" : "bg-card-header shadow-inner border border-border"}`}>
@@ -214,8 +214,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <Globe size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-text-main block">Recovery OTP</span>
-                    <p className="text-[10px] text-text-muted font-bold">Require OTP for account recovery</p>
+                    <span className="text-sm font-bold text-text-main block">{t("recoveryOtp")}</span>
+                    <p className="text-[10px] text-text-muted font-bold">{t("recoveryOtpDesc")}</p>
                   </div>
                 </div>
                 <button onClick={() => setGlobalSettings(prev => ({ ...prev, recovery_otp_enabled: !prev.recovery_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.recovery_otp_enabled ? "bg-purple-500" : "bg-card-header shadow-inner border border-border"}`}>
@@ -230,14 +230,29 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <Mail size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-text-main block">Winner Notifications</span>
-                    <p className="text-[10px] text-text-muted font-bold">Send email celebrate when user wins</p>
+                    <span className="text-sm font-bold text-text-main block">{t("winnerEmail")}</span>
+                    <p className="text-[10px] text-text-muted font-bold">{t("winnerEmailDesc")}</p>
                   </div>
                 </div>
                 <button onClick={() => setGlobalSettings(prev => ({ ...prev, winner_email_enabled: !prev.winner_email_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.winner_email_enabled ? "bg-green-500" : "bg-card-header shadow-inner border border-border"}`}>
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.winner_email_enabled ? "left-7" : "left-1"}`} />
                 </button>
               </div>
+            </div>
+            
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={handleUpdateSettings}
+                disabled={isSaving || !isDirty}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                  isSaving || !isDirty
+                    ? "bg-card-header text-text-muted cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-400 text-white shadow-lg shadow-green-500/20 active:scale-95"
+                }`}
+              >
+                {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                {t("saveAllSettings")}
+              </button>
             </div>
           </div>
 
