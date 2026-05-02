@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+export type Theme = 'dark' | 'light' | 'liquid-glass';
 
 interface ThemeContextType {
   theme: Theme;
@@ -24,7 +24,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    const themes: Theme[] = ['dark', 'light', 'liquid-glass'];
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    const newTheme = themes[nextIndex];
+    
     setThemeState(newTheme);
     localStorage.setItem('theme', newTheme);
   };
@@ -36,7 +40,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('dark', 'light');
+    root.classList.remove('dark', 'light', 'liquid-glass');
     root.classList.add(theme);
     root.setAttribute('data-theme', theme);
   }, [theme]);

@@ -84,6 +84,7 @@ export const GlobalWinModal: React.FC = () => {
   }, [winModalData]);
 
   const isLight = theme === 'light';
+  const isLiquid = theme === 'liquid-glass';
 
   return (
     <AnimatePresence>
@@ -100,22 +101,24 @@ export const GlobalWinModal: React.FC = () => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 50 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className={`relative w-full max-w-sm rounded-[2.5rem] overflow-hidden border p-6 sm:p-10 text-center shadow-2xl transition-colors duration-500 mb-16 md:mb-0 ${
+            className={`relative w-full max-w-sm rounded-[2.5rem] overflow-hidden border p-6 sm:p-10 text-center shadow-2xl transition-all duration-500 mb-16 md:mb-0 ${
               isLight 
                 ? "bg-white border-green-100 shadow-green-500/10" 
+                : isLiquid
+                ? "bg-slate-950/40 backdrop-blur-2xl border-white/10 shadow-green-400/20"
                 : "bg-slate-900 border-green-500/30 shadow-green-500/20"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Background Accent */}
             <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b opacity-20 pointer-events-none ${
-              isLight ? "from-green-500/40" : "from-green-500/30"
+              isLight ? "from-green-500/40" : isLiquid ? "from-green-400/50" : "from-green-500/30"
             } to-transparent`} />
             
             <Particles />
 
             <div className={`mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-8 relative transition-colors ${
-              isLight ? "bg-green-50 text-green-500 shadow-inner" : "bg-green-500/20 text-green-400 shadow-lg shadow-green-500/30"
+              isLight ? "bg-green-50 text-green-500 shadow-inner" : isLiquid ? "bg-green-400/30 text-green-300 shadow-lg shadow-green-400/40" : "bg-green-500/20 text-green-400 shadow-lg shadow-green-500/30"
             }`}>
               <Trophy size={48} className="drop-shadow-lg" />
               <Sparkles
@@ -130,7 +133,7 @@ export const GlobalWinModal: React.FC = () => {
               {t("congratulations")}
             </h2>
             <p className={`text-sm font-bold mb-8 transition-colors ${
-              isLight ? "text-slate-500" : "text-slate-400"
+              isLight ? "text-slate-500" : isLiquid ? "text-slate-200" : "text-slate-400"
             }`}>
               {t("predictionCorrect")}{" "}
               <span className={`uppercase font-black ${isLight ? "text-primary" : "text-white"}`}>
@@ -142,16 +145,18 @@ export const GlobalWinModal: React.FC = () => {
             <div className={`rounded-3xl p-5 sm:p-7 border mb-10 overflow-hidden transition-all ${
               isLight 
                 ? "bg-slate-50 border-slate-100 shadow-inner" 
+                : isLiquid
+                ? "bg-white/[0.05] border-white/10 shadow-inner"
                 : "bg-slate-950/50 border-white/5 shadow-inner"
             }`}>
               <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${
-                isLight ? "text-slate-400" : "text-slate-500"
+                isLight ? "text-slate-400" : isLiquid ? "text-slate-300" : "text-slate-500"
               }`}>
                 {t("totalPayout")}
               </p>
               <p
                 className={`font-black tabular-nums drop-shadow-sm break-all leading-tight transition-all duration-300 ${
-                  isLight ? "text-green-600" : "text-green-400"
+                  isLight ? "text-green-600" : isLiquid ? "text-green-300" : "text-green-400"
                 } ${
                   (() => {
                     const len = `+${formatCurrency(winModalData.payout)}`.length;
@@ -170,6 +175,8 @@ export const GlobalWinModal: React.FC = () => {
               className={`w-full py-5 rounded-2xl font-black text-xl transition-all active:scale-95 shadow-xl ${
                 isLight 
                   ? "bg-primary text-white hover:bg-primary/90 shadow-primary/20" 
+                  : isLiquid
+                  ? "bg-gradient-to-r from-green-400 to-emerald-500 text-slate-950 hover:brightness-110 shadow-green-500/30"
                   : "bg-green-500 text-slate-950 hover:bg-green-400 shadow-green-500/30"
               }`}
             >

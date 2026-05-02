@@ -230,7 +230,7 @@ export const Trade: React.FC = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className="absolute md:left-0 left-[-50%] top-full mt-4 w-80 md:w-96 bg-card border border-border rounded-2xl shadow-2xl z-50 p-4 space-y-4"
+                          className="absolute md:left-0 left-[-50%] top-full mt-4 w-80 md:w-96 glass-menu z-50 p-4 space-y-4"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="relative">
@@ -446,7 +446,7 @@ export const Trade: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-card border border-border rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden relative mb-16 md:mb-0"
+              className="glass-menu rounded-[2.5rem] w-full max-w-2xl overflow-hidden relative mb-16 md:mb-0"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Decorative Blur */}

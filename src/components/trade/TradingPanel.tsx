@@ -403,7 +403,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-card border border-border rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden flex flex-col mb-16 md:mb-0"
+              className="glass-menu rounded-[2.5rem] w-full max-w-sm relative overflow-hidden flex flex-col mb-16 md:mb-0"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}

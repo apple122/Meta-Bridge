@@ -35,7 +35,7 @@ import { maskEmail } from "../../utils/format";
 import { generateOTP } from "../../utils/otp";
 import { emailService } from "../../services/emailService";
 import { encryptPassword, comparePassword } from "../../utils/security";
-import { Check, Globe, Zap } from "lucide-react";
+import { Check, Globe, Zap, Sparkles } from "lucide-react";
 import { activityService } from "../../services/activityService";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -885,7 +885,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                             setTempBankNetwork(e.target.value);
                             setTempBankName("");
                           }}
-                          className="w-full appearance-none bg-transparent border border-border rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-text-main font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                          className="w-full appearance-none bg-input-bg backdrop-blur-md border border-border rounded-2xl py-3.5 sm:py-4 pl-16 pr-10 text-text-main font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer shadow-inner"
                         >
                           <option value="" disabled>{language === "th" ? "— เลือกธนาคาร —" : "— Select a bank —"}</option>
                           {THAI_BANKS.map((bank) => (
@@ -1760,10 +1760,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <div className="space-y-4">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">{t("theme")}</h3>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
                   { id: 'dark', label: t("darkMode"), icon: <Moon size={20} />, colors: "bg-slate-900" },
-                  { id: 'light', label: t("lightMode"), icon: <Sun size={20} />, colors: "bg-slate-50" },
+                  { id: 'light', label: t("lightMode"), icon: <Sun size={20} />, colors: "bg-slate-50 border border-slate-200" },
+                  { id: 'liquid-glass', label: t("liquidGlass"), icon: <Sparkles size={20} />, colors: "bg-gradient-to-br from-primary/30 to-accent/30 backdrop-blur-md border border-white/20" },
                 ].map((mode) => {
                   const { theme, setTheme } = useTheme();
                   const isActive = theme === mode.id;
@@ -1771,7 +1772,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                   return (
                     <button
                       key={mode.id}
-                      onClick={() => setTheme(mode.id as 'dark' | 'light')}
+                      onClick={() => setTheme(mode.id as any)}
                       className={`relative group flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all duration-300 ${isActive
                         ? 'bg-primary/10 border-primary/50 ring-1 ring-primary/20'
                         : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
