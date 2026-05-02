@@ -6,6 +6,9 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { playSuccessSound } from "../../utils/audio";
 import { sendWinnerNotification } from "../../utils/notifications";
+import { supabase } from "../../lib/supabase";
+import { emailService } from "../../services/emailService";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Particles = () => {
   return (
@@ -40,7 +43,8 @@ const Particles = () => {
 };
 
 export const GlobalWinModal: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { profile } = useAuth();
   const { theme } = useTheme();
   const [winModalData, setWinModalData] = useState<{
     assetSymbol: string;
@@ -66,6 +70,30 @@ export const GlobalWinModal: React.FC = () => {
           t("predictionCorrect"),
           t("wasCorrect")
         );
+
+        // Send Email Notification if enabled
+        (async () => {
+          try {
+            const { data: settings } = await supabase
+              .from("global_settings")
+              .select("winner_email_enabled")
+              .eq("id", "main")
+              .single();
+
+            if (settings?.winner_email_enabled && profile?.email) {
+              await emailService.sendWinNotification({
+                email: profile.email,
+                userName: profile.first_name || profile.username || "Trader",
+                amount: e.detail.amount,
+                payout: e.detail.payout,
+                assetSymbol: e.detail.assetSymbol,
+                lang: (profile.language || language) as any
+              });
+            }
+          } catch (err) {
+            console.error("[GlobalWinModal] Error sending win email:", err);
+          }
+        })();
       }
     };
     window.addEventListener("binary-trade-result", handler);

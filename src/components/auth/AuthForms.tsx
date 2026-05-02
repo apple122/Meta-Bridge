@@ -214,6 +214,19 @@ export const AuthForms: React.FC = () => {
 
         if (error || !data) throw new Error("No account found with this email.");
 
+        // Check if recovery OTP is enabled
+        const { data: settings } = await supabase
+          .from("global_settings")
+          .select("recovery_otp_enabled")
+          .eq("id", "main")
+          .single();
+
+        if (settings && settings.recovery_otp_enabled === false) {
+          throw new Error(language === "th" 
+            ? "การกู้คืนบัญชีผ่านอีเมลถูกปิดใช้งานชั่วคราว กรุณาติดต่อฝ่ายสนับสนุน" 
+            : "Account recovery via email is currently disabled. Please contact support.");
+        }
+
         const newOtp = generateOTP();
         await supabase
           .from("profiles")

@@ -455,6 +455,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
     setOtpLoading(true);
     try {
+      // Check if change password OTP is enabled
+      const { data: settings } = await supabase
+        .from("global_settings")
+        .select("change_password_otp_enabled")
+        .eq("id", "main")
+        .single();
+
+      if (settings?.change_password_otp_enabled === false) {
+        setOtpStep("new_password");
+        return;
+      }
+
       const code = generateOTP();
       const expires_at = new Date(Date.now() + 10 * 60000).toISOString();
 
@@ -533,6 +545,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const handleSendOldEmailOtp = async () => {
     setEmailLoading(true);
     try {
+      // Check if change email OTP is enabled
+      const { data: settings } = await supabase
+        .from("global_settings")
+        .select("change_email_otp_enabled")
+        .eq("id", "main")
+        .single();
+
+      if (settings?.change_email_otp_enabled === false) {
+        setEmailOtpStep("new_email");
+        return;
+      }
+
       const code = generateOTP();
       const expires_at = new Date(Date.now() + 10 * 60000).toISOString();
       const { error } = await supabase

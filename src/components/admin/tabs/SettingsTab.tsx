@@ -158,19 +158,86 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
           <div className="pt-4 border-t border-border space-y-4">
             <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">{t("securitySettings")}</h4>
-            <div className="p-4 rounded-2xl bg-card-header/30 border border-border flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${globalSettings.registration_otp_enabled ? "bg-primary/20 text-primary" : "bg-card-header text-text-muted"}`}>
-                  <Shield size={20} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Registration OTP */}
+              <div className="p-4 rounded-2xl bg-card-header/30 border border-border flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${globalSettings.registration_otp_enabled ? "bg-primary/20 text-primary" : "bg-card-header text-text-muted"}`}>
+                    <Shield size={20} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-text-main block">{t("registrationOtp")}</span>
+                    <p className="text-[10px] text-text-muted font-bold">{t("otpDescription")}</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm font-bold text-text-main block">{t("registrationOtp")}</span>
-                  <p className="text-[10px] text-text-muted font-bold">{t("otpDescription")}</p>
-                </div>
+                <button onClick={() => setGlobalSettings(prev => ({ ...prev, registration_otp_enabled: !prev.registration_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.registration_otp_enabled ? "bg-primary" : "bg-card-header shadow-inner border border-border"}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.registration_otp_enabled ? "left-7" : "left-1"}`} />
+                </button>
               </div>
-              <button onClick={() => setGlobalSettings(prev => ({ ...prev, registration_otp_enabled: !prev.registration_otp_enabled }))} className={`w-12 h-6 rounded-full transition-all relative ${globalSettings.registration_otp_enabled ? "bg-primary" : "bg-card-header shadow-inner border border-border"}`}>
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.registration_otp_enabled ? "left-7" : "left-1"}`} />
-              </button>
+
+              {/* Change Email OTP */}
+              <div className="p-4 rounded-2xl bg-card-header/30 border border-border flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${globalSettings.change_email_otp_enabled ? "bg-blue-500/20 text-blue-500" : "bg-card-header text-text-muted"}`}>
+                    <Mail size={20} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-text-main block">Change Email OTP</span>
+                    <p className="text-[10px] text-text-muted font-bold">Require OTP when changing email</p>
+                  </div>
+                </div>
+                <button onClick={() => setGlobalSettings(prev => ({ ...prev, change_email_otp_enabled: !prev.change_email_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.change_email_otp_enabled ? "bg-blue-500" : "bg-card-header shadow-inner border border-border"}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.change_email_otp_enabled ? "left-7" : "left-1"}`} />
+                </button>
+              </div>
+
+              {/* Change Password OTP */}
+              <div className="p-4 rounded-2xl bg-card-header/30 border border-border flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${globalSettings.change_password_otp_enabled ? "bg-amber-500/20 text-amber-500" : "bg-card-header text-text-muted"}`}>
+                    <ShieldAlert size={20} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-text-main block">Change Password OTP</span>
+                    <p className="text-[10px] text-text-muted font-bold">Require OTP when changing password</p>
+                  </div>
+                </div>
+                <button onClick={() => setGlobalSettings(prev => ({ ...prev, change_password_otp_enabled: !prev.change_password_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.change_password_otp_enabled ? "bg-amber-500" : "bg-card-header shadow-inner border border-border"}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.change_password_otp_enabled ? "left-7" : "left-1"}`} />
+                </button>
+              </div>
+
+              {/* Recovery OTP */}
+              <div className="p-4 rounded-2xl bg-card-header/30 border border-border flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${globalSettings.recovery_otp_enabled ? "bg-purple-500/20 text-purple-500" : "bg-card-header text-text-muted"}`}>
+                    <Globe size={20} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-text-main block">Recovery OTP</span>
+                    <p className="text-[10px] text-text-muted font-bold">Require OTP for account recovery</p>
+                  </div>
+                </div>
+                <button onClick={() => setGlobalSettings(prev => ({ ...prev, recovery_otp_enabled: !prev.recovery_otp_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.recovery_otp_enabled ? "bg-purple-500" : "bg-card-header shadow-inner border border-border"}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.recovery_otp_enabled ? "left-7" : "left-1"}`} />
+                </button>
+              </div>
+
+              {/* Winner Email Notification */}
+              <div className="p-4 rounded-2xl bg-card-header/30 border border-border flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${globalSettings.winner_email_enabled ? "bg-green-500/20 text-green-500" : "bg-card-header text-text-muted"}`}>
+                    <Mail size={20} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-text-main block">Winner Notifications</span>
+                    <p className="text-[10px] text-text-muted font-bold">Send email celebrate when user wins</p>
+                  </div>
+                </div>
+                <button onClick={() => setGlobalSettings(prev => ({ ...prev, winner_email_enabled: !prev.winner_email_enabled }))} className={`shrink-0 w-12 h-6 rounded-full transition-all relative ${globalSettings.winner_email_enabled ? "bg-green-500" : "bg-card-header shadow-inner border border-border"}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${globalSettings.winner_email_enabled ? "left-7" : "left-1"}`} />
+                </button>
+              </div>
             </div>
           </div>
 

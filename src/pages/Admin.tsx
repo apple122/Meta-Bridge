@@ -59,6 +59,10 @@ export const Admin: React.FC = () => {
     email_enabled: false,
     discord_enabled: false,
     registration_otp_enabled: true,
+    change_email_otp_enabled: true,
+    change_password_otp_enabled: true,
+    recovery_otp_enabled: true,
+    winner_email_enabled: true,
   });
 
   const initialSettings = React.useRef<GlobalSettings>(globalSettings);
@@ -100,6 +104,10 @@ export const Admin: React.FC = () => {
         email_enabled: data.email_enabled ?? false,
         discord_enabled: data.discord_enabled ?? false,
         registration_otp_enabled: data.registration_otp_enabled ?? true,
+        change_email_otp_enabled: data.change_email_otp_enabled ?? true,
+        change_password_otp_enabled: data.change_password_otp_enabled ?? true,
+        recovery_otp_enabled: data.recovery_otp_enabled ?? true,
+        winner_email_enabled: data.winner_email_enabled ?? true,
       };
       setGlobalSettings(fetched);
       initialSettings.current = fetched;

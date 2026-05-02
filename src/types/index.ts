@@ -40,6 +40,10 @@ export interface GlobalSettings {
   email_enabled: boolean;
   discord_enabled: boolean;
   registration_otp_enabled: boolean;
+  change_email_otp_enabled: boolean;
+  change_password_otp_enabled: boolean;
+  recovery_otp_enabled: boolean;
+  winner_email_enabled: boolean;
 }
 
 export type TransactionType = "buy" | "sell" | "deposit" | "withdraw" | "win" | "loss";
