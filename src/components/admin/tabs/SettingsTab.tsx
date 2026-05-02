@@ -66,6 +66,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
   const fetchProviders = async () => {
     setIsFetchingProviders(true);
+    console.log('[SettingsTab] Fetching email providers...');
     try {
       const { data, error } = await supabase
         .from('email_providers')
@@ -73,10 +74,15 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[SettingsTab] Supabase Error:', error);
+        throw error;
+      }
+      console.log('[SettingsTab] Providers found:', data?.length);
       setProviders(data || []);
-    } catch (err) {
-      console.error('Error fetching providers:', err);
+    } catch (err: any) {
+      console.error('[SettingsTab] Fetch Error:', err);
+      // alert("Error fetching providers: " + err.message);
     } finally {
       setIsFetchingProviders(false);
     }
@@ -402,8 +408,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 </div>
               </div>
               <button 
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all text-[10px] font-black uppercase tracking-widest"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowAddForm(!showAddForm);
+                }}
+                className="relative z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all text-[10px] font-black uppercase tracking-widest cursor-pointer border border-primary/20"
               >
                 {showAddForm ? <XCircle size={14} /> : <Plus size={14} />}
                 {showAddForm ? (language === 'th' ? 'ยกเลิก' : 'CANCEL') : (language === 'th' ? 'เพิ่ม Provider' : 'ADD PROVIDER')}
