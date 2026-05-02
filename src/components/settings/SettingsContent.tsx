@@ -463,7 +463,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .single();
 
       if (settings?.change_password_otp_enabled === false) {
-        setOtpStep("new_password");
+        showToast(language === "th" 
+          ? "การเปลี่ยนรหัสผ่านผ่านอีเมลถูกปิดใช้งานชั่วคราว กรุณาติดต่อฝ่ายสนับสนุน" 
+          : "Password change via email is currently disabled. Please contact support.", "error");
         return;
       }
 
@@ -553,7 +555,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         .single();
 
       if (settings?.change_email_otp_enabled === false) {
-        setEmailOtpStep("new_email");
+        showToast(language === "th" 
+          ? "การเปลี่ยนอีเมลผ่านระบบ OTP ถูกปิดใช้งานชั่วคราว กรุณาติดต่อฝ่ายสนับสนุน" 
+          : "Email change via OTP is currently disabled. Please contact support.", "error");
         return;
       }
 
