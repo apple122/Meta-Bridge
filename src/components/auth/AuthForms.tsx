@@ -117,6 +117,23 @@ export const AuthForms: React.FC = () => {
           setFirstName(data.first_name);
           setVerificationType("login");
 
+          // Check if registration/verification OTP is enabled
+          const { data: settings } = await supabase
+            .from("global_settings")
+            .select("registration_otp_enabled")
+            .eq("id", "main")
+            .single();
+
+          if (settings?.registration_otp_enabled === false) {
+            // If OTP is disabled, just verify the user and login
+            await supabase.from("profiles").update({ is_verified: true, otp_code: null }).eq("id", data.id);
+            sessionStorage.removeItem("auth_mode");
+            sessionStorage.removeItem("auth_email");
+            sessionStorage.removeItem("auth_verification_type");
+            login(data as Profile);
+            return;
+          }
+
           // Auto-send OTP when redirecting to verification
           const newOtp = generateOTP();
           await supabase
@@ -294,6 +311,24 @@ export const AuthForms: React.FC = () => {
     setSuccessMsg("");
 
     try {
+      // Check global settings based on verification type
+      const { data: settings } = await supabase
+        .from("global_settings")
+        .select("registration_otp_enabled, recovery_otp_enabled")
+        .eq("id", "main")
+        .single();
+
+      if (verificationType === 'forgot' && settings?.recovery_otp_enabled === false) {
+        throw new Error(language === "th" 
+          ? "การกู้คืนบัญชีถูกปิดใช้งาน" 
+          : "Account recovery is disabled.");
+      }
+      if ((verificationType === 'register' || verificationType === 'login') && settings?.registration_otp_enabled === false) {
+        throw new Error(language === "th" 
+          ? "การยืนยันตัวตนผ่านอีเมลถูกปิดใช้งาน" 
+          : "Email verification is disabled.");
+      }
+
       const newOtp = generateOTP();
       const { error } = await supabase
         .from("profiles")
