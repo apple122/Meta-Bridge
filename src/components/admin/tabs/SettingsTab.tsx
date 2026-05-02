@@ -44,6 +44,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; msg: string } | null>(null);
+  const [isEmailSaving, setIsEmailSaving] = useState(false);
+  const [isEmailDirty, setIsEmailDirty] = useState(false);
 
   // Track original settings to detect changes
   const [initialSettings, setInitialSettings] = useState<GlobalSettings>(globalSettings);
@@ -60,6 +62,49 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
+
+  const handleUpdateEmailConfig = async () => {
+    setIsEmailSaving(true);
+    try {
+      const { error } = await supabase
+        .from("global_settings")
+        .update({
+          emailjs_public_key: globalSettings.emailjs_public_key,
+          emailjs_service_id: globalSettings.emailjs_service_id,
+          emailjs_template_otp: globalSettings.emailjs_template_otp,
+          emailjs_template_win: globalSettings.emailjs_template_win,
+        })
+        .eq("id", "main");
+
+      if (error) throw error;
+      
+      // Update local state to reflect saved status
+      setInitialSettings({ ...globalSettings });
+      setIsEmailDirty(false);
+      
+      await logAdminAction(
+        "UPDATE_SETTINGS", 
+        "Updated EmailJS Configuration", 
+        { 
+          public_key: globalSettings.emailjs_public_key,
+          service_id: globalSettings.emailjs_service_id 
+        }
+      );
+      
+      if (onSaveSuccess) onSaveSuccess(globalSettings);
+      alert("Email configuration updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating email config:", error);
+      alert("Error updating email config: " + error.message);
+    } finally {
+      setIsEmailSaving(false);
+    }
+  };
+
+  const handleEmailChange = (field: keyof GlobalSettings, value: any) => {
+    setGlobalSettings(prev => ({ ...prev, [field]: value }));
+    setIsEmailDirty(true);
+  };
 
   const handleUpdateSettings = async () => {
     setIsSaving(true);
@@ -260,59 +305,89 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           </div>
 
           <div className="pt-4 border-t border-border space-y-4">
-            <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest px-1">EmailJS Configuration</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 rounded-2xl bg-card-header/20 border border-border">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Public Key</label>
-                <div className="relative group">
-                  <Key size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    value={globalSettings.emailjs_public_key}
-                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_public_key: e.target.value }))}
-                    placeholder="Enter Public Key"
-                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                  />
+            <div className="flex items-center justify-between px-1">
+              <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">EmailJS Configuration</h4>
+              {isEmailDirty && (
+                <motion.div 
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-2 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20"
+                >
+                  <ShieldAlert size={12} />
+                  {language === 'th' ? 'ระวัง: การแก้ไขอาจทำให้ระบบอีเมลขัดข้อง' : 'Warning: Changes may break email service'}
+                </motion.div>
+              )}
+            </div>
+            
+            <div className="p-6 rounded-2xl bg-card-header/20 border border-border space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Public Key</label>
+                  <div className="relative group">
+                    <Key size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                    <input
+                      type="text"
+                      value={globalSettings.emailjs_public_key}
+                      onChange={(e) => handleEmailChange('emailjs_public_key', e.target.value)}
+                      placeholder="Enter Public Key"
+                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Service ID</label>
+                  <div className="relative group">
+                    <Activity size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                    <input
+                      type="text"
+                      value={globalSettings.emailjs_service_id}
+                      onChange={(e) => handleEmailChange('emailjs_service_id', e.target.value)}
+                      placeholder="Enter Service ID"
+                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">OTP Template ID</label>
+                  <div className="relative group">
+                    <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                    <input
+                      type="text"
+                      value={globalSettings.emailjs_template_otp}
+                      onChange={(e) => handleEmailChange('emailjs_template_otp', e.target.value)}
+                      placeholder="Enter Template ID"
+                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Win Template ID</label>
+                  <div className="relative group">
+                    <Trophy size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
+                    <input
+                      type="text"
+                      value={globalSettings.emailjs_template_win}
+                      onChange={(e) => handleEmailChange('emailjs_template_win', e.target.value)}
+                      placeholder="Enter Template ID"
+                      className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Service ID</label>
-                <div className="relative group">
-                  <Activity size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    value={globalSettings.emailjs_service_id}
-                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_service_id: e.target.value }))}
-                    placeholder="Enter Service ID"
-                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">OTP Template ID</label>
-                <div className="relative group">
-                  <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    value={globalSettings.emailjs_template_otp}
-                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_template_otp: e.target.value }))}
-                    placeholder="Enter Template ID"
-                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Win Template ID</label>
-                <div className="relative group">
-                  <Trophy size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    value={globalSettings.emailjs_template_win}
-                    onChange={(e) => setGlobalSettings(prev => ({ ...prev, emailjs_template_win: e.target.value }))}
-                    placeholder="Enter Template ID"
-                    className="w-full bg-transparent border border-border rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-all"
-                  />
-                </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleUpdateEmailConfig}
+                  disabled={isEmailSaving || !isEmailDirty}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                    isEmailSaving || !isEmailDirty
+                      ? "bg-card-header text-text-muted cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 active:scale-95"
+                  }`}
+                >
+                  {isEmailSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  {language === 'th' ? 'บันทึก Email Config' : 'SAVE EMAIL CONFIG'}
+                </button>
               </div>
             </div>
           </div>
