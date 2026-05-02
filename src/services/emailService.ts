@@ -145,8 +145,8 @@ export const emailService = {
     }
   },
 
-  sendDepositNotification: async () => ({ success: false, error: "Not implemented" }),
-  sendWithdrawNotification: async () => ({ success: false, error: "Not implemented" })
+  sendDepositNotification: async (_options: any) => ({ success: false, error: "Not implemented" }),
+  sendWithdrawNotification: async (_options: any) => ({ success: false, error: "Not implemented" })
 };
 
 type NotifyWinNotificationOptions = NotifyWinOptions;
